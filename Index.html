@@ -1,306 +1,280 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Descubre Sabor Mediterráneo, un restaurante de cocina mediterránea con productos frescos, platos tradicionales y un ambiente acogedor.">
-    <title>Sabor Mediterráneo | Restaurante</title>
+    <meta name="description" content="Sabor Mediterráneo, cocina mediterránea con producto de la Vega de Granada. Consulta la carta, los horarios y reserva tu mesa online.">
+    <meta name="theme-color" content="#23408E">
+    <title>Sabor Mediterráneo | Restaurante en Granada</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+    <script src="javascript.js" defer></script>
 </head>
 <body>
 
-    <header class="header">
-        <a href="#inicio" class="logo">
-            <span class="logo-icon">SM</span>
-            <span>SABOR <span class="gold">MEDITERRÁNEO</span></span>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <!-- ============ CABECERA ============ -->
+    <header class="header" id="header">
+        <a href="#inicio" class="logo" aria-label="Sabor Mediterráneo, ir al inicio">
+            <svg class="logo-mark" viewBox="0 0 40 48" aria-hidden="true">
+                <path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/>
+                <path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/>
+            </svg>
+            <span class="logo-text">Sabor<br>Mediterráneo</span>
         </a>
 
-        <button class="menu-toggle" id="menu-toggle"
-                aria-label="Abrir menú" aria-expanded="false">
-            ☰
+        <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav">
+            <span></span><span></span>
         </button>
 
-        <nav class="nav" id="nav">
-            <a href="#inicio">Inicio</a>
+        <nav class="nav" id="nav" aria-label="Principal">
             <a href="#nosotros">Nosotros</a>
-            <a href="#carta">Nuestra carta</a>
-            <a href="#horarios">Horarios</a>
-            <a href="#contacto">Contacto</a>
-            <a href="#reservas" class="nav-button">Reservar mesa</a>
+            <a href="#carta">Carta</a>
+            <a href="#servicios">Celebraciones</a>
+            <a href="#visitanos">Horario y ubicación</a>
+            <a href="#reservas" class="nav-cta">Reservar mesa</a>
         </nav>
     </header>
 
-    <main>
+    <main id="contenido">
+
+        <!-- ============ HERO ============ -->
         <section class="hero" id="inicio">
-            <div class="hero-content">
-                <p class="eyebrow">COCINA MEDITERRÁNEA · PRODUCTOS FRESCOS</p>
-                <h1>El sabor de nuestra tierra, <span>en tu mesa.</span></h1>
-                <p class="hero-description">
-                    Disfruta de una cocina llena de tradición, ingredientes
-                    frescos y sabores que te harán sentir como en casa.
+            <div class="hero-text">
+                <p class="open-status" id="open-status" aria-live="polite">
+                    <span class="dot"></span><span class="open-status-text">Consultando horario…</span>
                 </p>
-                <div class="hero-buttons">
-                    <a href="#carta" class="button button-gold">Descubrir la carta</a>
-                    <a href="#reservas" class="button button-outline">Reservar mesa</a>
+                <h1 class="hero-title">
+                    <span class="line">Cocina de la Vega,</span>
+                    <span class="line">mesa de</span>
+                    <span class="line">Granada.</span>
+                </h1>
+                <p class="hero-lead">
+                    Arroces, guisos y pescado del día con producto de huertas
+                    a menos de 30 km. Sin prisas, como se ha comido siempre aquí.
+                </p>
+                <div class="hero-actions">
+                    <a href="#reservas" class="btn btn-primary">Reservar mesa</a>
+                    <a href="#carta" class="btn btn-ghost">Ver la carta</a>
                 </div>
             </div>
-            <div class="hero-label">
-                <span class="label-star">✦</span>
-                Tradición y sabor mediterráneo
-            </div>
+
+            <figure class="hero-arch">
+                <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1100&q=80"
+                     alt="Mesa servida con varios platos en el comedor del restaurante">
+            </figure>
         </section>
 
-        <section class="intro section" id="nosotros">
-            <div class="intro-image">
-                <img
-                    src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=85"
-                    alt="Interior acogedor de un restaurante"
-                    loading="lazy">
-                <div class="image-caption">Un lugar para disfrutar</div>
-            </div>
+        <div class="tile-band" aria-hidden="true"></div>
 
-            <div class="intro-content">
-                <p class="eyebrow">NUESTRA ESENCIA</p>
-                <h2>La tradición mediterránea, hecha con cariño.</h2>
+        <!-- ============ NOSOTROS ============ -->
+        <section class="about section" id="nosotros">
+            <figure class="about-arch">
+                <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80"
+                     alt="Comedor del restaurante con luz cálida" loading="lazy">
+            </figure>
+
+            <div class="about-text">
+                <h2>Una casa de comidas con la puerta abierta</h2>
                 <p>
-                    En Sabor Mediterráneo creemos que comer bien es mucho más
-                    que sentarse a la mesa. Es compartir, disfrutar y descubrir
-                    los sabores de siempre.
+                    Sabor Mediterráneo nace con una idea sencilla: cocinar lo que
+                    da la tierra en cada estación y servirlo en un comedor donde
+                    apetezca quedarse a la sobremesa.
                 </p>
                 <p>
-                    Nuestra propuesta se inspira en la cocina mediterránea,
-                    con recetas tradicionales, ingredientes de temporada y
-                    una atención cercana.
+                    Compramos cada mañana en la Vega y en la lonja de Motril.
+                    Lo que no está bueno ese día, no entra en la carta.
                 </p>
-                <a href="#carta" class="text-link">Descubre nuestros platos →</a>
+
+                <dl class="facts">
+                    <div><dt>30 km</dt><dd>radio máximo de nuestros proveedores de huerta</dd></div>
+                    <div><dt>14</dt><dd>alérgenos señalados en cada plato</dd></div>
+                    <div><dt>60</dt><dd>comensales entre salón, terraza y reservado</dd></div>
+                </dl>
             </div>
         </section>
 
-        <section class="menu-section section" id="carta">
-            <div class="section-heading">
-                <p class="eyebrow">UNA EXPERIENCIA PARA EL PALADAR</p>
-                <h2>Nuestra carta</h2>
-                <p>Platos inspirados en la cocina mediterránea.</p>
+        <!-- ============ CARTA ============ -->
+        <section class="menu section" id="carta">
+            <header class="menu-head">
+                <h2>La carta</h2>
+                <p>Cambia con la temporada. Pregúntanos por los platos fuera de carta.</p>
+            </header>
+
+            <div class="menu-controls">
+                <div class="tabs" role="tablist" id="menu-tabs" aria-label="Categorías de la carta"></div>
+                <fieldset class="diet-filters">
+                    <legend class="sr-only">Filtrar por dieta</legend>
+                    <label class="chip-check"><input type="checkbox" value="vegetariano" id="f-veg"> Vegetariano</label>
+                    <label class="chip-check"><input type="checkbox" value="sin_gluten" id="f-sg"> Sin gluten</label>
+                </fieldset>
             </div>
 
-            <div class="menu-grid">
-                <article class="dish-card">
-                    <img
-                        src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80"
-                        alt="Ensalada mediterránea"
-                        loading="lazy">
-                    <div class="dish-info">
-                        <div class="dish-title">
-                            <h3>Ensalada mediterránea</h3>
-                            <span>9,50 €</span>
-                        </div>
-                        <p>Tomate, hojas frescas, aceitunas, queso y aceite de oliva.</p>
-                    </div>
-                </article>
+            <div class="menu-body">
+                <ul class="dish-list" id="dish-list" aria-live="polite"></ul>
 
-                <article class="dish-card">
-                    <img
-                        src="https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?auto=format&fit=crop&w=800&q=80"
-                        alt="Plato de cocina mediterránea"
-                        loading="lazy">
-                    <div class="dish-info">
-                        <div class="dish-title">
-                            <h3>Especial de la casa</h3>
-                            <span>14,50 €</span>
-                        </div>
-                        <p>Una combinación de sabores tradicionales con productos de temporada.</p>
-                    </div>
-                </article>
-
-                <article class="dish-card">
-                    <img
-                        src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80"
-                        alt="Plato de verduras frescas"
-                        loading="lazy">
-                    <div class="dish-info">
-                        <div class="dish-title">
-                            <h3>Verduras de temporada</h3>
-                            <span>10,00 €</span>
-                        </div>
-                        <p>Verduras seleccionadas, preparadas con hierbas aromáticas.</p>
-                    </div>
-                </article>
-
-                <article class="dish-card">
-                    <img
-                        src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80"
-                        alt="Plato de pasta"
-                        loading="lazy">
-                    <div class="dish-info">
-                        <div class="dish-title">
-                            <h3>Pasta de la casa</h3>
-                            <span>12,50 €</span>
-                        </div>
-                        <p>Pasta acompañada de una salsa casera y hierbas mediterráneas.</p>
-                    </div>
-                </article>
-
-                <article class="dish-card">
-                    <img
-                        src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"
-                        alt="Plato principal de carne"
-                        loading="lazy">
-                    <div class="dish-info">
-                        <div class="dish-title">
-                            <h3>Carne a nuestro estilo</h3>
-                            <span>16,00 €</span>
-                        </div>
-                        <p>Plato principal con guarnición y un toque de la casa.</p>
-                    </div>
-                </article>
-
-                <article class="dish-card">
-                    <img
-                        src="https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&q=80"
-                        alt="Postre con fruta"
-                        loading="lazy">
-                    <div class="dish-info">
-                        <div class="dish-title">
-                            <h3>Postre del día</h3>
-                            <span>5,50 €</span>
-                        </div>
-                        <p>Un dulce final para completar tu experiencia.</p>
-                    </div>
-                </article>
+                <aside class="menu-preview" aria-hidden="true">
+                    <figure class="preview-arch">
+                        <img id="preview-img" src="" alt="">
+                    </figure>
+                    <p class="preview-caption" id="preview-caption"></p>
+                </aside>
             </div>
 
-            <p class="menu-note">
-                Carta y precios de ejemplo para el proyecto. Se podrán adaptar
-                a los platos reales del restaurante.
-            </p>
+            <details class="allergen-legend">
+                <summary>Leyenda de alérgenos</summary>
+                <ul id="allergen-legend"></ul>
+                <p>Si tienes una alergia o intolerancia, avísanos al reservar. Adaptamos lo que se pueda adaptar.</p>
+            </details>
         </section>
 
-        <section class="quote-section">
-            <p class="eyebrow">SENCILLEZ, CALIDAD Y TRADICIÓN</p>
-            <h2>Los mejores momentos siempre se comparten alrededor de una mesa.</h2>
+        <!-- ============ SERVICIOS ============ -->
+        <section class="services section" id="servicios">
+            <h2>Más allá de la carta</h2>
+            <div class="services-grid" id="services-grid"></div>
         </section>
 
-        <section class="details section" id="horarios">
-            <div class="section-heading">
-                <p class="eyebrow">VEN A CONOCERNOS</p>
-                <h2>Te esperamos</h2>
+        <!-- ============ OPINIONES ============ -->
+        <section class="reviews section" aria-labelledby="reviews-title">
+            <h2 id="reviews-title">Lo que cuentan quienes ya han venido</h2>
+            <div class="reviews-track" id="reviews-track"></div>
+        </section>
+
+        <!-- ============ VISÍTANOS ============ -->
+        <section class="visit section" id="visitanos">
+            <div class="visit-info">
+                <h2>Horario y ubicación</h2>
+
+                <table class="schedule" id="schedule">
+                    <caption class="sr-only">Horario semanal</caption>
+                    <thead><tr><th scope="col">Día</th><th scope="col">Comida</th><th scope="col">Cena</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+
+                <div class="contact-lines">
+                    <p><strong>Dirección</strong> Centro de Granada · dirección por confirmar</p>
+                    <p><strong>Teléfono</strong> <a href="tel:+34958000000">958 000 000</a></p>
+                    <p><strong>Email</strong> <a href="mailto:reservas@sabormediterraneo.es">reservas@sabormediterraneo.es</a></p>
+                </div>
             </div>
 
-            <div class="details-grid">
-                <article class="detail-card">
-                    <span class="detail-icon">◷</span>
-                    <h3>Horario</h3>
-                    <p>Lunes a domingo</p>
-                    <p>13:00–16:00 · 20:00–23:00</p>
-                    <small>Horario provisional de ejemplo.</small>
-                </article>
-
-                <article class="detail-card">
-                    <span class="detail-icon">⌖</span>
-                    <h3>Ubicación</h3>
-                    <p>Dirección pendiente de confirmar</p>
-                    <p>Granada, España</p>
-                    <small>Ubicación provisional del proyecto.</small>
-                </article>
-
-                <article class="detail-card" id="contacto">
-                    <span class="detail-icon">✉</span>
-                    <h3>Contacto</h3>
-                    <p>Teléfono: pendiente de confirmar</p>
-                    <p>Email: pendiente de confirmar</p>
-                    <small>Datos de contacto por completar.</small>
-                </article>
+            <div class="visit-map">
+                <iframe
+                    title="Mapa de la ubicación del restaurante en Granada"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=-3.6075%2C37.1695%2C-3.5895%2C37.1795&amp;layer=mapnik&amp;marker=37.1745%2C-3.5985"
+                    loading="lazy"></iframe>
             </div>
         </section>
 
-        <section class="reservation-section section" id="reservas">
-            <div class="reservation-text">
-                <p class="eyebrow">TU MESA TE ESPERA</p>
-                <h2>Reserva tu próxima experiencia.</h2>
-                <p>
-                    Rellena el formulario y prepara tu visita a Sabor
-                    Mediterráneo. En esta primera versión, la reserva es
-                    una demostración y todavía no se envía al restaurante.
-                </p>
+        <!-- ============ RESERVAS ============ -->
+        <section class="booking" id="reservas">
+            <div class="booking-inner">
+                <div class="booking-text">
+                    <h2>Reserva tu mesa</h2>
+                    <p>
+                        Elige día, turno y cuántos sois. Te enviaremos la
+                        confirmación al momento. Para grupos de más de 8
+                        personas, llámanos y lo organizamos juntos.
+                    </p>
+                </div>
+
+                <form class="booking-form" id="booking-form" novalidate>
+                    <fieldset class="step">
+                        <legend><span class="step-n">1</span> ¿Cuántos sois?</legend>
+                        <div class="party" role="radiogroup" aria-label="Número de personas" id="party"></div>
+                    </fieldset>
+
+                    <fieldset class="step">
+                        <legend><span class="step-n">2</span> ¿Qué día?</legend>
+                        <div class="date-strip" id="date-strip" role="radiogroup" aria-label="Fecha"></div>
+                        <label class="other-date">Otra fecha <input type="date" id="fecha" name="fecha"></label>
+                    </fieldset>
+
+                    <fieldset class="step">
+                        <legend><span class="step-n">3</span> ¿A qué hora?</legend>
+                        <div class="slots" id="slots" aria-live="polite"></div>
+                    </fieldset>
+
+                    <fieldset class="step">
+                        <legend><span class="step-n">4</span> Tus datos</legend>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="nombre">Nombre y apellidos</label>
+                                <input type="text" id="nombre" name="nombre" autocomplete="name" required minlength="3">
+                                <p class="field-error" data-for="nombre"></p>
+                            </div>
+                            <div class="field">
+                                <label for="telefono">Teléfono</label>
+                                <input type="tel" id="telefono" name="telefono" autocomplete="tel" required pattern="[0-9 +]{9,15}">
+                                <p class="field-error" data-for="telefono"></p>
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" autocomplete="email" required>
+                                <p class="field-error" data-for="email"></p>
+                            </div>
+                            <div class="field">
+                                <label for="zona">Zona preferida</label>
+                                <select id="zona" name="zona">
+                                    <option value="1">Salón</option>
+                                    <option value="2">Terraza</option>
+                                    <option value="3">Reservado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="comentarios">Alergias o peticiones <span class="optional">(opcional)</span></label>
+                            <textarea id="comentarios" name="comentarios" rows="3" maxlength="500"></textarea>
+                        </div>
+                        <label class="consent">
+                            <input type="checkbox" id="privacidad" required>
+                            Acepto que usen mis datos solo para gestionar esta reserva.
+                        </label>
+                        <p class="field-error" data-for="privacidad"></p>
+                    </fieldset>
+
+                    <div class="booking-summary" id="booking-summary" aria-live="polite"></div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="booking-submit">Confirmar reserva</button>
+                </form>
+
+                <div class="booking-done" id="booking-done" hidden tabindex="-1">
+                    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4l5 10 10 5-10 5-5 10-5-10-10-5 10-5z" fill="currentColor"/></svg>
+                    <h3>Reserva confirmada</h3>
+                    <p id="booking-done-text"></p>
+                    <p class="code">Código de reserva <strong id="booking-code"></strong></p>
+                    <button type="button" class="btn btn-ghost-light" id="booking-new">Hacer otra reserva</button>
+                </div>
             </div>
-
-            <form class="reservation-form" id="reservation-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="nombre">Nombre completo</label>
-                        <input type="text" id="nombre" name="nombre"
-                               placeholder="Tu nombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="telefono">Teléfono</label>
-                        <input type="tel" id="telefono" name="telefono"
-                               placeholder="Tu teléfono" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="fecha">Fecha</label>
-                        <input type="date" id="fecha" name="fecha" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="hora">Hora</label>
-                        <select id="hora" name="hora" required>
-                            <option value="">Selecciona una hora</option>
-                            <option value="13:00">13:00</option>
-                            <option value="13:30">13:30</option>
-                            <option value="14:00">14:00</option>
-                            <option value="14:30">14:30</option>
-                            <option value="15:00">15:00</option>
-                            <option value="20:00">20:00</option>
-                            <option value="20:30">20:30</option>
-                            <option value="21:00">21:00</option>
-                            <option value="21:30">21:30</option>
-                            <option value="22:00">22:00</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="personas">Número de personas</label>
-                    <select id="personas" name="personas" required>
-                        <option value="1">1 persona</option>
-                        <option value="2" selected>2 personas</option>
-                        <option value="3">3 personas</option>
-                        <option value="4">4 personas</option>
-                        <option value="5">5 personas</option>
-                        <option value="6">6 personas</option>
-                        <option value="7">7 personas</option>
-                        <option value="8">8 personas</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="comentarios">Comentarios (opcional)</label>
-                    <textarea id="comentarios" name="comentarios"
-                              rows="3" placeholder="¿Alguna petición especial?"></textarea>
-                </div>
-
-                <button type="submit" class="button button-gold form-button">
-                    Solicitar reserva
-                </button>
-
-                <p id="form-message" class="form-message" role="status"></p>
-            </form>
         </section>
     </main>
 
+    <!-- ============ PIE ============ -->
     <footer class="footer">
-        <a href="#inicio" class="logo footer-logo">
-            <span class="logo-icon">SM</span>
-            <span>SABOR <span class="gold">MEDITERRÁNEO</span></span>
-        </a>
-        <p>Cocina mediterránea, tradición y buenos momentos.</p>
-        <p class="footer-copy">
-            © <span id="year"></span> Sabor Mediterráneo · Proyecto educativo GastroWeb
-        </p>
+        <div class="tile-band tile-band-thin" aria-hidden="true"></div>
+        <div class="footer-inner">
+            <a href="#inicio" class="logo logo-footer">
+                <svg class="logo-mark" viewBox="0 0 40 48" aria-hidden="true">
+                    <path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/>
+                    <path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/>
+                </svg>
+                <span class="logo-text">Sabor<br>Mediterráneo</span>
+            </a>
+            <nav class="footer-nav" aria-label="Pie de página">
+                <a href="#carta">Carta</a>
+                <a href="#servicios">Celebraciones</a>
+                <a href="#reservas">Reservas</a>
+                <a href="#visitanos">Contacto</a>
+            </nav>
+            <p class="footer-copy">© <span id="year"></span> Sabor Mediterráneo. Proyecto intermodular 2º SMR.</p>
+        </div>
     </footer>
 
 </body>
