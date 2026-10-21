@@ -1,29 +1,63 @@
 # Sabor Mediterráneo · Proyecto intermodular 2º SMR
 
-Web de un restaurante de cocina mediterránea en Granada con carta dinámica, reservas online y base de datos MySQL.
+Web de un restaurante de cocina mediterránea en Granada: carta dinámica, reservas online con control de mesas, formulario de contacto y panel de administración, todo sobre PHP + MySQL.
 
 ## Estructura
 
 ```
 Proyecto-German/
-├── index.html            Página principal
-├── style.css             Estilos (diseño responsive)
-├── javascript.js         Carta, filtros, horario en vivo y reservas
-├── database/
-│   ├── restaurante.sql   Script de la base de datos (tablas + datos de ejemplo)
-│   └── README.md         Diagrama E-R y explicación
-└── api/                  (paso 3) Archivos PHP que conectan la web con la BD
+├── index.html              Web pública
+├── style.css               Estilos de la web (responsive)
+├── javascript.js           Carta, filtros, horario en vivo, reservas y contacto
+├── api/                    PHP que conecta la web con la base de datos (devuelve JSON)
+│   ├── config.php          Datos de conexión (usuario, contraseña, nombre de la BD)
+│   ├── db.php              Conexión PDO y funciones comunes
+│   ├── carta.php           GET  · categorías, platos y alérgenos
+│   ├── info.php            GET  · horario, servicios, opiniones y días cerrados
+│   ├── disponibilidad.php  GET  · horas libres para una fecha y nº de personas
+│   ├── reservas.php        POST · crea una reserva y le asigna mesa
+│   └── contacto.php        POST · guarda un mensaje del formulario
+├── admin/                  Panel de administración
+│   ├── login.php / logout.php / instalar.php
+│   ├── index.php           Resumen del día y gráfico de ocupación
+│   ├── reservas.php        Agenda, filtros, asignar mesa, reservas por teléfono
+│   ├── carta.php, plato.php  Gestión de la carta y los alérgenos
+│   ├── opiniones.php       Publicar o retirar reseñas
+│   ├── mensajes.php        Bandeja del formulario de contacto
+│   └── usuarios.php        Equipo (roles Administración y Sala)
+└── database/
+    ├── restaurante.sql     Script completo de la base de datos
+    └── README.md           Diagrama E-R y decisiones de diseño
 ```
 
-## Cómo verla
+## Puesta en marcha con XAMPP
 
-- **Sin servidor:** abre `index.html` en el navegador. Funciona con datos de demostración.
-- **Con XAMPP:** copia la carpeta a `C:\xampp\htdocs\`, importa `database/restaurante.sql` en phpMyAdmin y abre `http://localhost/Proyecto-German/`.
+1. Copia la carpeta del proyecto dentro de `C:\xampp\htdocs\`.
+2. En el panel de XAMPP arranca **Apache** y **MySQL**.
+3. Abre <http://localhost/phpmyadmin> → pestaña **Importar** → elige `database/restaurante.sql` → **Continuar**.
+4. Abre la web: <http://localhost/Proyecto-German/>
+5. Abre el panel: <http://localhost/Proyecto-German/admin/>. La primera vez te pedirá crear la cuenta de administración.
+
+Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `api/config.php`.
+
+> Si abres `index.html` con doble clic (sin XAMPP), la web funciona igual con datos de demostración, pero no guarda nada.
+
+## Seguridad aplicada
+
+- **Inyección SQL:** todas las consultas con datos del usuario usan consultas preparadas de PDO.
+- **XSS:** todo lo que se pinta en el panel pasa por `htmlspecialchars` (función `e()`), y en la web por `escapeHTML`.
+- **Contraseñas:** cifradas con `password_hash` (bcrypt), nunca en texto plano.
+- **CSRF:** cada formulario del panel lleva un token secreto que se comprueba en el servidor.
+- **Sesiones:** cookie `HttpOnly` y `SameSite=Strict`, id nuevo al entrar, cierre tras 30 min de inactividad.
+- **Fuerza bruta:** bloqueo de 5 minutos tras 5 intentos fallidos de login.
+- **Roles:** el personal de Sala solo ve las reservas; Administración gestiona todo.
+- **Validación doble:** en el navegador (comodidad) y en el servidor (seguridad).
+- **Anti-spam:** campo trampa oculto en los formularios públicos.
 
 ## Hoja de ruta
 
 - [x] Paso 1 · Rediseño visual y carta dinámica
 - [x] Paso 2 · Base de datos (16 tablas, vistas, función, procedimiento y trigger)
-- [ ] Paso 3 · API en PHP (PDO): carta, horarios y reservas reales
-- [ ] Paso 4 · Panel de administración con login
-- [ ] Paso 5 · Extras: galería, eventos con inscripción, emails de confirmación, despliegue
+- [x] Paso 3 · API en PHP: carta, horarios, disponibilidad, reservas y contacto
+- [x] Paso 4 · Panel de administración con login y roles
+- [ ] Paso 5 · Extras: consultar/cancelar reserva con el código, eventos con inscripción, galería, emails, despliegue en un hosting

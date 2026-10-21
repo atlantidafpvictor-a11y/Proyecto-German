@@ -109,7 +109,7 @@ Tablas sin relaciones (configuración y gestión): `horarios`, `dias_cerrados`, 
 | `mesas` | Mesas físicas, su zona y su capacidad. |
 | `horarios` | Apertura y cierre por día de la semana y turno. |
 | `dias_cerrados` | Festivos y vacaciones. |
-| `clientes` | Datos de contacto de quien reserva (email único). |
+| `clientes` | Datos de contacto de quien reserva (email único; puede faltar en reservas por teléfono). |
 | `reservas` | Fecha, hora, personas, estado y mesa asignada. |
 | `servicios` | Menú del día, celebraciones, catas, para llevar. |
 | `eventos` / `inscripciones_evento` | Eventos con plazas limitadas y quién se apunta. |
@@ -126,9 +126,17 @@ Tablas sin relaciones (configuración y gestión): `horarios`, `dias_cerrados`, 
 - **Seguridad.** Las contraseñas se guardan como hash (`password_hash` de PHP), nunca en claro. Desde PHP se usarán consultas preparadas (PDO) para evitar inyección SQL.
 - **Lógica en la base de datos.**
   - `fn_mesas_libres(fecha, hora, personas)` cuenta las mesas libres, suponiendo que cada reserva ocupa la mesa 90 minutos.
-  - `sp_asignar_mesa(id_reserva)` asigna la mesa más ajustada al grupo, priorizando la zona que eligió el cliente.
+  - `sp_asignar_mesa(id_reserva)` asigna la mesa más ajustada al grupo, priorizando la zona que eligió el cliente, y deja la reserva confirmada. Si no queda mesa, lanza un error (`SIGNAL`) que PHP convierte en un mensaje para el cliente. Lo usan la web al reservar y el panel al confirmar.
   - `trg_reservas_validar` impide reservar en fechas pasadas o días cerrados.
 - **Vistas.** `vista_carta`, `vista_reservas_hoy` y `vista_ocupacion_diaria` simplifican las consultas de la web y del panel.
+
+## Flujo de una reserva
+
+1. El cliente elige personas y día → `api/disponibilidad.php` calcula las horas con mesa libre.
+2. Envía el formulario → `api/reservas.php` valida los datos y, en una **transacción**:
+   crea o actualiza el cliente, inserta la reserva (el trigger comprueba la fecha) y llama a `sp_asignar_mesa`.
+3. Si todo va bien se confirma (`COMMIT`) y el cliente recibe su código; si no queda mesa se deshace todo (`ROLLBACK`).
+4. El personal la ve en el panel, en «Hoy» y en «Reservas», y la marca como completada o no presentada.
 
 ## Consultas de ejemplo
 

@@ -15,6 +15,7 @@ const API = {
     info: "api/info.php",
     disponibilidad: "api/disponibilidad.php",
     reservas: "api/reservas.php",
+    contacto: "api/contacto.php",
 };
 
 /* ---------- Datos de demostración (copia de la BD) ---------- */
@@ -98,11 +99,17 @@ const isoLocal = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).to
 const aMinutos = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return (h === 0 ? 24 : h) * 60 + m; };
 const escapeHTML = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-/** Pide JSON al servidor; si no hay servidor, devuelve los datos de reserva. */
+/**
+ * Pide JSON al servidor PHP.
+ * - Si PHP responde con JSON (aunque sea un error de validación), se devuelve tal cual.
+ * - Si no hay servidor PHP (archivo abierto con doble clic, o el .php no existe),
+ *   se usan los datos de demostración para que la web siga funcionando.
+ */
 async function pedir(url, respaldo, opciones) {
     try {
         const res = await fetch(url, opciones);
-        if (!res.ok) throw new Error(res.status);
+        const tipo = res.headers.get("Content-Type") || "";
+        if (!tipo.includes("application/json")) throw new Error("Sin API");
         return { datos: await res.json(), demo: false };
     } catch {
         return { datos: typeof respaldo === "function" ? respaldo() : respaldo, demo: true };
@@ -318,7 +325,8 @@ function pintarOpiniones(opiniones) {
 /* =========================================================
    5. RESERVAS
    ========================================================= */
-function iniciarReservas(horarios) {
+function iniciarReservas(horarios, diasCerrados = []) {
+    const cerrados = new Set(diasCerrados.map((d) => d.fecha));
     const form = $("#booking-form");
     const party = $("#party");
     const strip = $("#date-strip");
@@ -350,7 +358,7 @@ function iniciarReservas(horarios) {
     const dias = [];
     for (let i = 0; dias.length < 7 && i < 21; i++) {
         const d = new Date(hoy); d.setDate(d.getDate() + i);
-        if (turnosDelDia(horarios, diaSemana(d)).length) dias.push(d);
+        if (turnosDelDia(horarios, diaSemana(d)).length && !cerrados.has(isoLocal(d))) dias.push(d);
     }
     strip.innerHTML = dias.map((d, i) => `
         <button type="button" class="opt" role="radio" data-fecha="${isoLocal(d)}" aria-checked="false">
@@ -402,13 +410,20 @@ function iniciarReservas(horarios) {
             return;
         }
         const d = new Date(estado.fecha + "T12:00:00");
-        if (!turnosDelDia(horarios, diaSemana(d)).length) {
+        if (!turnosDelDia(horarios, diaSemana(d)).length || cerrados.has(estado.fecha)) {
             slots.innerHTML = `<p class="slots-msg">Ese día estamos cerrados. Prueba con otra fecha.</p>`;
             return;
         }
         slots.innerHTML = `<p class="slots-msg">Buscando mesa…</p>`;
         const url = `${API.disponibilidad}?fecha=${estado.fecha}&personas=${estado.personas}`;
+        const peticion = (cargarHoras.ultima = Symbol());
         const { datos } = await pedir(url, () => horasDemo(estado.fecha, estado.personas));
+        if (peticion !== cargarHoras.ultima) return; // llegó una respuesta antigua: se ignora
+
+        if (!datos.slots || datos.cerrado) {
+            slots.innerHTML = `<p class="slots-msg">${datos.cerrado ? "Ese día estamos cerrados. Prueba con otra fecha." : escapeHTML(datos.error || "No hemos podido consultar las mesas libres.")}</p>`;
+            return;
+        }
 
         const grupos = { comida: "Comida", cena: "Cena" };
         const html = Object.entries(grupos).map(([turno, titulo]) => {
@@ -484,6 +499,7 @@ function iniciarReservas(horarios) {
             personas: estado.personas,
             zona_id: Number($("#zona").value),
             comentarios: $("#comentarios").value.trim(),
+            web: $("#web").value, // campo trampa anti-bots
         };
 
         enviar.disabled = true;
@@ -500,6 +516,9 @@ function iniciarReservas(horarios) {
         enviar.textContent = "Confirmar reserva";
 
         if (!datos.ok) {
+            // Errores de validación del servidor: se marcan en su campo
+            Object.entries(datos.campos || {}).forEach(([campo, msg]) => error(campo, msg));
+            if (datos.campos?.hora || /completar/.test(datos.error || "")) cargarHoras();
             resumen.innerHTML = `<span style="color:var(--error)">${escapeHTML(datos.error || "No se ha podido guardar la reserva. Inténtalo de nuevo o llámanos.")}</span>`;
             return;
         }
@@ -508,7 +527,7 @@ function iniciarReservas(horarios) {
         $("#booking-done-text").textContent =
             `${reserva.nombre.split(" ")[0]}, te esperamos el ${f} a las ${reserva.hora}. ` +
             (demo ? "Modo demostración: la reserva aún no se ha guardado en la base de datos."
-                  : `Te hemos enviado los detalles a ${reserva.email}.`);
+                  : "Guarda este código: te lo pediremos si necesitas cambiar o cancelar la reserva.");
         $("#booking-code").textContent = datos.codigo;
         form.hidden = true;
         hecho.hidden = false;
@@ -528,19 +547,84 @@ function iniciarReservas(horarios) {
 }
 
 /* =========================================================
+   6. FORMULARIO DE CONTACTO
+   ========================================================= */
+function iniciarContacto() {
+    const form = $("#contact-form");
+    if (!form) return;
+    const estado = $("#contact-status");
+    const boton = $("button[type=submit]", form);
+
+    const reglas = {
+        "c-nombre": (v) => v.length >= 2 || "Escribe tu nombre.",
+        "c-email": (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || "Revisa el email: falta algo como nombre@correo.com.",
+        "c-asunto": (v) => v.length >= 3 || "Escribe un asunto.",
+        "c-mensaje": (v) => v.length >= 10 || "Cuéntanos un poco más (mínimo 10 caracteres).",
+    };
+    const marcar = (id, msg) => {
+        const campo = document.getElementById(id).closest(".field");
+        campo.classList.toggle("invalid", Boolean(msg));
+        $(".field-error", campo).textContent = msg || "";
+    };
+    Object.keys(reglas).forEach((id) => document.getElementById(id).addEventListener("input", () => marcar(id, "")));
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        let ok = true;
+        Object.entries(reglas).forEach(([id, regla]) => {
+            const r = regla(document.getElementById(id).value.trim());
+            marcar(id, r === true ? "" : r);
+            if (r !== true) ok = false;
+        });
+        if (!ok) { $(".invalid input, .invalid textarea", form)?.focus(); return; }
+
+        boton.disabled = true;
+        boton.textContent = "Enviando…";
+        const cuerpo = {
+            nombre: $("#c-nombre").value.trim(),
+            email: $("#c-email").value.trim(),
+            asunto: $("#c-asunto").value.trim(),
+            mensaje: $("#c-mensaje").value.trim(),
+            web: $("#c-web").value,
+        };
+        const { datos, demo } = await pedir(API.contacto, { ok: true }, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo),
+        });
+        boton.disabled = false;
+        boton.textContent = "Enviar mensaje";
+
+        if (!datos.ok) {
+            Object.entries(datos.campos || {}).forEach(([id, msg]) => marcar(id, msg));
+            estado.textContent = datos.error || "No se ha podido enviar. Prueba a llamarnos.";
+            estado.className = "contact-status is-error";
+            return;
+        }
+        form.reset();
+        estado.textContent = demo
+            ? "Mensaje enviado (modo demostración: no se ha guardado)."
+            : "Mensaje enviado. Te responderemos en menos de 24 horas.";
+        estado.className = "contact-status is-ok";
+    });
+}
+
+/* =========================================================
    ARRANQUE
    ========================================================= */
 document.addEventListener("DOMContentLoaded", async () => {
     iniciarCabecera();
 
-    const [{ datos: carta }, { datos: info }] = await Promise.all([
-        pedir(API.carta, { categorias: DATOS_DEMO.categorias, platos: DATOS_DEMO.platos, alergenos: DATOS_DEMO.alergenos }),
-        pedir(API.info, { horarios: DATOS_DEMO.horarios, servicios: DATOS_DEMO.servicios, opiniones: DATOS_DEMO.opiniones }),
-    ]);
+    const cartaDemo = { categorias: DATOS_DEMO.categorias, platos: DATOS_DEMO.platos, alergenos: DATOS_DEMO.alergenos };
+    const infoDemo = { horarios: DATOS_DEMO.horarios, servicios: DATOS_DEMO.servicios, opiniones: DATOS_DEMO.opiniones };
+    let [{ datos: carta }, { datos: info }] = await Promise.all([pedir(API.carta, cartaDemo), pedir(API.info, infoDemo)]);
+
+    // Si la base de datos falla, la web sigue mostrando la carta de ejemplo
+    if (!carta.platos || !carta.categorias?.length) carta = cartaDemo;
+    if (!info.horarios) info = infoDemo;
 
     pintarHorario(info.horarios);
     iniciarCarta(carta);
     pintarServicios(info.servicios);
     pintarOpiniones(info.opiniones);
-    iniciarReservas(info.horarios);
+    iniciarReservas(info.horarios, info.dias_cerrados || []);
+    iniciarContacto();
 });
