@@ -116,7 +116,7 @@ CREATE TABLE clientes (
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nombre     VARCHAR(100) NOT NULL,
     telefono   VARCHAR(15)  NOT NULL,
-    email      VARCHAR(120) NOT NULL UNIQUE,
+    email      VARCHAR(120) NULL UNIQUE COMMENT 'Puede faltar en reservas por teléfono',
     acepta_publicidad BOOLEAN NOT NULL DEFAULT FALSE,
     fecha_alta DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB;
@@ -292,7 +292,6 @@ BEGIN
     FROM mesas m
     WHERE m.activa = TRUE
       AND m.capacidad >= p_personas
-      AND m.capacidad <= p_personas + 2      -- no dar una mesa de 8 a una pareja
       AND m.id NOT IN (
           SELECT r.mesa_id
           FROM reservas r
@@ -410,10 +409,11 @@ INSERT INTO zonas (id, nombre, descripcion) VALUES
 (2, 'Terraza',   'Exterior con toldo, 16 plazas'),
 (3, 'Reservado', 'Sala privada para grupos, hasta 20 plazas');
 
-INSERT INTO mesas (numero, zona_id, capacidad) VALUES
-(1, 1, 2), (2, 1, 2), (3, 1, 2), (4, 1, 4), (5, 1, 4), (6, 1, 4), (7, 1, 6), (8, 1, 6), (9, 1, 6),
-(10, 2, 2), (11, 2, 2), (12, 2, 4), (13, 2, 4), (14, 2, 4),
-(20, 3, 8), (21, 3, 12);
+-- El id coincide con el número de mesa para que sea fácil de leer
+INSERT INTO mesas (id, numero, zona_id, capacidad) VALUES
+(1, 1, 1, 2), (2, 2, 1, 2), (3, 3, 1, 2), (4, 4, 1, 4), (5, 5, 1, 4), (6, 6, 1, 4), (7, 7, 1, 6), (8, 8, 1, 6), (9, 9, 1, 6),
+(10, 10, 2, 2), (11, 11, 2, 2), (12, 12, 2, 4), (13, 13, 2, 4), (14, 14, 2, 4),
+(20, 20, 3, 8), (21, 21, 3, 12);
 
 INSERT INTO horarios (dia_semana, turno, apertura, cierre) VALUES
 (1, 'comida', NULL, NULL),        (1, 'cena', NULL, NULL),
