@@ -396,6 +396,7 @@ sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/003_fotos_webp.sql
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/004_contacto_reserva.sql
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/005_ingles.sql
+sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/006_maridajes_presupuestos.sql
 ```
 
 Se ejecutan en orden y solo una vez cada una (aunque repetirlas no rompe nada).

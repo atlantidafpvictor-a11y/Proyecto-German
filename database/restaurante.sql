@@ -48,10 +48,15 @@ CREATE TABLE platos (
     sin_gluten   BOOLEAN NOT NULL DEFAULT FALSE,
     destacado    BOOLEAN NOT NULL DEFAULT FALSE,
     disponible   BOOLEAN NOT NULL DEFAULT TRUE,
+    maridaje_id  INT UNSIGNED NULL COMMENT 'Vino o bebida de la carta que recomendamos con este plato',
     creado_en    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_platos_categoria FOREIGN KEY (categoria_id)
         REFERENCES categorias (id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    -- Clave foránea a la propia tabla: el maridaje es otro "plato" (de la Bodega).
+    -- Si se borra ese vino, el plato se queda sin maridaje (no se borra el plato).
+    CONSTRAINT fk_platos_maridaje FOREIGN KEY (maridaje_id)
+        REFERENCES platos (id) ON DELETE SET NULL,
     CONSTRAINT chk_platos_precio CHECK (precio >= 0),
     CONSTRAINT chk_platos_vegano CHECK (vegano = FALSE OR vegetariano = TRUE),
     UNIQUE KEY uq_platos_nombre (nombre)
@@ -215,6 +220,24 @@ CREATE TABLE mensajes_contacto (
     mensaje TEXT NOT NULL,
     leido   BOOLEAN NOT NULL DEFAULT FALSE,
     fecha   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
+
+-- Solicitudes de presupuesto para celebraciones (formulario de la web)
+CREATE TABLE presupuestos (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    tipo        ENUM('cumpleanos', 'empresa', 'familiar', 'grupo', 'otro') NOT NULL,
+    personas    SMALLINT UNSIGNED NOT NULL,
+    fecha       DATE NULL COMMENT 'Fecha aproximada; puede faltar si aún no la saben',
+    turno       ENUM('comida', 'cena', 'indiferente') NOT NULL DEFAULT 'indiferente',
+    nombre      VARCHAR(100) NOT NULL,
+    telefono    VARCHAR(15)  NOT NULL,
+    email       VARCHAR(120) NOT NULL,
+    comentarios VARCHAR(1000) NULL,
+    idioma      CHAR(2) NOT NULL DEFAULT 'es' COMMENT 'Idioma en el que hay que responder',
+    estado      ENUM('nueva', 'respondida', 'aceptada', 'descartada') NOT NULL DEFAULT 'nueva',
+    creada_en   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_presupuestos_personas CHECK (personas BETWEEN 6 AND 200),
+    INDEX idx_presupuestos_estado (estado, creada_en)
 ) ENGINE = InnoDB;
 
 -- Fotos de la galería. "imagen" guarda una dirección web (https://...)
@@ -414,6 +437,19 @@ INSERT INTO platos (id, categoria_id, nombre, descripcion, precio, unidad, image
 (15, 5, 'Vino tinto de la Contraviesa',      'Copa. Tempranillo y garnacha de altura.',                           3.50, 'copa','img/platos/vino-tinto.webp', 1, 1, 1, 0),
 (16, 5, 'Vino blanco de Granada',            'Copa. Vijiriega, fresco y aromático.',                              3.50, 'copa','img/platos/vino-blanco.webp', 1, 1, 1, 0),
 (17, 5, 'Cerveza de barril',                 'Caña o tercio, con su tapa.',                                       2.50, NULL,  'img/platos/cerveza.webp', 1, 1, 0, 0);
+
+-- Maridaje recomendado de cada plato (otro registro de platos: los vinos y la cerveza)
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino blanco de Granada' SET p.maridaje_id = v.id WHERE p.nombre = 'Salmorejo con jamón y huevo' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino blanco de Granada' SET p.maridaje_id = v.id WHERE p.nombre = 'Remojón granadino' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Cerveza de barril' SET p.maridaje_id = v.id WHERE p.nombre = 'Berenjenas fritas con miel de caña' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Cerveza de barril' SET p.maridaje_id = v.id WHERE p.nombre = 'Croquetas caseras de puchero' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino blanco de Granada' SET p.maridaje_id = v.id WHERE p.nombre = 'Arroz negro con alioli' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino blanco de Granada' SET p.maridaje_id = v.id WHERE p.nombre = 'Arroz de verduras de la huerta' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino tinto de la Contraviesa' SET p.maridaje_id = v.id WHERE p.nombre = 'Arroz meloso de pato y setas' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino blanco de Granada' SET p.maridaje_id = v.id WHERE p.nombre = 'Lubina a la sal' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino tinto de la Contraviesa' SET p.maridaje_id = v.id WHERE p.nombre = 'Carrillada ibérica al vino tinto' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino tinto de la Contraviesa' SET p.maridaje_id = v.id WHERE p.nombre = 'Cordero segureño al horno' AND p.maridaje_id IS NULL;
+UPDATE platos p JOIN platos v ON v.nombre = 'Vino blanco de Granada' SET p.maridaje_id = v.id WHERE p.nombre = 'Pasta fresca al pesto de albahaca' AND p.maridaje_id IS NULL;
 
 INSERT INTO plato_alergeno (plato_id, alergeno_id) VALUES
 (1, 1), (1, 3),

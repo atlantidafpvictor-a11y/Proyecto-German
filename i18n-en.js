@@ -253,4 +253,57 @@ const TRADUCCIONES_EN = {
     "No se ha podido cambiar la reserva.": "We couldn't change the booking.",
     "Reserva cambiada. Tu código sigue siendo {codigo}.": "Booking changed. Your code is still {codigo}.",
     "Volver": "Back",
+
+    /* ---------- Ficha de plato ---------- */
+    "Ver el plato": "View dish",
+    "Vegano": "Vegan",
+    "Alérgenos": "Allergens",
+    "Sin alérgenos declarados": "No declared allergens",
+    "Maridaje recomendado": "Suggested pairing",
+    "Reservar para probar este plato": "Book a table to try this dish",
+    "Nos gustaría probar: {plato}": "We'd like to try: {plato}",
+    "Si tienes una alergia o intolerancia, avísanos al reservar: te confirmamos los ingredientes.":
+        "If you have an allergy or intolerance, tell us when you book: we'll confirm the ingredients.",
+
+    /* ---------- Celebraciones y presupuesto ---------- */
+    "Celebraciones y más": "Celebrations and more",
+    "Del menú del día a la cena de empresa: lo organizamos contigo, con menús cerrados y nuestro reservado para 20 personas.":
+        "From the set lunch to the company dinner: we plan it with you, with set menus and our private room for 20 people.",
+    "Mesa larga preparada para una celebración en el reservado": "A long table set for a celebration in the private room",
+    "Pide presupuesto para tu celebración": "Ask for a quote for your celebration",
+    "Cuéntanos qué celebras y cuántos seréis. Te llamamos o te escribimos con una propuesta de menú y precio, sin compromiso.":
+        "Tell us what you're celebrating and how many of you there will be. We'll call or email you with a menu and price proposal, with no obligation.",
+    "¿Qué celebráis?": "What are you celebrating?",
+    "Cumpleaños o aniversario": "Birthday or anniversary",
+    "Empresa": "Company event",
+    "Comunión, bautizo o familia": "Communion, christening or family",
+    "Grupo de amigos": "Group of friends",
+    "Otra cosa": "Something else",
+    "Fecha aproximada": "Approximate date",
+    "Turno": "Sitting",
+    "Comida o cena": "Lunch or dinner",
+    "¿Algo que debamos saber?": "Anything we should know?",
+    "Por ejemplo: hay dos personas celíacas y traemos tarta": "For example: two guests are coeliac and we're bringing a cake",
+    "Acepto que usen mis datos solo para preparar este presupuesto.": "I agree that my details will only be used to prepare this quote.",
+    "Pedir presupuesto": "Request a quote",
+    "Presupuestos": "Quotes",
+    "Indica entre 6 y 200 personas. Para menos, reserva mesa directamente.": "Enter between 6 and 200 guests. For fewer, book a table directly.",
+    "La fecha debe estar entre hoy y dentro de un año (o déjala vacía).": "The date must be between today and one year from now (or leave it empty).",
+    "Necesitamos tu permiso para preparar el presupuesto.": "We need your permission to prepare the quote.",
+    "Solicitud enviada (modo demostración: no se ha guardado).": "Request sent (demo mode: it has not been saved).",
+    "¡Gracias! Te llamamos o te escribimos en menos de 24 horas con una propuesta.": "Thank you! We'll call or email you within 24 hours with a proposal.",
+
+    /* ---------- Reservas, visítanos y accesos rápidos ---------- */
+    "Comedor principal · 36 plazas": "Main dining room · 36 seats",
+    "Exterior con toldo · 16 plazas": "Outdoors under an awning · 16 seats",
+    "Sala privada · hasta 20 plazas": "Private room · up to 20 seats",
+    "Reserva de prueba (sin guardar)": "Test booking (not saved)",
+    "Inscripción de prueba (sin guardar)": "Test sign-up (not saved)",
+    "Dirección provisional": "Provisional address",
+    "Cómo llegar": "Get directions",
+    "Llamar": "Call",
+    "Escribir un email": "Send an email",
+    "Llamar al restaurante": "Call the restaurant",
+    "Volver arriba": "Back to top",
+    "Idioma · Language": "Language · Idioma",
 };

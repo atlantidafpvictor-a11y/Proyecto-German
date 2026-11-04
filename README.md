@@ -82,7 +82,7 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 ## Hoja de ruta
 
 - [x] Paso 1 · Rediseño visual y carta dinámica
-- [x] Paso 2 · Base de datos (17 tablas, vistas, función, procedimiento y trigger)
+- [x] Paso 2 · Base de datos (18 tablas, vistas, función, procedimiento y trigger)
 - [x] Paso 3 · API en PHP: carta, horarios, disponibilidad, reservas y contacto
 - [x] Paso 4 · Panel de administración con login y roles
 - [x] Servidor Ubuntu Server con HTTPS (ver `docs/servidor-ubuntu.md`)

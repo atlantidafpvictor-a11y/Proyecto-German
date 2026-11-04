@@ -105,11 +105,11 @@
 
     <link rel="alternate" hreflang="es" href="?lang=es">
     <link rel="alternate" hreflang="en" href="?lang=en">
-    <link rel="stylesheet" href="style.css?v=20261107">
+    <link rel="stylesheet" href="style.css?v=20261108">
     <!-- Idiomas: el diccionario inglés, después las funciones, después la web -->
-    <script src="i18n-en.js?v=20261107" defer></script>
-    <script src="i18n.js?v=20261107" defer></script>
-    <script src="javascript.js?v=20261107" defer></script>
+    <script src="i18n-en.js?v=20261108" defer></script>
+    <script src="i18n.js?v=20261108" defer></script>
+    <script src="javascript.js?v=20261108" defer></script>
 </head>
 <body>
 
@@ -260,9 +260,88 @@
         </section>
 
         <!-- ============ SERVICIOS ============ -->
-        <section class="services section" id="servicios">
-            <h2>Más allá de la carta</h2>
+        <section class="services section" id="servicios" aria-labelledby="services-title">
+            <header class="services-head">
+                <h2 id="services-title">Celebraciones y más</h2>
+                <p>Del menú del día a la cena de empresa: lo organizamos contigo, con menús cerrados y nuestro reservado para 20 personas.</p>
+            </header>
             <div class="services-grid" id="services-grid"></div>
+
+            <div class="celebra" id="presupuesto">
+                <figure class="celebra-arch">
+                    <img src="img/galeria/celebracion.webp" width="1500" height="1120" loading="lazy"
+                         alt="Mesa larga preparada para una celebración en el reservado">
+                </figure>
+                <div class="celebra-body">
+                    <h3 class="celebra-title">Pide presupuesto para tu celebración</h3>
+                    <p class="celebra-lead">Cuéntanos qué celebras y cuántos seréis. Te llamamos o te escribimos con una propuesta de menú y precio, sin compromiso.</p>
+
+                    <form class="quote-form" id="quote-form" novalidate>
+                        <fieldset class="quote-types">
+                            <legend>¿Qué celebráis?</legend>
+                            <div class="chips" role="radiogroup">
+                                <label class="chip-radio"><input type="radio" name="p-tipo" value="cumpleanos" checked> <span>Cumpleaños o aniversario</span></label>
+                                <label class="chip-radio"><input type="radio" name="p-tipo" value="empresa"> <span>Empresa</span></label>
+                                <label class="chip-radio"><input type="radio" name="p-tipo" value="familiar"> <span>Comunión, bautizo o familia</span></label>
+                                <label class="chip-radio"><input type="radio" name="p-tipo" value="grupo"> <span>Grupo de amigos</span></label>
+                                <label class="chip-radio"><input type="radio" name="p-tipo" value="otro"> <span>Otra cosa</span></label>
+                            </div>
+                            <p class="field-error" data-for="p-tipo"></p>
+                        </fieldset>
+                        <div class="field-row field-row-3">
+                            <div class="field">
+                                <label for="p-personas">Personas</label>
+                                <input type="number" id="p-personas" min="6" max="200" value="12" inputmode="numeric" required>
+                                <p class="field-error" data-for="p-personas"></p>
+                            </div>
+                            <div class="field">
+                                <label for="p-fecha">Fecha aproximada <span class="optional">(opcional)</span></label>
+                                <input type="date" id="p-fecha">
+                                <p class="field-error" data-for="p-fecha"></p>
+                            </div>
+                            <div class="field">
+                                <label for="p-turno">Turno</label>
+                                <select id="p-turno">
+                                    <option value="indiferente">Comida o cena</option>
+                                    <option value="comida">Comida</option>
+                                    <option value="cena">Cena</option>
+                                </select>
+                                <p class="field-error" data-for="p-turno"></p>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="p-nombre">Nombre y apellidos</label>
+                            <input type="text" id="p-nombre" autocomplete="name" required>
+                            <p class="field-error" data-for="p-nombre"></p>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="p-telefono">Teléfono</label>
+                                <input type="tel" id="p-telefono" autocomplete="tel" required>
+                                <p class="field-error" data-for="p-telefono"></p>
+                            </div>
+                            <div class="field">
+                                <label for="p-email">Email</label>
+                                <input type="email" id="p-email" autocomplete="email" required>
+                                <p class="field-error" data-for="p-email"></p>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="p-comentarios">¿Algo que debamos saber? <span class="optional">(opcional)</span></label>
+                            <textarea id="p-comentarios" rows="3" maxlength="1000" placeholder="Por ejemplo: hay dos personas celíacas y traemos tarta"></textarea>
+                            <p class="field-error" data-for="p-comentarios"></p>
+                        </div>
+                        <div class="hp" aria-hidden="true"><label for="p-web">No rellenar</label><input type="text" id="p-web" tabindex="-1" autocomplete="off"></div>
+                        <label class="consent">
+                            <input type="checkbox" id="p-privacidad" required>
+                            Acepto que usen mis datos solo para preparar este presupuesto.
+                        </label>
+                        <p class="field-error" data-for="p-privacidad"></p>
+                        <button type="submit" class="btn btn-primary" id="quote-submit">Pedir presupuesto</button>
+                        <p class="contact-status" id="quote-status" role="status"></p>
+                    </form>
+                </div>
+            </div>
         </section>
 
         <!-- ============ EVENTOS ============ -->
@@ -301,9 +380,15 @@
                 </table>
 
                 <div class="contact-lines">
-                    <p><strong>Dirección</strong> Centro de Granada · dirección por confirmar</p>
+                    <p><strong>Dirección</strong> Centro de Granada <span class="pill-provisional">Dirección provisional</span></p>
                     <p><strong>Teléfono</strong> <a href="tel:+34958000000">958 000 000</a></p>
                     <p><strong>Email</strong> <a href="mailto:reservas@sabormediterraneo.es">reservas@sabormediterraneo.es</a></p>
+                </div>
+
+                <div class="visit-actions">
+                    <a class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.1745%2C-3.5985" target="_blank" rel="noopener">Cómo llegar</a>
+                    <a class="btn btn-ghost" href="tel:+34958000000">Llamar</a>
+                    <a class="btn btn-ghost" href="mailto:reservas@sabormediterraneo.es">Escribir un email</a>
                 </div>
             </div>
 
@@ -407,15 +492,30 @@
                                 <input type="email" id="email" name="email" autocomplete="email" required>
                                 <p class="field-error" data-for="email"></p>
                             </div>
-                            <div class="field">
-                                <label for="zona">Zona preferida</label>
-                                <select id="zona" name="zona">
-                                    <option value="1">Salón</option>
-                                    <option value="2">Terraza</option>
-                                    <option value="3">Reservado</option>
-                                </select>
-                            </div>
                         </div>
+                        <fieldset class="zones">
+                            <legend class="field-label">Zona preferida</legend>
+                            <div class="zones-grid">
+                                <label class="zone">
+                                    <input type="radio" name="zona" value="1" checked>
+                                    <svg class="zone-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 44V22C8 13 15 6 24 6s16 7 16 16v22" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 32h20M18 32v8M30 32v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    <span class="zone-name">Salón</span>
+                                    <span class="zone-info">Comedor principal · 36 plazas</span>
+                                </label>
+                                <label class="zone">
+                                    <input type="radio" name="zona" value="2">
+                                    <svg class="zone-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 18L24 8l18 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M24 18v24M14 34h20M18 34v8M30 34v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    <span class="zone-name">Terraza</span>
+                                    <span class="zone-info">Exterior con toldo · 16 plazas</span>
+                                </label>
+                                <label class="zone">
+                                    <input type="radio" name="zona" value="3">
+                                    <svg class="zone-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="8" width="32" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 18h32M16 28h16M20 28v8M28 28v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    <span class="zone-name">Reservado</span>
+                                    <span class="zone-info">Sala privada · hasta 20 plazas</span>
+                                </label>
+                            </div>
+                        </fieldset>
                         <div class="field">
                             <label for="comentarios">Alergias o peticiones <span class="optional">(opcional)</span></label>
                             <textarea id="comentarios" name="comentarios" rows="3" maxlength="500"></textarea>
@@ -435,7 +535,7 @@
 
                 <div class="booking-done" id="booking-done" hidden tabindex="-1">
                     <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4l5 10 10 5-10 5-5 10-5-10-10-5 10-5z" fill="currentColor"/></svg>
-                    <h3>Reserva confirmada</h3>
+                    <h3 id="booking-done-title">Reserva confirmada</h3>
                     <p id="booking-done-text"></p>
                     <p class="code">Código de reserva <strong id="booking-code"></strong></p>
                     <p class="small-note">Con este código y tu teléfono puedes consultar, cambiar o cancelar la reserva desde «Gestionar mi reserva».</p>
@@ -462,6 +562,33 @@
             <button type="button" class="lb-btn lb-close" id="lb-close" aria-label="Cerrar">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
+        </dialog>
+
+        <!-- ============ FICHA DE PLATO ============ -->
+        <dialog class="dish-dialog" id="dish-dialog" aria-labelledby="dd-name">
+            <button type="button" class="manage-close" id="dd-close" aria-label="Cerrar">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <figure class="dd-photo"><img id="dd-img" alt=""></figure>
+            <div class="dd-body">
+                <p class="dd-cat" id="dd-cat"></p>
+                <h3 class="dd-name" id="dd-name" tabindex="-1"></h3>
+                <p class="dd-price" id="dd-price"></p>
+                <p class="dd-desc" id="dd-desc"></p>
+                <div class="dd-tags" id="dd-tags"></div>
+                <section class="dd-block">
+                    <h4>Alérgenos</h4>
+                    <ul class="dd-allergens" id="dd-allergens"></ul>
+                </section>
+                <section class="dd-block dd-pairing" id="dd-pairing" hidden>
+                    <h4>Maridaje recomendado</h4>
+                    <p id="dd-pairing-text"></p>
+                </section>
+                <div class="dd-actions">
+                    <button type="button" class="btn btn-primary" id="dd-book">Reservar para probar este plato</button>
+                </div>
+                <p class="dd-note">Si tienes una alergia o intolerancia, avísanos al reservar: te confirmamos los ingredientes.</p>
+            </div>
         </dialog>
 
         <!-- ============ INSCRIPCIÓN A UN EVENTO ============ -->
@@ -596,6 +723,17 @@
         </dialog>
     </main>
 
+    <!-- Accesos rápidos: barra "Reservar" en el móvil y botón para volver arriba -->
+    <div class="quick-bar" id="quick-bar">
+        <a class="btn btn-primary" href="#reservas">Reservar mesa</a>
+        <a class="quick-icon" href="tel:+34958000000" aria-label="Llamar al restaurante">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3h3l1.5 4.2-2 1.3a12 12 0 0 0 6.4 6.4l1.3-2 4.2 1.5v3a2 2 0 0 1-2.2 2A17.6 17.6 0 0 1 4.6 5.2 2 2 0 0 1 6.6 3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </a>
+    </div>
+    <a class="to-top" id="to-top" href="#inicio" aria-label="Volver arriba">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
     <!-- ============ PIE ============ -->
     <footer class="footer">
         <div class="tile-band tile-band-thin" aria-hidden="true"></div>
@@ -610,6 +748,7 @@
             <nav class="footer-nav" aria-label="Pie de página">
                 <a href="#carta">Carta</a>
                 <a href="#servicios">Celebraciones</a>
+                <a href="#presupuesto">Presupuestos</a>
                 <a href="#eventos">Eventos</a>
                 <a href="#galeria">Galería</a>
                 <a href="#reservas">Reservas</a>

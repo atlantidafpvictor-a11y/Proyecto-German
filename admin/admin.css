@@ -283,3 +283,12 @@ code { background: var(--cal-2); padding: 1px 6px; border-radius: 4px; font-size
 .lang-fields { display: grid; grid-template-columns: 1fr 2fr; gap: 12px 16px; border: 1px dashed var(--linea); border-radius: 12px; padding: 12px 16px 16px; }
 .lang-fields legend { padding: 0 6px; font-weight: 600; }
 @media (max-width: 760px) { .lang-fields { grid-template-columns: 1fr; } }
+
+/* ---------- Presupuestos ---------- */
+.quote-list { display: grid; gap: 16px; }
+.quote { margin-bottom: 0; }
+.quote-new { border-color: var(--ocre, #C98A2E); box-shadow: inset 4px 0 0 var(--ocre, #C98A2E); }
+.quote-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 8px; }
+.quote-head h2 { font-size: 1.2rem; margin: 0; }
+.quote-notes { background: var(--cal, #F6F5F1); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+.quote .actions { margin-top: 12px; }

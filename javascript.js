@@ -20,7 +20,11 @@ const API = {
     eventos: "api/eventos.php",
     inscripcion: "api/inscripcion.php",
     galeria: "api/galeria.php",
+    presupuesto: "api/presupuesto.php",
 };
+
+/** ¿Quiere la persona menos movimiento? (ajuste del sistema operativo) */
+const sinMovimiento = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- Datos de demostración (copia de la BD) ---------- */
 
@@ -40,19 +44,19 @@ const DATOS_DEMO = {
         { id: 5, nombre: "Bodega" },
     ],
     platos: [
-        { id: 1, categoria_id: 1, nombre: "Salmorejo con jamón y huevo", descripcion: "Tomate de la Vega, pan de pueblo y aceite de Montefrío.", precio: 7.5, imagen: "img/platos/salmorejo.webp", vegetariano: 0, sin_gluten: 0, destacado: 0, alergenos: [1, 3] },
-        { id: 2, categoria_id: 1, nombre: "Remojón granadino", descripcion: "Naranja, bacalao desalado, aceituna negra y cebolleta.", precio: 8.5, imagen: "img/platos/remojon.webp", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [4] },
-        { id: 3, categoria_id: 1, nombre: "Berenjenas fritas con miel de caña", descripcion: "Finas, crujientes y con miel de caña de Frigiliana.", precio: 8, imagen: "img/platos/berenjenas.webp", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1] },
-        { id: 4, categoria_id: 1, nombre: "Croquetas caseras de puchero", descripcion: "Seis unidades, con la carne del cocido de la casa.", precio: 9, imagen: "img/platos/croquetas.webp", vegetariano: 0, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7] },
+        { id: 1, categoria_id: 1, nombre: "Salmorejo con jamón y huevo", descripcion: "Tomate de la Vega, pan de pueblo y aceite de Montefrío.", precio: 7.5, imagen: "img/platos/salmorejo.webp", vegetariano: 0, sin_gluten: 0, destacado: 0, alergenos: [1, 3] , maridaje_id: 16 },
+        { id: 2, categoria_id: 1, nombre: "Remojón granadino", descripcion: "Naranja, bacalao desalado, aceituna negra y cebolleta.", precio: 8.5, imagen: "img/platos/remojon.webp", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [4] , maridaje_id: 16 },
+        { id: 3, categoria_id: 1, nombre: "Berenjenas fritas con miel de caña", descripcion: "Finas, crujientes y con miel de caña de Frigiliana.", precio: 8, imagen: "img/platos/berenjenas.webp", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1] , maridaje_id: 17 },
+        { id: 4, categoria_id: 1, nombre: "Croquetas caseras de puchero", descripcion: "Seis unidades, con la carne del cocido de la casa.", precio: 9, imagen: "img/platos/croquetas.webp", vegetariano: 0, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7] , maridaje_id: 17 },
 
-        { id: 5, categoria_id: 2, nombre: "Arroz negro con alioli", descripcion: "Sepia de Motril y su tinta. Mínimo dos personas.", precio: 16.5, unidad: "p.p.", imagen: "img/platos/arroz-negro.webp", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [3, 14] },
-        { id: 6, categoria_id: 2, nombre: "Arroz de verduras de la huerta", descripcion: "Alcachofa, judía verde, pimiento y ñora. Mínimo dos personas.", precio: 14, unidad: "p.p.", imagen: "img/platos/arroz-verduras.webp", vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [] },
-        { id: 7, categoria_id: 2, nombre: "Arroz meloso de pato y setas", descripcion: "Pato confitado y setas de temporada de Sierra Nevada.", precio: 17, unidad: "p.p.", imagen: "img/platos/arroz-pato.webp", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [9, 12] },
+        { id: 5, categoria_id: 2, nombre: "Arroz negro con alioli", descripcion: "Sepia de Motril y su tinta. Mínimo dos personas.", precio: 16.5, unidad: "p.p.", imagen: "img/platos/arroz-negro.webp", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [3, 14] , maridaje_id: 16 },
+        { id: 6, categoria_id: 2, nombre: "Arroz de verduras de la huerta", descripcion: "Alcachofa, judía verde, pimiento y ñora. Mínimo dos personas.", precio: 14, unidad: "p.p.", imagen: "img/platos/arroz-verduras.webp", vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [] , maridaje_id: 16 },
+        { id: 7, categoria_id: 2, nombre: "Arroz meloso de pato y setas", descripcion: "Pato confitado y setas de temporada de Sierra Nevada.", precio: 17, unidad: "p.p.", imagen: "img/platos/arroz-pato.webp", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [9, 12] , maridaje_id: 15 },
 
-        { id: 8, categoria_id: 3, nombre: "Lubina a la sal", descripcion: "Pieza entera para compartir, con verduras asadas.", precio: 19.5, imagen: "img/platos/lubina.webp", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [4] },
-        { id: 9, categoria_id: 3, nombre: "Carrillada ibérica al vino tinto", descripcion: "Guisada a fuego lento durante seis horas, con puré de patata.", precio: 16, imagen: "img/platos/carrillada.webp", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [7, 12] },
-        { id: 10, categoria_id: 3, nombre: "Cordero segureño al horno", descripcion: "Paletilla con patatas a lo pobre.", precio: 21, imagen: "img/platos/cordero.webp", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [] },
-        { id: 11, categoria_id: 3, nombre: "Pasta fresca al pesto de albahaca", descripcion: "Hecha cada mañana, con piñones y queso curado.", precio: 12.5, imagen: "img/platos/pasta-pesto.webp", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7, 8] },
+        { id: 8, categoria_id: 3, nombre: "Lubina a la sal", descripcion: "Pieza entera para compartir, con verduras asadas.", precio: 19.5, imagen: "img/platos/lubina.webp", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [4] , maridaje_id: 16 },
+        { id: 9, categoria_id: 3, nombre: "Carrillada ibérica al vino tinto", descripcion: "Guisada a fuego lento durante seis horas, con puré de patata.", precio: 16, imagen: "img/platos/carrillada.webp", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [7, 12] , maridaje_id: 15 },
+        { id: 10, categoria_id: 3, nombre: "Cordero segureño al horno", descripcion: "Paletilla con patatas a lo pobre.", precio: 21, imagen: "img/platos/cordero.webp", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [] , maridaje_id: 15 },
+        { id: 11, categoria_id: 3, nombre: "Pasta fresca al pesto de albahaca", descripcion: "Hecha cada mañana, con piñones y queso curado.", precio: 12.5, imagen: "img/platos/pasta-pesto.webp", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7, 8] , maridaje_id: 16 },
 
         { id: 12, categoria_id: 4, nombre: "Piononos de Santa Fe", descripcion: "Bizcocho borracho y crema tostada, el dulce de la provincia.", precio: 5.5, imagen: "img/platos/piononos.webp", vegetariano: 1, sin_gluten: 0, destacado: 1, alergenos: [1, 3, 7] },
         { id: 13, categoria_id: 4, nombre: "Tarta de queso al horno", descripcion: "Cremosa por dentro, con mermelada de higos.", precio: 6, imagen: "img/platos/tarta-queso.webp", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7] },
@@ -363,6 +367,7 @@ function pintarHorario(horarios) {
    3. CARTA DINÁMICA
    ========================================================= */
 function iniciarCarta({ categorias, platos, alergenos }) {
+    const nombreCategoria = Object.fromEntries(categorias.map((c) => [c.id, c.nombre]));
     const tabs = $("#menu-tabs");
     const lista = $("#dish-list");
     const fVeg = $("#f-veg");
@@ -404,7 +409,7 @@ function iniciarCarta({ categorias, platos, alergenos }) {
         if (!visibles.length) {
             lista.innerHTML = `<li class="dish-empty">${__("No hay platos en esta sección con esos filtros.")}
                 <button type="button" id="clear-filters">${__("Quitar filtros")}</button></li>`;
-            $("#clear-filters").onclick = () => { fVeg.checked = fSg.checked = false; pintar(); };
+            $("#clear-filters").onclick = () => { fVeg.checked = fSg.checked = false; repintar(); };
             return;
         }
 
@@ -415,24 +420,85 @@ function iniciarCarta({ categorias, platos, alergenos }) {
             if (p.sin_gluten) tags.push(`<span class="tag tag-diet">${__("Sin gluten")}</span>`);
             p.alergenos.forEach((id) => tags.push(`<span class="tag">${escapeHTML(nombreAlergeno[id])}</span>`));
             return `
-            <li class="dish" data-id="${p.id}" tabindex="0">
+            <li class="dish" data-id="${p.id}">
                 <div class="dish-top">
-                    <h3 class="dish-name">${escapeHTML(p.nombre)}</h3>
+                    <h3 class="dish-name"><button type="button" class="dish-open" aria-haspopup="dialog">${escapeHTML(p.nombre)}</button></h3>
                     <span class="dish-leader" aria-hidden="true"></span>
                     <span class="dish-price">${euro(p.precio)}${p.unidad ? ` <small>${escapeHTML(__(p.unidad))}</small>` : ""}</span>
                 </div>
                 <p class="dish-desc">${escapeHTML(p.descripcion)}</p>
                 ${tags.length ? `<div class="dish-meta">${tags.join("")}</div>` : ""}
+                <span class="dish-more" aria-hidden="true">${__("Ver el plato")} →</span>
             </li>`;
         }).join("");
 
-        $$(".dish", lista).forEach((li) => {
+        $$(".dish", lista).forEach((li, i) => {
             const plato = platos.find((p) => String(p.id) === li.dataset.id);
             li.addEventListener("mouseenter", () => mostrarPreview(plato));
-            li.addEventListener("focus", () => mostrarPreview(plato));
+            li.addEventListener("focusin", () => mostrarPreview(plato));
+            if (animar) { li.classList.add("is-entering"); li.style.setProperty("--i", i); }
         });
         mostrarPreview(visibles.find((p) => p.destacado) || visibles[0]);
     }
+
+    /* Al cambiar de categoría o de filtro, los platos salen un instante y entran escalonados */
+    let animar = false;
+    function repintar() {
+        if (sinMovimiento() || !lista.children.length) { animar = false; pintar(); return; }
+        lista.classList.add("is-leaving");
+        setTimeout(() => { lista.classList.remove("is-leaving"); animar = true; pintar(); animar = false; }, 140);
+    }
+
+    /* --- Ficha del plato (al pulsar un plato) --- */
+    const ficha = $("#dish-dialog");
+    function abrirPlato(p) {
+        $("#dd-img").src = p.imagen;
+        $("#dd-img").alt = p.nombre;
+        $("#dd-cat").textContent = nombreCategoria[p.categoria_id] || "";
+        $("#dd-name").textContent = p.nombre;
+        $("#dd-price").innerHTML = `${escapeHTML(euro(p.precio))}${p.unidad ? ` <small>${escapeHTML(__(p.unidad))}</small>` : ""}`;
+        $("#dd-desc").textContent = p.descripcion;
+        const tags = [];
+        if (p.destacado) tags.push(`<span class="tag tag-star">${__("Recomendado")}</span>`);
+        if (p.vegano) tags.push(`<span class="tag tag-diet">${__("Vegano")}</span>`);
+        else if (p.vegetariano) tags.push(`<span class="tag tag-diet">${__("Vegetariano")}</span>`);
+        if (p.sin_gluten) tags.push(`<span class="tag tag-diet">${__("Sin gluten")}</span>`);
+        $("#dd-tags").innerHTML = tags.join("");
+        $("#dd-allergens").innerHTML = p.alergenos.length
+            ? p.alergenos.map((id) => `<li>${escapeHTML(nombreAlergeno[id] || "")}</li>`).join("")
+            : `<li class="none">${__("Sin alérgenos declarados")}</li>`;
+        // El maridaje es otro plato de la carta (un vino o la cerveza): sale con su nombre y su precio
+        const vino = platos.find((x) => x.id === p.maridaje_id);
+        $("#dd-pairing").hidden = !vino;
+        if (vino) {
+            $("#dd-pairing-text").innerHTML = `${escapeHTML(vino.nombre)} <span>${escapeHTML(euro(vino.precio))}${vino.unidad ? " " + escapeHTML(__(vino.unidad)) : ""}</span>`;
+        }
+        $("#dd-book").onclick = () => reservarPlato(p);
+        ficha.showModal();
+        $("#dd-name").focus();
+    }
+
+    /* "Reservar para probar este plato": baja a la reserva y lo deja apuntado en las peticiones */
+    function reservarPlato(p) {
+        ficha.close();
+        const notas = $("#comentarios");
+        if (notas && !notas.value.trim()) notas.value = __("Nos gustaría probar: {plato}", { plato: p.nombre });
+        $("#reservas").scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth" });
+        setTimeout(() => $("#party .opt[aria-checked='true']")?.focus({ preventScroll: true }), sinMovimiento() ? 0 : 700);
+    }
+
+    lista.addEventListener("click", (e) => {
+        const li = e.target.closest(".dish");
+        if (!li || e.target.closest("#clear-filters")) return;
+        const plato = platos.find((p) => String(p.id) === li.dataset.id);
+        if (plato) abrirPlato(plato);
+    });
+    $("#dd-close").addEventListener("click", () => ficha.close());
+    ficha.addEventListener("click", (e) => {
+        if (e.target !== ficha) return;
+        const r = ficha.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) ficha.close();
+    });
 
     tabs.addEventListener("click", (e) => {
         const btn = e.target.closest(".tab");
@@ -451,11 +517,11 @@ function iniciarCarta({ categorias, platos, alergenos }) {
         $$(".tab", tabs).forEach((t) => { t.setAttribute("aria-selected", "false"); t.tabIndex = -1; });
         btn.setAttribute("aria-selected", "true"); btn.tabIndex = 0;
         categoriaActiva = Number(btn.dataset.id);
-        pintar();
+        repintar();
     }
 
-    fVeg.addEventListener("change", pintar);
-    fSg.addEventListener("change", pintar);
+    fVeg.addEventListener("change", repintar);
+    fSg.addEventListener("change", repintar);
     pintar();
 }
 
@@ -627,6 +693,7 @@ function iniciarEventos() {
         form.reset();
         $("#event-signup").hidden = true;
         $("#event-done").hidden = false;
+        $("#event-done-title").textContent = demo ? __("Inscripción de prueba (sin guardar)") : __("¡Te esperamos!");
         $("#event-done-title").focus();
     });
 
@@ -876,17 +943,23 @@ function iniciarReservas(horarios, diasCerrados = []) {
         if (input) input.closest(".field")?.classList.toggle("invalid", Boolean(msg));
     }
 
+    // Una regla por campo: se usa al salir del campo (validación en directo) y al enviar
+    const REGLAS = {
+        nombre: () => $("#nombre").value.trim().length >= 3 || __("Escribe tu nombre y apellidos."),
+        telefono: () => /^\+?[0-9]{9,14}$/.test($("#telefono").value.replace(/\s/g, "")) || __("Escribe un teléfono de 9 cifras."),
+        email: () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#email").value.trim()) || __("Revisa el email: falta algo como nombre@correo.com."),
+        privacidad: () => $("#privacidad").checked || __("Necesitamos tu permiso para guardar la reserva."),
+    };
+    function validarCampo(id) {
+        const r = REGLAS[id]();
+        error(id, r === true ? "" : r);
+        document.getElementById(id)?.closest(".field")?.classList.toggle("valid", r === true && id !== "privacidad");
+        return r === true;
+    }
+
     function validar() {
         let ok = true;
-        const nombre = $("#nombre").value.trim();
-        const tel = $("#telefono").value.replace(/\s/g, "");
-        const email = $("#email").value.trim();
-
-        error("nombre", nombre.length >= 3 ? "" : __("Escribe tu nombre y apellidos."));
-        error("telefono", /^\+?[0-9]{9,14}$/.test(tel) ? "" : __("Escribe un teléfono de 9 cifras."));
-        error("email", /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "" : __("Revisa el email: falta algo como nombre@correo.com."));
-        error("privacidad", $("#privacidad").checked ? "" : __("Necesitamos tu permiso para guardar la reserva."));
-        if (nombre.length < 3 || !/^\+?[0-9]{9,14}$/.test(tel) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !$("#privacidad").checked) ok = false;
+        Object.keys(REGLAS).forEach((id) => { if (!validarCampo(id)) ok = false; });
 
         if (!estado.fecha || !estado.hora) {
             ok = false;
@@ -895,7 +968,12 @@ function iniciarReservas(horarios, diasCerrados = []) {
         }
         return ok;
     }
-    ["nombre", "telefono", "email"].forEach((id) => $("#" + id).addEventListener("input", () => error(id, "")));
+    ["nombre", "telefono", "email"].forEach((id) => {
+        const campo = $("#" + id);
+        campo.addEventListener("input", () => error(id, ""));
+        // Al salir del campo se comprueba, pero solo si ya se ha escrito algo
+        campo.addEventListener("blur", () => { if (campo.value.trim()) validarCampo(id); });
+    });
     $("#privacidad").addEventListener("change", () => error("privacidad", ""));
 
     /* --- Envío --- */
@@ -910,7 +988,7 @@ function iniciarReservas(horarios, diasCerrados = []) {
             fecha: estado.fecha,
             hora: estado.hora,
             personas: estado.personas,
-            zona_id: Number($("#zona").value),
+            zona_id: Number($("input[name='zona']:checked")?.value || 1),
             comentarios: $("#comentarios").value.trim(),
             web: $("#web").value, // campo trampa anti-bots
         };
@@ -941,6 +1019,8 @@ function iniciarReservas(horarios, diasCerrados = []) {
             __("{nombre}, te esperamos el {fecha} a las {hora}.", { nombre: reserva.nombre.split(" ")[0], fecha: f, hora: reserva.hora }) + " " +
             (demo ? __("Modo demostración: la reserva aún no se ha guardado en la base de datos.")
                   : __("Guarda este código: te lo pediremos si necesitas cambiar o cancelar la reserva."));
+        // Sin servidor no se ha guardado nada: no se dice "confirmada"
+        $("#booking-done-title").textContent = demo ? __("Reserva de prueba (sin guardar)") : __("Reserva confirmada");
         $("#booking-code").textContent = datos.codigo;
         ultimaReserva = { codigo: datos.codigo, telefono: reserva.telefono };
         $("#booking-ics").onclick = () => calendarioReserva({ codigo: datos.codigo, fecha: reserva.fecha, hora: reserva.hora, personas: reserva.personas });
@@ -1269,6 +1349,162 @@ function iniciarContacto() {
 }
 
 /* =========================================================
+   7. PRESUPUESTO DE CELEBRACIONES
+   ========================================================= */
+function iniciarPresupuesto() {
+    const form = $("#quote-form");
+    if (!form) return;
+    const estado = $("#quote-status");
+    const boton = $("#quote-submit");
+    const fecha = $("#p-fecha");
+    const hoy = new Date();
+    const enUnAno = new Date(); enUnAno.setFullYear(hoy.getFullYear() + 1);
+    fecha.min = isoLocal(hoy);
+    fecha.max = isoLocal(enUnAno);
+
+    const REGLAS = {
+        "p-personas": () => { const n = Number($("#p-personas").value); return (Number.isInteger(n) && n >= 6 && n <= 200) || __("Indica entre 6 y 200 personas. Para menos, reserva mesa directamente."); },
+        "p-fecha": () => !fecha.value || (fecha.value >= fecha.min && fecha.value <= fecha.max) || __("La fecha debe estar entre hoy y dentro de un año (o déjala vacía)."),
+        "p-nombre": () => $("#p-nombre").value.trim().length >= 3 || __("Escribe tu nombre y apellidos."),
+        "p-telefono": () => /^\+?[0-9]{9,14}$/.test($("#p-telefono").value.replace(/\s/g, "")) || __("Escribe un teléfono de 9 cifras."),
+        "p-email": () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#p-email").value.trim()) || __("Revisa el email: falta algo como nombre@correo.com."),
+        "p-privacidad": () => $("#p-privacidad").checked || __("Necesitamos tu permiso para preparar el presupuesto."),
+    };
+    const marcar = (id, msg) => {
+        const p = $(`#quote-form .field-error[data-for="${id}"]`);
+        if (p) p.textContent = msg || "";
+        document.getElementById(id)?.closest(".field")?.classList.toggle("invalid", Boolean(msg));
+    };
+    const validarCampo = (id) => { const r = REGLAS[id](); marcar(id, r === true ? "" : r); return r === true; };
+
+    Object.keys(REGLAS).forEach((id) => {
+        const el = document.getElementById(id);
+        el.addEventListener("input", () => marcar(id, ""));
+        el.addEventListener("blur", () => { if (el.type !== "checkbox" && el.value.trim()) validarCampo(id); });
+    });
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        let ok = true;
+        Object.keys(REGLAS).forEach((id) => { if (!validarCampo(id)) ok = false; });
+        if (!ok) { form.querySelector(".invalid input, .invalid textarea")?.focus(); return; }
+
+        const cuerpo = {
+            tipo: $("input[name='p-tipo']:checked")?.value || "otro",
+            personas: Number($("#p-personas").value),
+            fecha: fecha.value,
+            turno: $("#p-turno").value,
+            nombre: $("#p-nombre").value.trim(),
+            telefono: $("#p-telefono").value.replace(/\s/g, ""),
+            email: $("#p-email").value.trim(),
+            comentarios: $("#p-comentarios").value.trim(),
+            web: $("#p-web").value, // campo trampa anti-bots
+        };
+        boton.disabled = true;                       // evita enviarlo dos veces
+        boton.textContent = __("Enviando…");
+        const { datos, demo } = await pedir(API.presupuesto, { ok: true }, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo),
+        });
+        boton.disabled = false;
+        boton.textContent = __("Pedir presupuesto");
+
+        if (!datos.ok) {
+            Object.entries(datos.campos || {}).forEach(([id, msg]) => marcar(id, msg));
+            estado.textContent = datos.error || __("No se ha podido enviar. Prueba a llamarnos.");
+            estado.className = "contact-status is-error";
+            return;
+        }
+        form.reset();
+        estado.textContent = demo
+            ? __("Solicitud enviada (modo demostración: no se ha guardado).")
+            : __("¡Gracias! Te llamamos o te escribimos en menos de 24 horas con una propuesta.");
+        estado.className = "contact-status is-ok";
+    });
+}
+
+/* =========================================================
+   8. MOVIMIENTO: apariciones, títulos y contadores
+   ---------------------------------------------------------
+   Todo se hace con IntersectionObserver (el navegador avisa cuando
+   algo entra en pantalla) y CSS. Si el sistema pide "reducir
+   movimiento", no se anima nada y todo se ve desde el principio.
+   ========================================================= */
+function iniciarMovimiento() {
+    if (sinMovimiento() || !("IntersectionObserver" in window)) return;
+    document.documentElement.classList.add("js-motion");
+
+    const obs = new IntersectionObserver((entradas) => {
+        entradas.forEach((e) => {
+            if (!e.isIntersecting) return;
+            (e.target._revela || [e.target]).forEach((el) => el.classList.add("is-in"));
+            obs.unobserve(e.target);
+        });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+
+    // Títulos de sección: la línea sube desde detrás de una máscara (clip-path).
+    // Se vigila el bloque que lo contiene, no el título: un elemento recortado
+    // con clip-path "no se ve" para IntersectionObserver y nunca avisaría.
+    $$(".section h2, .booking-text h2, .celebra-title").forEach((h) => {
+        h.classList.add("reveal-title");
+        const caja = h.parentElement;
+        (caja._revela ||= []).push(h);
+        obs.observe(caja);
+    });
+    // Bloques que aparecen suavemente, escalonados dentro de su grupo
+    const grupos = [".about-statement", ".about-arch", ".facts > div", ".service", ".celebra-arch", ".quote-form", ".visit-map", ".contact-form", ".review"];
+    grupos.forEach((sel) => $$(sel).forEach((el, i) => { el.classList.add("reveal"); el.style.setProperty("--i", i % 4); obs.observe(el); }));
+
+    // Contadores: "30 km", "14", "60" cuentan desde 0 cuando se ven
+    const contar = new IntersectionObserver((entradas) => {
+        entradas.forEach((e) => {
+            if (!e.isIntersecting) return;
+            contar.unobserve(e.target);
+            const el = e.target;
+            const [, numero, resto] = el.dataset.valor.match(/^(\d+)(.*)$/);
+            const fin = Number(numero), inicio = performance.now(), dura = 1400;
+            const paso = (t) => {
+                const p = Math.min(1, (t - inicio) / dura);
+                const suave = 1 - Math.pow(1 - p, 3);     // rápido al principio, lento al final
+                el.textContent = Math.round(fin * suave) + resto;
+                if (p < 1) requestAnimationFrame(paso);
+            };
+            requestAnimationFrame(paso);
+        });
+    }, { threshold: 0.6 });
+    $$(".facts dt").forEach((dt) => {
+        if (!/^\d/.test(dt.textContent.trim())) return;
+        dt.dataset.valor = dt.textContent.trim();
+        dt.setAttribute("aria-label", dt.dataset.valor); // el lector de pantalla lee el valor final
+        dt.textContent = "0" + dt.dataset.valor.replace(/^\d+/, "");
+        contar.observe(dt);
+    });
+}
+
+/* =========================================================
+   9. ACCESOS RÁPIDOS: barra "Reservar" (móvil) y volver arriba
+   ========================================================= */
+function iniciarAccesosRapidos() {
+    const barra = $("#quick-bar");
+    const arriba = $("#to-top");
+    const reservas = $("#reservas");
+    let enReservas = false;
+    // La barra se esconde cuando ya se está en la sección de reservas
+    new IntersectionObserver(([e]) => { enReservas = e.isIntersecting; actualizar(); }, { threshold: 0.05 }).observe(reservas);
+    function actualizar() {
+        const bajado = window.scrollY > window.innerHeight * 0.9;
+        barra.classList.toggle("is-visible", bajado && !enReservas);
+        arriba.classList.toggle("is-visible", window.scrollY > window.innerHeight * 2);
+    }
+    addEventListener("scroll", actualizar, { passive: true });
+    arriba.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: sinMovimiento() ? "auto" : "smooth" });
+        $(".logo").focus({ preventScroll: true });
+    });
+    actualizar();
+}
+
+/* =========================================================
    ARRANQUE
    ========================================================= */
 document.addEventListener("DOMContentLoaded", async () => {
@@ -1291,6 +1527,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     pintarOpiniones(info.opiniones);
     iniciarReservas(info.horarios, info.dias_cerrados || []);
     iniciarContacto();
+    iniciarPresupuesto();
+    iniciarAccesosRapidos();
+    iniciarMovimiento();
     iniciarMiReserva();
     iniciarEventos();
     const { datos: ev } = await pedir(API.eventos, { eventos: DATOS_DEMO.eventos });

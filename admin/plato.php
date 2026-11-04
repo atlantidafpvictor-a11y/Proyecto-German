@@ -9,11 +9,16 @@ $pdo = db();
 $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT) ?: null;
 $categorias = $pdo->query('SELECT id, nombre FROM categorias ORDER BY orden, id')->fetchAll();
 $alergenos  = $pdo->query('SELECT id, nombre FROM alergenos ORDER BY id')->fetchAll();
+// Posibles maridajes: los vinos y bebidas de la Bodega
+$bebidas = $pdo->query(
+    "SELECT p.id, p.nombre FROM platos p JOIN categorias c ON c.id = p.categoria_id
+     WHERE c.nombre = 'Bodega' ORDER BY p.nombre"
+)->fetchAll();
 
 $plato = [
     'categoria_id' => (int) ($_GET['categoria'] ?? $categorias[0]['id'] ?? 1),
     'nombre' => '', 'descripcion' => '', 'nombre_en' => '', 'descripcion_en' => '', 'precio' => '', 'unidad' => '', 'imagen' => '',
-    'vegetariano' => 0, 'vegano' => 0, 'sin_gluten' => 0, 'destacado' => 0, 'disponible' => 1,
+    'vegetariano' => 0, 'vegano' => 0, 'sin_gluten' => 0, 'destacado' => 0, 'disponible' => 1, 'maridaje_id' => null,
 ];
 $marcados = [];
 
@@ -50,7 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'sin_gluten'   => isset($_POST['sin_gluten']) ? 1 : 0,
         'destacado'    => isset($_POST['destacado']) ? 1 : 0,
         'disponible'   => isset($_POST['disponible']) ? 1 : 0,
+        'maridaje_id'  => filter_var($_POST['maridaje_id'] ?? null, FILTER_VALIDATE_INT) ?: null,
     ];
+    // Solo se acepta una bebida de la Bodega, y nunca el propio plato
+    if ($plato['maridaje_id'] && (!in_array($plato['maridaje_id'], array_map('intval', array_column($bebidas, 'id')), true) || $plato['maridaje_id'] === $id)) {
+        $plato['maridaje_id'] = null;
+    }
     if ($plato['vegano']) $plato['vegetariano'] = 1; // un plato vegano siempre es vegetariano
     $idsValidos = array_map('intval', array_column($alergenos, 'id'));
     $marcados = array_values(array_intersect(array_map('intval', (array) ($_POST['alergenos'] ?? [])), $idsValidos));
@@ -80,17 +90,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $plato['nombre_en'] ?: null, $plato['descripcion_en'] ?: null, $plato['precio'],
             $plato['unidad'] ?: null, $plato['imagen'] ?: null,
             $plato['vegetariano'], $plato['vegano'], $plato['sin_gluten'], $plato['destacado'], $plato['disponible'],
+            $plato['maridaje_id'],
         ];
         try {
             $pdo->beginTransaction();
             if ($id) {
                 $pdo->prepare('UPDATE platos SET categoria_id = ?, nombre = ?, descripcion = ?, nombre_en = ?, descripcion_en = ?, precio = ?, unidad = ?, imagen = ?,
-                               vegetariano = ?, vegano = ?, sin_gluten = ?, destacado = ?, disponible = ? WHERE id = ?')
+                               vegetariano = ?, vegano = ?, sin_gluten = ?, destacado = ?, disponible = ?, maridaje_id = ? WHERE id = ?')
                     ->execute([...$valores, $id]);
                 $pdo->prepare('DELETE FROM plato_alergeno WHERE plato_id = ?')->execute([$id]);
             } else {
                 $pdo->prepare('INSERT INTO platos (categoria_id, nombre, descripcion, nombre_en, descripcion_en, precio, unidad, imagen,
-                               vegetariano, vegano, sin_gluten, destacado, disponible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                               vegetariano, vegano, sin_gluten, destacado, disponible, maridaje_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
                     ->execute($valores);
                 $id = (int) $pdo->lastInsertId();
             }
@@ -140,6 +151,14 @@ cabecera($id ? 'Editar plato' : 'Nuevo plato', 'carta');
         <label>Description <textarea name="descripcion_en" lang="en" rows="2" maxlength="255"><?= e((string) ($plato['descripcion_en'] ?? '')) ?></textarea></label>
     </fieldset>
     <label>Precio (€) <input name="precio" inputmode="decimal" value="<?= e((string) $plato['precio']) ?>" required></label>
+    <label><span>Maridaje recomendado <span class="muted">(opcional)</span></span>
+        <select name="maridaje_id">
+            <option value="">Sin maridaje</option>
+            <?php foreach ($bebidas as $b): if ((int) $b['id'] === (int) $id) continue; ?>
+                <option value="<?= (int) $b['id'] ?>" <?= (int) ($plato['maridaje_id'] ?? 0) === (int) $b['id'] ? 'selected' : '' ?>><?= e($b['nombre']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
     <label><span>Unidad <span class="muted">(opcional)</span></span><input name="unidad" value="<?= e($plato['unidad']) ?>" placeholder="p.p., copa, ración" maxlength="10"></label>
 
     <div class="span-all photo-field">

@@ -170,11 +170,16 @@ function cabecera(string $titulo, string $activa): void
     $u = usuario();
     $pendientes = 0;
     $sinLeer = 0;
+    $nuevas = 0;
     if ($u) {
         try {
             $pendientes = (int) db()->query("SELECT COUNT(*) FROM reservas WHERE estado = 'pendiente' AND fecha >= CURRENT_DATE")->fetchColumn();
             $sinLeer    = (int) db()->query('SELECT COUNT(*) FROM mensajes_contacto WHERE leido = 0')->fetchColumn();
         } catch (PDOException) {
+        }
+        try {
+            $nuevas = (int) db()->query("SELECT COUNT(*) FROM presupuestos WHERE estado = 'nueva'")->fetchColumn();
+        } catch (PDOException) { // la tabla llega con la migración 006
         }
     }
     $enlace = function (string $href, string $id, string $texto, int $badge = 0) use ($activa): string {
@@ -209,6 +214,7 @@ function cabecera(string $titulo, string $activa): void
                 <?= $enlace('eventos.php', 'eventos', 'Eventos') ?>
                 <?= $enlace('galeria.php', 'galeria', 'Galería') ?>
                 <?= $enlace('opiniones.php', 'opiniones', 'Opiniones') ?>
+                <?= $enlace('presupuestos.php', 'presupuestos', 'Presupuestos', $nuevas) ?>
                 <?= $enlace('mensajes.php', 'mensajes', 'Mensajes', $sinLeer) ?>
                 <?= $enlace('usuarios.php', 'usuarios', 'Equipo') ?>
                 <?= $enlace('estado.php', 'estado', 'Estado del servidor') ?>

@@ -20,7 +20,7 @@ ejecutar(function () {
     // GROUP_CONCAT junta los id de alérgenos de cada plato en un texto "1,3,7"
     $platos = $pdo->query(
         'SELECT p.id, p.categoria_id, ' . col('p.nombre') . ' AS nombre, ' . col('p.descripcion') . ' AS descripcion, p.precio, p.unidad, p.imagen,
-                p.vegetariano, p.vegano, p.sin_gluten, p.destacado,
+                p.vegetariano, p.vegano, p.sin_gluten, p.destacado, p.maridaje_id,
                 GROUP_CONCAT(pa.alergeno_id ORDER BY pa.alergeno_id) AS alergenos
          FROM platos p
          JOIN categorias c ON c.id = p.categoria_id AND c.activa = 1
@@ -48,6 +48,7 @@ ejecutar(function () {
             'vegano'       => (bool) $p['vegano'],
             'sin_gluten'   => (bool) $p['sin_gluten'],
             'destacado'    => (bool) $p['destacado'],
+            'maridaje_id'  => $p['maridaje_id'] !== null ? (int) $p['maridaje_id'] : null, // otro plato de la lista (un vino)
             'alergenos'    => $p['alergenos'] ? array_map('intval', explode(',', $p['alergenos'])) : [],
         ];
     }, $platos);

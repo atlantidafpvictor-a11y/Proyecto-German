@@ -7,7 +7,7 @@ Base de datos `sabor_mediterraneo` (MySQL / MariaDB en XAMPP). Script completo e
 1. Abre XAMPP y arranca **Apache** y **MySQL**.
 2. Entra en <http://localhost/phpmyadmin>.
 3. Pestaña **Importar** → selecciona `database/restaurante.sql` → **Continuar**.
-4. Comprueba que aparece la base `sabor_mediterraneo` con 17 tablas, 3 vistas, 1 función, 1 procedimiento y 1 trigger.
+4. Comprueba que aparece la base `sabor_mediterraneo` con 18 tablas, 3 vistas, 1 función, 1 procedimiento y 1 trigger.
 
 ## Migraciones (bases de datos que ya existían)
 
@@ -20,9 +20,10 @@ Base de datos `sabor_mediterraneo` (MySQL / MariaDB en XAMPP). Script completo e
 | `003_fotos_webp.sql` | Cambia las rutas de las fotos de `img/` de `.jpg` a `.webp` (formato más ligero) |
 | `004_contacto_reserva.sql` | Columnas `nombre` y `telefono` en `reservas`: los datos con los que se hizo cada reserva |
 | `005_ingles.sql` | Columnas `_en` (carta, alérgenos, zonas, servicios, eventos, galería) y sus traducciones para la web en inglés |
+| `006_maridajes_presupuestos.sql` | `platos.maridaje_id` (clave foránea a la propia tabla: el vino recomendado) y tabla `presupuestos` |
 
 - **XAMPP:** phpMyAdmin → base `sabor_mediterraneo` → Importar → el archivo de la migración.
-- **Ubuntu:** `sudo mysql sabor_mediterraneo < database/migraciones/001_galeria.sql` (y lo mismo con `002_fotos_propias.sql`, `003_fotos_webp.sql`, `004_contacto_reserva.sql` y `005_ingles.sql`)
+- **Ubuntu:** `sudo mysql sabor_mediterraneo < database/migraciones/001_galeria.sql` (y lo mismo con `002_fotos_propias.sql`, `003_fotos_webp.sql`, `004_contacto_reserva.sql`, `005_ingles.sql` y `006_maridajes_presupuestos.sql`)
 
 Se ejecutan **en orden** (001, 002…) y cada una solo una vez, aunque repetirlas no rompe nada.
 
