@@ -34,6 +34,9 @@ $config = [
     'max_personas_online' => 8,
     // Hasta cuántas horas antes puede el cliente cancelar online
     'horas_min_cancelacion' => 2,
+
+    // Informe que deja cada 5 minutos scripts/monitor.sh (solo en el servidor Ubuntu)
+    'estado_servidor' => '/var/lib/sabor-mediterraneo/estado.json',
 ];
 
 $local = __DIR__ . '/config.local.php';

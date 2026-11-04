@@ -92,3 +92,6 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - [x] Rendimiento: fotos en WebP (de 7,6 MB a 3,2 MB), fuentes WOFF2, compresión y caché del navegador con versionado de CSS/JS
 - [x] SEO: datos estructurados schema.org (Restaurant), Open Graph para compartir en WhatsApp y redes, favicon, manifest y robots.txt
 - [x] Producción: CSP, cabeceras de seguridad, rate limiting, página 404, copias automáticas, fail2ban y SSH endurecido
+- [x] Cambiar reserva (día, hora, personas) y «Añadir al calendario» (.ics)
+- [x] Carta para el móvil con QR por mesa (`carta.html`, panel → Códigos QR)
+- [x] Monitorización: estado del servidor en el panel, avisos y `api/salud.php`

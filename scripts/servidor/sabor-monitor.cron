@@ -1,0 +1,7 @@
+# Monitorización de Sabor Mediterráneo
+# Se copia a /etc/cron.d/sabor-monitor
+# Cada 5 minutos comprueba el servidor y deja el informe que lee el panel.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+*/5 * * * *  root  sabor-monitor >/dev/null 2>&1

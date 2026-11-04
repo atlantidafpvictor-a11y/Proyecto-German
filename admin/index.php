@@ -45,6 +45,21 @@ cabecera('Hoy', 'inicio');
     <a class="btn btn-primary" href="reservas.php?nueva=1">Añadir reserva por teléfono</a>
 </header>
 
+<?php
+// Aviso si el servidor tiene algún problema (solo lo ve Administración)
+$informe = $u['rol'] === 'admin' ? estadoServidor() : null;
+if ($informe && ($informe['viejo'] || $informe['estado'] !== 'ok')):
+    $malos = array_filter($informe['checks'], fn($c) => $c['estado'] !== 'ok');
+    $texto = $informe['viejo']
+        ? 'La monitorización no envía datos desde hace ' . $informe['minutos'] . ' minutos.'
+        : implode(' · ', array_map(fn($c) => $c['nombre'] . ': ' . $c['detalle'], $malos));
+?>
+    <p class="flash flash-<?= $informe['estado'] === 'error' || $informe['viejo'] ? 'error' : 'info' ?> server-alert" role="status">
+        <span><strong>Servidor:</strong> <?= e($texto) ?></span>
+        <a href="estado.php">Ver el estado del servidor</a>
+    </p>
+<?php endif; ?>
+
 <section class="stats" aria-label="Resumen">
     <div class="stat"><p class="stat-n"><?= (int) $hoy['reservas'] ?></p><p>reservas hoy</p></div>
     <div class="stat"><p class="stat-n"><?= (int) $hoy['comensales'] ?><small> / <?= $plazas * 2 ?></small></p><p>comensales hoy (plazas en 2 turnos)</p></div>

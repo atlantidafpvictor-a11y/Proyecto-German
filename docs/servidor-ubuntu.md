@@ -510,6 +510,23 @@ sudo ss -tlnp | grep -E "3306|mysql|mariadb"
 
 Debe salir `127.0.0.1:3306`, nunca `0.0.0.0:3306`: así nadie de la red puede conectarse a MariaDB directamente, solo PHP desde dentro del servidor. Además el cortafuegos (paso 8) solo deja pasar SSH, HTTP y HTTPS.
 
+### 11g. Monitorización
+
+Cada 5 minutos un script comprueba los servicios (Apache, MariaDB, SSH, fail2ban, cron, UFW), que la web responde, el disco, la memoria, la última copia, el certificado HTTPS, las IPs bloqueadas y las actualizaciones. El resultado se ve en el panel → **Estado del servidor**, y si algo falla sale un aviso en la pantalla «Hoy».
+
+```bash
+sudo install -m 700 /var/www/sabor-mediterraneo/scripts/monitor.sh /usr/local/sbin/sabor-monitor
+sudo install -m 644 /var/www/sabor-mediterraneo/scripts/servidor/sabor-monitor.cron /etc/cron.d/sabor-monitor
+sudo sabor-monitor
+cat /var/lib/sabor-mediterraneo/estado.json
+```
+
+- El informe (`estado.json`) se puede leer, pero solo root lo escribe: la web lo lee sin tener ningún permiso de administración del sistema.
+- Cuando algo pasa a estar mal (o se arregla) queda anotado una sola vez en el registro: `journalctl -t sabor-monitor`.
+- `https://IP/api/salud.php` responde 200 si la web y la base de datos funcionan y 503 si no: sirve para cualquier servicio de vigilancia externo.
+
+Prueba para la presentación: `sudo systemctl stop mariadb`, `sudo sabor-monitor`, recargar el panel (sale el aviso en rojo) y `sudo systemctl start mariadb`.
+
 ## Si algo falla
 
 | Síntoma | Causa probable | Qué mirar |

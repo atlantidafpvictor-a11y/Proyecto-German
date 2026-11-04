@@ -104,6 +104,24 @@ function comprobarCsrf(): void
     }
 }
 
+/* ---------- Estado del servidor (lo escribe scripts/monitor.sh cada 5 min) ---------- */
+
+/**
+ * Lee el último informe del servidor. null si no existe (XAMPP o monitorización
+ * sin instalar). Añade 'minutos' (antigüedad) y marca 'viejo' si tiene más de
+ * 15 minutos: eso significa que cron o el script han dejado de funcionar.
+ */
+function estadoServidor(): ?array
+{
+    $ruta = (string) config('estado_servidor');
+    if ($ruta === '' || !is_readable($ruta)) return null;
+    $datos = json_decode((string) file_get_contents($ruta), true);
+    if (!is_array($datos) || !isset($datos['checks'])) return null;
+    $datos['minutos'] = (int) floor((time() - (int) strtotime((string) $datos['generado'])) / 60);
+    $datos['viejo'] = $datos['minutos'] > 15;
+    return $datos;
+}
+
 /* ---------- Control de acceso ---------- */
 /**
  * Usuario identificado, comprobado contra la base de datos en cada petición:
@@ -193,6 +211,7 @@ function cabecera(string $titulo, string $activa): void
                 <?= $enlace('opiniones.php', 'opiniones', 'Opiniones') ?>
                 <?= $enlace('mensajes.php', 'mensajes', 'Mensajes', $sinLeer) ?>
                 <?= $enlace('usuarios.php', 'usuarios', 'Equipo') ?>
+                <?= $enlace('estado.php', 'estado', 'Estado del servidor') ?>
             <?php endif; ?>
         </nav>
         <div class="me">
