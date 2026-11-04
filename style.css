@@ -283,6 +283,52 @@ h3 { font-size: var(--t-md); }
 .service p { color: var(--tinta-2); font-size: .98rem; }
 .service .from { margin-top: 14px; font-weight: 600; color: var(--anil); font-size: var(--t-sm); }
 
+/* ---------- 8b. Eventos ---------- */
+.events { background: var(--blanco); }
+.events-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 40px; }
+.events-head p { color: var(--tinta-2); max-width: 44ch; }
+.events-list { list-style: none; border-top: 1px solid var(--cal-2); }
+
+.event {
+    display: grid; grid-template-columns: 120px 1fr auto; gap: 16px clamp(20px, 4vw, 56px); align-items: start;
+    padding: 30px 0; border-bottom: 1px solid var(--cal-2);
+}
+.event-date { display: grid; justify-items: start; line-height: 1; }
+.event-date .day { font-family: var(--f-display); font-size: 3.4rem; color: var(--anil); line-height: .9; }
+.event-date .month { font-weight: 700; text-transform: capitalize; margin-top: 8px; }
+.event-date .when { color: var(--tinta-2); font-size: var(--t-sm); margin-top: 6px; text-transform: capitalize; }
+
+.event-body h3 { font-size: 1.5rem; margin-bottom: 8px; }
+.event-body p { color: var(--tinta-2); max-width: 60ch; }
+
+.seats { margin-top: 16px; max-width: 320px; }
+.seats-bar { height: 6px; border-radius: 999px; background: var(--cal-2); overflow: hidden; }
+.seats-bar span { display: block; height: 100%; background: var(--anil); border-radius: inherit; }
+.seats-text { font-size: var(--t-sm); color: var(--tinta-2); margin-top: 8px; }
+.event.is-few .seats-bar span { background: var(--ocre); }
+.event.is-few .seats-text { color: #8A5C17; font-weight: 600; }
+
+.event-side { display: grid; justify-items: end; gap: 12px; text-align: right; }
+.event-price { font-family: var(--f-display); font-size: 1.6rem; line-height: 1; }
+.event-price small { display: block; font-family: var(--f-body); font-size: .8rem; color: var(--tinta-2); margin-top: 4px; }
+.event.is-full { opacity: .7; }
+.event.is-full .btn { background: var(--cal-2); color: var(--tinta-2); cursor: not-allowed; }
+
+.events-empty { padding: 40px 0; color: var(--tinta-2); }
+
+.event-total { font-weight: 600; margin: 8px 0 14px; }
+.event-total:empty { display: none; }
+.small-print { font-size: .82rem; color: var(--tinta-2); text-align: center; margin-top: 12px; }
+#event-done p { color: var(--tinta-2); margin: 8px 0 22px; }
+
+@media (max-width: 720px) {
+    .event { grid-template-columns: 88px minmax(0, 1fr); gap: 12px 16px; }
+    .event-date .day { font-size: 2.6rem; }
+    .event-date .month { font-size: .82rem; }
+    .event-date .when { font-size: .78rem; }
+    .event-side { grid-column: 2; justify-items: start; text-align: left; grid-auto-flow: column; align-items: center; justify-content: start; gap: 20px; }
+}
+
 /* ---------- 9. Opiniones ---------- */
 .reviews { background: var(--cal-2); }
 .reviews h2 { margin-bottom: 48px; }
@@ -342,7 +388,7 @@ h3 { font-size: var(--t-md); }
     border-radius: 18px; padding: clamp(24px, 4vw, 44px);
 }
 
-.step { border: 0; margin-bottom: 34px; }
+.step { border: 0; margin-bottom: 34px; min-width: 0; }
 .step legend { font-family: var(--f-display); font-size: var(--t-md); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
 .step-n {
     width: 30px; height: 30px; border-radius: 50%; display: inline-grid; place-items: center;
@@ -475,7 +521,7 @@ h3 { font-size: var(--t-md); }
     .hero { grid-template-columns: 1.1fr .9fr; }
     .services-grid { grid-template-columns: repeat(2, 1fr); }
     .reviews-track { grid-template-columns: 1fr; max-width: 640px; }
-    .booking-inner { grid-template-columns: 1fr; }
+    .booking-inner { grid-template-columns: minmax(0, 1fr); }
     .booking-text { position: static; }
 }
 
