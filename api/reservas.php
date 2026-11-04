@@ -47,19 +47,11 @@ ejecutar(function () {
     if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 100) $errores['nombre'] = 'Escribe tu nombre y apellidos.';
     if (!preg_match('/^\+?[0-9]{9,14}$/', $telefono))        $errores['telefono'] = 'Escribe un teléfono de 9 cifras.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 120) $errores['email'] = 'Revisa el email.';
-    if (!$fecha)                                             $errores['fecha'] = 'Elige un día.';
     if ($personas === false)                                 $errores['personas'] = 'Para más de ' . config('max_personas_online') . ' personas, llámanos.';
     if (mb_strlen($comentarios) > 500)                       $errores['comentarios'] = 'Máximo 500 caracteres.';
 
-    if ($fecha) {
-        $hoy = new DateTimeImmutable('today');
-        if ($fecha < $hoy || $fecha > $hoy->modify('+' . config('dias_max_reserva') . ' days')) {
-            $errores['fecha'] = 'Solo aceptamos reservas desde hoy hasta dentro de ' . config('dias_max_reserva') . ' días.';
-        } elseif (!in_array($hora, array_column(horasDelDia($fecha), 'hora'), true)) {
-            $errores['hora'] = 'Esa hora no está disponible ese día.';
-        } elseif ($fecha == $hoy && aMinutos($hora) <= (int) date('G') * 60 + (int) date('i') + 60) {
-            $errores['hora'] = 'Para hoy, reserva con al menos una hora de antelación.';
-        }
+    if ($p = problemaFechaHora($fecha, $hora)) {
+        $errores[$p[0]] = $p[1];
     }
 
     if ($errores) {
@@ -86,16 +78,9 @@ ejecutar(function () {
 
             // Una misma persona no puede acaparar mesas: si ya tiene una reserva
             // activa ese día a menos de 3 horas, se le avisa (comer y cenar sí se puede)
-            $suyas = $pdo->prepare(
-                "SELECT TIME_FORMAT(hora, '%H:%i') FROM reservas
-                 WHERE cliente_id = ? AND fecha = ? AND estado IN ('pendiente', 'confirmada')"
-            );
-            $suyas->execute([$clienteId, $fecha->format('Y-m-d')]);
-            foreach ($suyas->fetchAll(PDO::FETCH_COLUMN) as $otra) {
-                if (abs(aMinutos($otra) - aMinutos($hora)) < 180) {
-                    $pdo->rollBack();
-                    return ['ok' => false, 'error' => "Ya tienes una reserva ese día a las $otra. Si quieres cambiarla, cancélala con tu código («¿Ya tienes una reserva?») y haz una nueva.", 'http' => 409];
-                }
+            if ($otra = reservaSolapada($pdo, $clienteId, $fecha, $hora)) {
+                $pdo->rollBack();
+                return ['ok' => false, 'error' => "Ya tienes una reserva ese día a las $otra. Si quieres cambiarla, usa «¿Ya tienes una reserva?» con tu código.", 'http' => 409];
             }
 
             $codigo = generarCodigo($pdo);

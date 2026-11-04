@@ -103,8 +103,8 @@
 
     <link rel="preload" href="fonts/source-serif-4.woff2" as="font" type="font/woff2" crossorigin>
 
-    <link rel="stylesheet" href="style.css?v=20261105">
-    <script src="javascript.js?v=20261105" defer></script>
+    <link rel="stylesheet" href="style.css?v=20261106">
+    <script src="javascript.js?v=20261106" defer></script>
 </head>
 <body>
 
@@ -359,7 +359,7 @@
                     </p>
                     <div class="manage-cta">
                         <p>¿Ya tienes una reserva?</p>
-                        <button type="button" class="btn btn-ghost-light" id="manage-open" aria-haspopup="dialog">Consultar o cancelar</button>
+                        <button type="button" class="btn btn-ghost-light" id="manage-open" aria-haspopup="dialog">Gestionar mi reserva</button>
                     </div>
                 </div>
 
@@ -431,8 +431,11 @@
                     <h3>Reserva confirmada</h3>
                     <p id="booking-done-text"></p>
                     <p class="code">Código de reserva <strong id="booking-code"></strong></p>
-                    <p class="small-note">Con este código y tu teléfono puedes consultar o cancelar la reserva desde «Consultar o cancelar».</p>
-                    <button type="button" class="btn btn-ghost-light" id="booking-new">Hacer otra reserva</button>
+                    <p class="small-note">Con este código y tu teléfono puedes consultar, cambiar o cancelar la reserva desde «Gestionar mi reserva».</p>
+                    <div class="done-actions">
+                        <button type="button" class="btn btn-light" id="booking-ics">Añadir a mi calendario</button>
+                        <button type="button" class="btn btn-ghost-light" id="booking-new">Hacer otra reserva</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -502,7 +505,10 @@
             <div id="event-done" hidden>
                 <h3 tabindex="-1" id="event-done-title">¡Te esperamos!</h3>
                 <p id="event-done-text"></p>
-                <button type="button" class="btn btn-primary" id="event-done-close">Cerrar</button>
+                <div class="manage-actions">
+                    <button type="button" class="btn btn-primary" id="event-ics">Añadir a mi calendario</button>
+                    <button type="button" class="btn btn-ghost" id="event-done-close">Cerrar</button>
+                </div>
             </div>
         </dialog>
 
@@ -538,8 +544,10 @@
                 <p class="manage-note" id="manage-note"></p>
 
                 <div class="manage-actions" id="manage-actions">
+                    <button type="button" class="btn btn-primary" id="manage-change">Cambiar día u hora</button>
+                    <button type="button" class="btn btn-ghost" id="manage-ics">Añadir al calendario</button>
                     <button type="button" class="btn btn-danger" id="manage-cancel">Cancelar reserva</button>
-                    <button type="button" class="btn btn-ghost" id="manage-back">Buscar otra reserva</button>
+                    <button type="button" class="btn btn-link" id="manage-back">Buscar otra reserva</button>
                 </div>
 
                 <div class="manage-confirm" id="manage-confirm" hidden>
@@ -548,6 +556,34 @@
                         <button type="button" class="btn btn-danger" id="manage-cancel-yes">Sí, cancelar reserva</button>
                         <button type="button" class="btn btn-ghost" id="manage-cancel-no">No, mantenerla</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Cambiar la reserva: se busca mesa nueva; si no hay, sigue la de antes -->
+            <div id="manage-edit" hidden>
+                <h3 id="manage-edit-title" tabindex="-1">Cambiar la reserva</h3>
+                <p class="manage-lead">Elige el nuevo día, la hora o las personas. Si no queda mesa, tu reserva se queda como estaba.</p>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="c-personas">Personas</label>
+                        <select id="c-personas"></select>
+                        <p class="field-error" data-for="c-personas"></p>
+                    </div>
+                    <div class="field">
+                        <label for="c-fecha">Día</label>
+                        <input type="date" id="c-fecha" required>
+                        <p class="field-error" data-for="c-fecha"></p>
+                    </div>
+                </div>
+                <div class="field">
+                    <span class="field-label" id="c-hora-label">Hora</span>
+                    <div class="change-slots" id="c-slots" aria-labelledby="c-hora-label"></div>
+                    <p class="field-error" data-for="c-hora"></p>
+                </div>
+                <p class="manage-error" id="c-error" role="alert"></p>
+                <div class="manage-actions">
+                    <button type="button" class="btn btn-primary" id="c-save" disabled>Guardar cambios</button>
+                    <button type="button" class="btn btn-ghost" id="c-back">Volver</button>
                 </div>
             </div>
         </dialog>

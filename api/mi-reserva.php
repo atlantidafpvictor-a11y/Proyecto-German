@@ -4,10 +4,16 @@
  *
  * Consultar:  { "codigo": "K7Q2XB", "telefono": "600111222" }
  * Cancelar:   { "codigo": "K7Q2XB", "telefono": "600111222", "accion": "cancelar" }
+ * Cambiar:    { "codigo": "K7Q2XB", "telefono": "600111222", "accion": "cambiar",
+ *               "fecha": "2026-11-20", "hora": "21:00", "personas": 4 }
  *
- * Para ver o cancelar una reserva hay que saber DOS cosas: el código y el
- * teléfono con el que se hizo (guardado en la propia reserva). Así nadie puede cancelar la reserva de otro
- * probando códigos al azar.
+ * Para ver, cambiar o cancelar una reserva hay que saber DOS cosas: el código
+ * y el teléfono con el que se hizo (guardado en la propia reserva). Así nadie
+ * puede tocar la reserva de otro probando códigos al azar.
+ *
+ * Al cambiarla se busca mesa para el nuevo día y hora DENTRO de una
+ * transacción: si no queda, se deshace y la reserva sigue como estaba
+ * (nunca se pierde la mesa que ya se tenía).
  */
 declare(strict_types=1);
 require __DIR__ . '/db.php';
@@ -25,7 +31,7 @@ ejecutar(function () {
 
     $codigo   = strtoupper(trim(texto($d, 'codigo')));
     $telefono = soloDigitos(texto($d, 'telefono'));
-    $accion   = ($d['accion'] ?? '') === 'cancelar' ? 'cancelar' : 'consultar';
+    $accion   = in_array($d['accion'] ?? '', ['cancelar', 'cambiar'], true) ? $d['accion'] : 'consultar';
 
     if (!preg_match('/^[A-Z0-9]{6}$/', $codigo)) {
         responder(['ok' => false, 'error' => 'El código tiene 6 letras y números, por ejemplo K7Q2XB.', 'campo' => 'm-codigo'], 422);
@@ -36,7 +42,7 @@ ejecutar(function () {
 
     $pdo = db();
     $stmt = $pdo->prepare(
-        "SELECT r.id, r.codigo, r.fecha, TIME_FORMAT(r.hora, '%H:%i') AS hora, r.personas, r.estado,
+        "SELECT r.id, r.cliente_id, r.codigo, r.fecha, TIME_FORMAT(r.hora, '%H:%i') AS hora, r.personas, r.estado,
                 COALESCE(r.nombre, c.nombre) AS nombre, COALESCE(r.telefono, c.telefono) AS telefono, z.nombre AS zona
          FROM reservas r
          JOIN clientes c ON c.id = r.cliente_id
@@ -65,8 +71,63 @@ ejecutar(function () {
         [$puede, $motivo] = puedeCancelar($r);
     }
 
+    if ($accion === 'cambiar') {
+        if (!$puede) {
+            responder(['ok' => false, 'error' => str_replace('cancelar', 'cambiar', $motivo), 'reserva' => publica($r, false, $motivo)], 409);
+        }
+        $r = cambiar($pdo, $r, $d);
+        [$puede, $motivo] = puedeCancelar($r);
+        responder(['ok' => true, 'cambiada' => true, 'reserva' => publica($r, $puede, $motivo)]);
+    }
+
     responder(['ok' => true, 'reserva' => publica($r, $puede, $motivo)]);
 });
+
+/** Cambia día, hora y personas. Si algo falla responde con el error y la reserva queda como estaba. */
+function cambiar(PDO $pdo, array $r, array $d): array
+{
+    $fecha    = fechaValida(texto($d, 'fecha'));
+    $hora     = texto($d, 'hora');
+    $personas = filter_var($d['personas'] ?? null, FILTER_VALIDATE_INT,
+                ['options' => ['min_range' => 1, 'max_range' => (int) config('max_personas_online')]]);
+
+    if ($personas === false) {
+        responder(['ok' => false, 'error' => 'Para más de ' . config('max_personas_online') . ' personas, llámanos.', 'campo' => 'c-personas'], 422);
+    }
+    if ($p = problemaFechaHora($fecha, $hora)) {
+        responder(['ok' => false, 'error' => $p[1], 'campo' => 'c-' . $p[0]], 422);
+    }
+    if ($fecha->format('Y-m-d') === $r['fecha'] && $hora === $r['hora'] && $personas === (int) $r['personas']) {
+        responder(['ok' => false, 'error' => 'Es la misma reserva que ya tienes: cambia el día, la hora o las personas.'], 422);
+    }
+
+    $resultado = conCerrojo('mesas', function (PDO $pdo) use ($r, $fecha, $hora, $personas): ?string {
+        $pdo->beginTransaction();
+        try {
+            if ($otra = reservaSolapada($pdo, (int) $r['cliente_id'], $fecha, $hora, (int) $r['id'])) {
+                $pdo->rollBack();
+                return "Ya tienes otra reserva ese día a las $otra.";
+            }
+            // Se suelta la mesa actual y se busca una nueva para el nuevo día y hora
+            $pdo->prepare("UPDATE reservas SET fecha = ?, hora = ?, personas = ?, mesa_id = NULL, estado = 'pendiente' WHERE id = ?")
+                ->execute([$fecha->format('Y-m-d'), $hora, $personas, $r['id']]);
+            $call = $pdo->prepare('CALL sp_asignar_mesa(?)');
+            $call->execute([$r['id']]);
+            $call->closeCursor();
+            $pdo->commit();
+            return null;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack(); // la reserva vuelve a como estaba, con su mesa
+            if ($e->getCode() === '45000') return 'No queda mesa a esa hora. Tu reserva sigue como estaba: prueba otra hora.';
+            throw $e;
+        }
+    });
+
+    if ($resultado !== null) {
+        responder(['ok' => false, 'error' => $resultado], 409);
+    }
+    return array_merge($r, ['fecha' => $fecha->format('Y-m-d'), 'hora' => $hora, 'personas' => $personas, 'estado' => 'confirmada']);
+}
 
 function soloDigitos(string $tel): string
 {
@@ -107,6 +168,7 @@ function publica(array $r, bool $puede, string $motivo): array
         'zona'           => $r['zona'],
         'estado'         => $r['estado'],
         'puede_cancelar' => $puede,
+        'puede_cambiar'  => $puede, // mismas reglas: activa y con al menos 2 horas de margen
         'motivo'         => $motivo,
     ];
 }

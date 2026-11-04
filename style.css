@@ -782,3 +782,16 @@ h3, legend, .facts dt, .event-date .day, .event-price { font-weight: 600; }
 
 /* El mapa, en rectángulo redondeado: en forma de arco se perdía información */
 .visit-map { border-radius: 18px; }
+
+/* ---------- Cambiar reserva y añadir al calendario ---------- */
+.btn-light { background: var(--cal); color: var(--anil-oscuro); }
+.btn-light:hover { background: var(--blanco); }
+.btn-link { background: none; border-color: transparent; padding: 0 12px; color: var(--tinta-2); text-decoration: underline; text-underline-offset: 3px; }
+.btn-link:hover { color: var(--tinta); }
+.done-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.field-label { display: block; font-weight: 600; font-size: var(--t-sm); margin-bottom: 6px; }
+.change-slots { min-height: 48px; }
+.change-slots .slots-group + .slots-group { margin-top: 12px; }
+.change-slots .slots-group h4 { margin-bottom: 6px; }
+.change-slots .opt { min-height: 40px; }
+#manage-edit .manage-actions { margin-top: 8px; }

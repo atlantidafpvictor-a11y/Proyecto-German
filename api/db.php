@@ -176,6 +176,44 @@ function texto(array $datos, string $campo): string
     return is_scalar($v) ? (string) $v : '';
 }
 
+/**
+ * Comprueba que se puede reservar ese día a esa hora (la usan crear y cambiar
+ * reserva, así las reglas son las mismas). Devuelve [campo, mensaje] si hay
+ * un problema, o null si está todo bien.
+ */
+function problemaFechaHora(?DateTimeImmutable $fecha, string $hora): ?array
+{
+    if (!$fecha) return ['fecha', 'Elige un día.'];
+    $hoy = new DateTimeImmutable('today');
+    if ($fecha < $hoy || $fecha > $hoy->modify('+' . config('dias_max_reserva') . ' days')) {
+        return ['fecha', 'Solo aceptamos reservas desde hoy hasta dentro de ' . config('dias_max_reserva') . ' días.'];
+    }
+    if (!in_array($hora, array_column(horasDelDia($fecha), 'hora'), true)) {
+        return ['hora', 'Esa hora no está disponible ese día.'];
+    }
+    if ($fecha == $hoy && aMinutos($hora) <= (int) date('G') * 60 + (int) date('i') + 60) {
+        return ['hora', 'Para hoy, reserva con al menos una hora de antelación.'];
+    }
+    return null;
+}
+
+/**
+ * ¿Tiene este cliente otra reserva activa ese día a menos de 3 horas?
+ * Devuelve su hora ("14:00") o null. $excluir = id de la reserva que se está cambiando.
+ */
+function reservaSolapada(PDO $pdo, int $clienteId, DateTimeImmutable $fecha, string $hora, int $excluir = 0): ?string
+{
+    $stmt = $pdo->prepare(
+        "SELECT TIME_FORMAT(hora, '%H:%i') FROM reservas
+         WHERE cliente_id = ? AND fecha = ? AND id <> ? AND estado IN ('pendiente', 'confirmada')"
+    );
+    $stmt->execute([$clienteId, $fecha->format('Y-m-d'), $excluir]);
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $otra) {
+        if (abs(aMinutos($otra) - aMinutos($hora)) < 180) return $otra;
+    }
+    return null;
+}
+
 /** Valida una fecha en formato AAAA-MM-DD. */
 function fechaValida(string $fecha): ?DateTimeImmutable
 {

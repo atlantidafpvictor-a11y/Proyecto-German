@@ -1,7 +1,9 @@
 <?php
 /**
- * GET api/disponibilidad.php?fecha=2026-10-24&personas=4
+ * GET api/disponibilidad.php?fecha=2026-10-24&personas=4[&excluir=K7Q2XB]
  * Devuelve las horas del día y si queda alguna mesa libre para ese grupo.
+ * "excluir" = código de una reserva que se está cambiando: su propia mesa
+ * cuenta como libre (si no, al moverla media hora parecería que no hay sitio).
  *
  * Una hora está libre si existe al menos una mesa activa con capacidad
  * suficiente que no tenga otra reserva a menos de 90 minutos.
@@ -38,9 +40,9 @@ ejecutar(function () {
     $stmt = $pdo->prepare(
         "SELECT mesa_id, TIME_FORMAT(hora, '%H:%i') AS hora
          FROM reservas
-         WHERE fecha = ? AND mesa_id IS NOT NULL AND estado IN ('pendiente', 'confirmada')"
+         WHERE fecha = ? AND mesa_id IS NOT NULL AND estado IN ('pendiente', 'confirmada') AND codigo <> ?"
     );
-    $stmt->execute([$fecha->format('Y-m-d')]);
+    $stmt->execute([$fecha->format('Y-m-d'), strtoupper(substr((string) ($_GET['excluir'] ?? ''), 0, 6))]);
     $ocupadas = $stmt->fetchAll();
 
     $esHoy    = $fecha == $hoy;

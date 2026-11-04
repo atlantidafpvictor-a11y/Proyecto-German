@@ -124,6 +124,63 @@ const isoLocal = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).to
 const aMinutos = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return (h === 0 ? 24 : h) * 60 + m; };
 const escapeHTML = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+/* ---------- Añadir al calendario (archivo .ics, el estándar de Google, Apple y Outlook) ---------- */
+const ZONA_MADRID = [
+    "BEGIN:VTIMEZONE", "TZID:Europe/Madrid",
+    "BEGIN:DAYLIGHT", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0200", "TZNAME:CEST", "DTSTART:19700329T020000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "END:DAYLIGHT",
+    "BEGIN:STANDARD", "TZOFFSETFROM:+0200", "TZOFFSETTO:+0100", "TZNAME:CET", "DTSTART:19701025T030000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "END:STANDARD",
+    "END:VTIMEZONE",
+];
+
+/**
+ * Descarga un evento de calendario. La hora va en la zona de Madrid (TZID),
+ * así sale bien aunque quien reserve tenga el móvil en otra zona horaria.
+ * { uid, titulo, fecha: "2026-11-20", hora: "21:00", minutos: 90, descripcion, archivo }
+ */
+function descargarCalendario({ uid, titulo, fecha, hora, minutos, descripcion, archivo }) {
+    const esc = (t) => String(t).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+    const [y, mes, dia] = fecha.split("-").map(Number);
+    const [h, min] = hora.split(":").map(Number);
+    // Fin = inicio + minutos, contado como hora de reloj (sin pasar por la zona del navegador)
+    const reloj = (d) => d.toISOString().slice(0, 16).replace(/[-:]/g, "") + "00";
+    const inicio = reloj(new Date(Date.UTC(y, mes - 1, dia, h, min)));
+    const fin = reloj(new Date(Date.UTC(y, mes - 1, dia, h, min + minutos)));
+    const sello = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+    // Las líneas de un .ics no deben pasar de 75 bytes: se parten y la continuación empieza por un espacio
+    const doblar = (linea) => linea.match(/.{1,60}/gu).join("\r\n ");
+    const lineas = [
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Sabor Mediterraneo//Reservas//ES", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+        ...ZONA_MADRID,
+        "BEGIN:VEVENT",
+        `UID:${uid}@sabormediterraneo.es`,
+        `DTSTAMP:${sello}`,
+        `DTSTART;TZID=Europe/Madrid:${inicio}`,
+        `DTEND;TZID=Europe/Madrid:${fin}`,
+        `SUMMARY:${esc(titulo)}`,
+        `DESCRIPTION:${esc(descripcion)}`,
+        `LOCATION:${esc("Sabor Mediterráneo, Granada")}`,
+        "BEGIN:VALARM", "ACTION:DISPLAY", "TRIGGER:-PT2H", `DESCRIPTION:${esc(titulo)}`, "END:VALARM",
+        "END:VEVENT", "END:VCALENDAR",
+    ].map(doblar);
+    const url = URL.createObjectURL(new Blob([lineas.join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" }));
+    const a = Object.assign(document.createElement("a"), { href: url, download: archivo });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+/** Calendario de una reserva de mesa (90 minutos, lo que dura la mesa). */
+function calendarioReserva(r) {
+    descargarCalendario({
+        uid: "reserva-" + r.codigo,
+        titulo: `Mesa en Sabor Mediterráneo (${r.personas} ${r.personas === 1 ? "persona" : "personas"})`,
+        fecha: r.fecha, hora: r.hora, minutos: 90,
+        descripcion: `Código de reserva: ${r.codigo}\nPara cambiarla o cancelarla: web del restaurante, «Gestionar mi reserva», o llama al 958 000 000.`,
+        archivo: `reserva-${r.codigo}.ics`,
+    });
+}
+
 /**
  * Pide JSON al servidor PHP.
  * - Si PHP responde con JSON (aunque sea un error de validación), se devuelve tal cual.
@@ -555,6 +612,14 @@ function iniciarEventos() {
         $("#event-done-text").textContent =
             `${datos.nombre.split(" ")[0]}, tienes ${r.plazas} ${r.plazas === 1 ? "plaza" : "plazas"} para «${r.evento}» el ${f} a las ${r.hora}.` +
             (demo ? " Modo demostración: la inscripción no se ha guardado." : " Si no puedes venir, llámanos para liberar tu sitio.");
+        const inscrito = { id: evento.id, titulo: r.evento, fecha: r.fecha, hora: r.hora, plazas: r.plazas };
+        $("#event-ics").onclick = () => descargarCalendario({
+            uid: `evento-${inscrito.id}-${datos.email}`,
+            titulo: `${inscrito.titulo} · Sabor Mediterráneo`,
+            fecha: inscrito.fecha, hora: inscrito.hora, minutos: 120,
+            descripcion: `${inscrito.plazas} ${inscrito.plazas === 1 ? "plaza" : "plazas"} a nombre de ${datos.nombre}. El pago se hace en el restaurante.`,
+            archivo: `evento-${inscrito.id}.ics`,
+        });
         form.reset();
         $("#event-signup").hidden = true;
         $("#event-done").hidden = false;
@@ -874,6 +939,7 @@ function iniciarReservas(horarios, diasCerrados = []) {
                   : "Guarda este código: te lo pediremos si necesitas cambiar o cancelar la reserva.");
         $("#booking-code").textContent = datos.codigo;
         ultimaReserva = { codigo: datos.codigo, telefono: reserva.telefono };
+        $("#booking-ics").onclick = () => calendarioReserva({ codigo: datos.codigo, fecha: reserva.fecha, hora: reserva.hora, personas: reserva.personas });
         form.hidden = true;
         hecho.hidden = false;
         hecho.focus();
@@ -907,6 +973,9 @@ function iniciarMiReserva() {
     const confirmar = $("#manage-confirm");
     const acciones = $("#manage-actions");
     const botonCancelar = $("#manage-cancel");
+    const botonCambiar = $("#manage-change");
+    const botonCalendario = $("#manage-ics");
+    const vistaCambiar = $("#manage-edit");
     const ESTADOS = {
         pendiente: "Pendiente de mesa",
         confirmada: "Confirmada",
@@ -914,7 +983,8 @@ function iniciarMiReserva() {
         completada: "Completada",
         no_presentado: "No presentada",
     };
-    let actual = null; // { codigo, telefono } de la reserva que se está viendo
+    let actual = null;  // { codigo, telefono } de la reserva que se está viendo
+    let reserva = null; // la última reserva mostrada
 
     const marcar = (id, msg) => {
         const campo = document.getElementById(id).closest(".field");
@@ -934,12 +1004,14 @@ function iniciarMiReserva() {
 
     function mostrarBuscar() {
         vistaResultado.hidden = true;
+        vistaCambiar.hidden = true;
         vistaBuscar.hidden = false;
         errorGeneral.textContent = "";
         ["m-codigo", "m-telefono"].forEach((id) => marcar(id, ""));
     }
 
-    function mostrarReserva(r) {
+    function mostrarReserva(r, aviso = "") {
+        reserva = r;
         const fecha = new Date(r.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
         $("#manage-result-title").textContent = r.estado === "cancelada" ? "Reserva cancelada" : `Hola, ${r.nombre}`;
         const estado = $("#manage-status");
@@ -951,10 +1023,13 @@ function iniciarMiReserva() {
             <dt>Hora</dt><dd>${escapeHTML(r.hora)}</dd>
             <dt>Personas</dt><dd>${r.personas}</dd>
             ${r.zona ? `<dt>Zona</dt><dd>${escapeHTML(r.zona)}</dd>` : ""}`;
-        $("#manage-note").textContent = r.estado === "cancelada"
+        $("#manage-note").textContent = aviso || (r.estado === "cancelada"
             ? "La mesa ha quedado libre. Si cambias de idea, puedes hacer una reserva nueva."
-            : r.motivo;
+            : r.motivo);
         botonCancelar.hidden = !r.puede_cancelar;
+        botonCambiar.hidden = !r.puede_cambiar;
+        botonCalendario.hidden = !["pendiente", "confirmada"].includes(r.estado);
+        vistaCambiar.hidden = true;
         confirmar.hidden = true;
         acciones.hidden = false;
         vistaBuscar.hidden = true;
@@ -962,14 +1037,14 @@ function iniciarMiReserva() {
         $("#manage-result-title").focus();
     }
 
-    async function enviar(accion) {
+    async function enviar(accion, extra = {}) {
         const { datos, demo } = await pedir(API.miReserva, () => ({
             ok: false,
             error: "Para consultar reservas hace falta el servidor (XAMPP o Ubuntu). En modo demostración no se guardan.",
         }), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...actual, accion }),
+            body: JSON.stringify({ ...actual, accion, ...extra }),
         });
         return { datos, demo };
     }
@@ -1027,6 +1102,92 @@ function iniciarMiReserva() {
             acciones.hidden = false;
             $("#manage-note").textContent = datos.error || "No se ha podido cancelar. Llámanos al 958 000 000.";
         }
+    });
+
+    botonCalendario.addEventListener("click", () => calendarioReserva(reserva));
+
+    /* --- Cambiar día, hora o personas --- */
+    const cPersonas = $("#c-personas");
+    const cFecha = $("#c-fecha");
+    const cSlots = $("#c-slots");
+    const cGuardar = $("#c-save");
+    const cError = $("#c-error");
+    const cambio = { hora: null };
+    cPersonas.innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? "personas" : "persona"}</option>`).join("");
+
+    const marcarCambio = (campo, msg) => {
+        const p = $(`#manage-edit .field-error[data-for="${campo}"]`);
+        if (p) p.textContent = msg || "";
+    };
+
+    async function horasParaCambio() {
+        cambio.hora = null;
+        cGuardar.disabled = true;
+        cError.textContent = "";
+        ["c-personas", "c-fecha", "c-hora"].forEach((c) => marcarCambio(c, ""));
+        if (!cFecha.value) { cSlots.innerHTML = `<p class="slots-msg">Elige un día.</p>`; return; }
+        cSlots.innerHTML = `<p class="slots-msg">Buscando mesa…</p>`;
+        const url = `${API.disponibilidad}?fecha=${cFecha.value}&personas=${cPersonas.value}&excluir=${encodeURIComponent(reserva.codigo)}`;
+        const peticion = (horasParaCambio.ultima = Symbol());
+        const { datos } = await pedir(url, () => ({ ok: false, error: "Para cambiar reservas hace falta el servidor." }));
+        if (peticion !== horasParaCambio.ultima) return;
+        if (datos.cerrado) { cSlots.innerHTML = `<p class="slots-msg">Ese día estamos cerrados.</p>`; return; }
+        if (!datos.slots) { cSlots.innerHTML = `<p class="slots-msg">${escapeHTML(datos.error || "No hemos podido consultar las mesas libres.")}</p>`; return; }
+        if (!datos.slots.some((x) => x.libre)) { cSlots.innerHTML = `<p class="slots-msg">No quedan mesas ese día para ese grupo.</p>`; return; }
+        const grupos = { comida: "Comida", cena: "Cena" };
+        cSlots.innerHTML = Object.entries(grupos).map(([turno, titulo]) => {
+            const lista = datos.slots.filter((x) => x.turno === turno);
+            if (!lista.length) return "";
+            return `<div class="slots-group"><h4>${titulo}</h4><div class="slots-row" role="radiogroup" aria-label="${titulo}">${lista.map((x) =>
+                `<button type="button" class="opt" role="radio" aria-checked="false" data-hora="${escapeHTML(x.hora)}" ${x.libre ? "" : `disabled aria-label="${escapeHTML(x.hora)}, completo"`}>${escapeHTML(x.hora)}</button>`).join("")}</div></div>`;
+        }).join("");
+        // Si sigue siendo el mismo día, se marca la hora que ya tenía
+        const suya = cFecha.value === reserva.fecha && $(`.opt[data-hora="${reserva.hora}"]:not([disabled])`, cSlots);
+        if (suya) elegirHora(suya);
+    }
+
+    function elegirHora(b) {
+        cambio.hora = b.dataset.hora;
+        $$(".opt", cSlots).forEach((o) => o.setAttribute("aria-checked", String(o === b)));
+        cGuardar.disabled = false;
+        marcarCambio("c-hora", "");
+    }
+
+    cSlots.addEventListener("click", (e) => {
+        const b = e.target.closest(".opt:not([disabled])");
+        if (b) elegirHora(b);
+    });
+    cPersonas.addEventListener("change", horasParaCambio);
+    cFecha.addEventListener("change", horasParaCambio);
+
+    botonCambiar.addEventListener("click", () => {
+        const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+        const max = new Date(hoy); max.setDate(max.getDate() + 90);
+        cFecha.min = isoLocal(hoy);
+        cFecha.max = isoLocal(max);
+        cFecha.value = reserva.fecha;
+        cPersonas.value = String(Math.min(8, reserva.personas));
+        vistaResultado.hidden = true;
+        vistaCambiar.hidden = false;
+        $("#manage-edit-title").focus();
+        horasParaCambio();
+    });
+    $("#c-back").addEventListener("click", () => mostrarReserva(reserva));
+
+    cGuardar.addEventListener("click", async () => {
+        if (!cambio.hora) { marcarCambio("c-hora", "Elige una hora."); return; }
+        cGuardar.disabled = true;
+        cGuardar.textContent = "Guardando…";
+        const { datos } = await enviar("cambiar", { fecha: cFecha.value, hora: cambio.hora, personas: Number(cPersonas.value) });
+        cGuardar.textContent = "Guardar cambios";
+        if (!datos.ok) {
+            cGuardar.disabled = false;
+            if (datos.campo) marcarCambio(datos.campo, datos.error);
+            else cError.textContent = datos.error || "No se ha podido cambiar la reserva.";
+            if (/mesa/.test(datos.error || "")) horasParaCambio();
+            return;
+        }
+        mostrarReserva(datos.reserva, `Reserva cambiada. Tu código sigue siendo ${datos.reserva.codigo}.`);
     });
 
     $("#manage-back").addEventListener("click", () => { mostrarBuscar(); form.reset(); $("#m-codigo").focus(); });
