@@ -1,10 +1,21 @@
 <?php
 /**
  * Configuración de la conexión a la base de datos.
+ *
  * Valores por defecto de XAMPP: usuario "root" sin contraseña.
- * Si en clase o en el hosting usáis otros datos, cambiadlos aquí.
+ *
+ * En un servidor (Ubuntu) NO cambiéis este archivo: cread al lado uno
+ * llamado config.local.php con solo los valores que cambian, por ejemplo:
+ *
+ *     <?php
+ *     return [
+ *         'db_user' => 'sabor_web',
+ *         'db_pass' => 'la-contraseña-del-servidor',
+ *     ];
+ *
+ * config.local.php está en .gitignore, así que la contraseña nunca se sube a GitHub.
  */
-return [
+$config = [
     'db_host' => 'localhost',
     'db_port' => 3306,
     'db_name' => 'sabor_mediterraneo',
@@ -22,3 +33,10 @@ return [
     // Máximo de personas por reserva online (grupos mayores, por teléfono)
     'max_personas_online' => 8,
 ];
+
+$local = __DIR__ . '/config.local.php';
+if (is_file($local)) {
+    $config = array_merge($config, require $local);
+}
+
+return $config;

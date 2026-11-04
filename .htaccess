@@ -1,0 +1,2 @@
+# No mostrar listados de carpetas (como "Index of /database")
+Options -Indexes

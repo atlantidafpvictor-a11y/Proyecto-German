@@ -1,0 +1,4 @@
+# Los archivos de configuración no se pueden abrir desde el navegador
+<FilesMatch "^config(\.local)?\.php$">
+    Require all denied
+</FilesMatch>
