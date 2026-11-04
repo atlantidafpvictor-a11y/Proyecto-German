@@ -37,7 +37,8 @@
             <a href="#carta">Carta</a>
             <a href="#servicios">Celebraciones</a>
             <a href="#eventos">Eventos</a>
-            <a href="#visitanos">Horario y ubicación</a>
+            <a href="#galeria">Galería</a>
+            <a href="#visitanos">Visítanos</a>
             <a href="#reservas" class="nav-cta">Reservar mesa</a>
         </nav>
     </header>
@@ -147,6 +148,15 @@
                 <p>Catas, jornadas y menús especiales con plazas limitadas. Apúntate desde aquí y te guardamos el sitio.</p>
             </header>
             <ol class="events-list" id="events-list" aria-live="polite"></ol>
+        </section>
+
+        <!-- ============ GALERÍA ============ -->
+        <section class="gallery section" id="galeria" aria-labelledby="gallery-title">
+            <header class="gallery-head">
+                <h2 id="gallery-title">Galería</h2>
+                <div class="gallery-filters" id="gallery-filters" role="group" aria-label="Filtrar fotos"></div>
+            </header>
+            <ul class="gallery-grid" id="gallery-grid"></ul>
         </section>
 
         <!-- ============ OPINIONES ============ -->
@@ -310,6 +320,23 @@
             </div>
         </section>
 
+        <!-- ============ VISOR DE FOTOS ============ -->
+        <dialog class="lightbox" id="lightbox" aria-label="Foto ampliada">
+            <figure class="lb-figure">
+                <img id="lb-img" src="" alt="">
+                <figcaption><span id="lb-title"></span> <span class="lb-count" id="lb-count"></span></figcaption>
+            </figure>
+            <button type="button" class="lb-btn lb-prev" id="lb-prev" aria-label="Foto anterior">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button type="button" class="lb-btn lb-next" id="lb-next" aria-label="Foto siguiente">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button type="button" class="lb-btn lb-close" id="lb-close" aria-label="Cerrar">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+        </dialog>
+
         <!-- ============ INSCRIPCIÓN A UN EVENTO ============ -->
         <dialog class="manage" id="event-dialog" aria-labelledby="event-dialog-title">
             <button type="button" class="manage-close" id="event-close" aria-label="Cerrar">
@@ -424,6 +451,7 @@
                 <a href="#carta">Carta</a>
                 <a href="#servicios">Celebraciones</a>
                 <a href="#eventos">Eventos</a>
+                <a href="#galeria">Galería</a>
                 <a href="#reservas">Reservas</a>
                 <a href="#contacto">Contacto</a>
                 <a href="admin/login.php">Acceso del personal</a>

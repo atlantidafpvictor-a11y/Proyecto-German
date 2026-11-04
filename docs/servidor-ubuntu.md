@@ -386,6 +386,26 @@ sudo git pull
 
 `config.local.php` no se toca, porque Git lo ignora.
 
+### Si la actualización trae una migración
+
+Algunas actualizaciones añaden tablas nuevas. En vez de reimportar `restaurante.sql` (que borraría todo), se ejecuta solo el archivo de `database/migraciones/` correspondiente:
+
+```bash
+sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/001_galeria.sql
+```
+
+### Carpeta para las fotos de la galería (una sola vez)
+
+Apache (usuario `www-data`) tiene que poder guardar las fotos que se suben desde el panel:
+
+```bash
+sudo mkdir -p /var/www/sabor-mediterraneo/uploads/galeria
+sudo chown -R www-data:www-data /var/www/sabor-mediterraneo/uploads
+sudo chmod -R 755 /var/www/sabor-mediterraneo/uploads
+```
+
+Solo esa carpeta es de `www-data`: el resto del código sigue siendo de `root`, así que aunque alguien atacara la web no podría modificar los archivos PHP. Además, `uploads/.htaccess` impide que se ejecute ningún script dentro de `uploads/`, y `admin/.htaccess` sube el límite de subida a 8 MB (Ubuntu trae 2 MB).
+
 > ⚠️ **No volváis a importar `restaurante.sql` en el servidor** salvo que queráis empezar de cero: el script empieza con `DROP DATABASE` y borra todas las reservas, mensajes y usuarios reales.
 
 ## Copia de seguridad de la base de datos
