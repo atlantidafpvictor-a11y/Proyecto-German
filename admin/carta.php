@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__ . '/inc/bootstrap.php';
+require __DIR__ . '/inc/subidas.php';
 exigirLogin('admin');
 $pdo = db();
 
@@ -16,7 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare('UPDATE platos SET destacado = NOT destacado WHERE id = ?')->execute([$id]);
         flash('ok', 'Plato recomendado actualizado.');
     } elseif ($id && $accion === 'borrar') {
+        $foto = $pdo->prepare('SELECT imagen FROM platos WHERE id = ?');
+        $foto->execute([$id]);
         $pdo->prepare('DELETE FROM platos WHERE id = ?')->execute([$id]); // plato_alergeno se borra en cascada
+        borrarSubida($foto->fetchColumn() ?: null);
         flash('ok', 'Plato eliminado de la carta.');
     }
     redirigir('carta.php');
@@ -55,7 +59,8 @@ cabecera('Carta', 'carta');
     <?php else: ?>
     <ul class="dish-admin">
         <?php foreach ($porCategoria[$c['id']] as $p): ?>
-        <li class="<?= $p['disponible'] ? '' : 'row-dim' ?>">
+        <li class="dish-admin-item <?= $p['disponible'] ? '' : 'row-dim' ?>">
+            <img class="dish-thumb" src="<?= e(miniatura($p['imagen'], 160)) ?>" alt="" loading="lazy">
             <div class="dish-admin-main">
                 <p class="dish-admin-name">
                     <?= e($p['nombre']) ?>

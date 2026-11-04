@@ -3,26 +3,16 @@
  * Gestión de la galería: subir fotos, cambiar título y categoría,
  * ordenarlas, ocultarlas y borrarlas.
  *
- * Seguridad al subir archivos (nunca hay que fiarse del archivo que llega):
- *  1. Tamaño máximo de 6 MB.
- *  2. getimagesize() comprueba que el contenido es de verdad una imagen
- *     JPG, PNG o WEBP (no basta con mirar la extensión, que se puede falsear).
- *  3. El archivo se guarda con un nombre aleatorio y la extensión la ponemos
- *     nosotros según el tipo real: nadie puede subir "foto.php".
- *  4. La carpeta uploads/ tiene un .htaccess que impide ejecutar código.
+ * La subida segura de archivos está en inc/subidas.php.
  */
 declare(strict_types=1);
 require __DIR__ . '/inc/bootstrap.php';
+require __DIR__ . '/inc/subidas.php';
 exigirLogin('admin');
 $pdo = db();
 
-const CARPETA = 'uploads/galeria';           // relativa a la raíz de la web
-const MAX_BYTES = 6 * 1024 * 1024;           // 6 MB
 const CATEGORIAS = ['local' => 'El local', 'platos' => 'Platos', 'eventos' => 'Eventos'];
-const TIPOS = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'];
 
-$raiz = dirname(__DIR__);                    // carpeta del proyecto
-$carpetaDisco = $raiz . '/' . CARPETA;
 
 // ¿Existe la tabla? Si no, hay que ejecutar la migración
 try {
@@ -52,16 +42,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $titulo = trim((string) ($_POST['titulo'] ?? ''));
         $categoria = array_key_exists($_POST['categoria'] ?? '', CATEGORIAS) ? $_POST['categoria'] : 'platos';
         $url = trim((string) ($_POST['url'] ?? ''));
-        $archivo = $_FILES['foto'] ?? null;
-        $hayArchivo = $archivo && $archivo['error'] !== UPLOAD_ERR_NO_FILE;
 
         if (mb_strlen($titulo) < 3 || mb_strlen($titulo) > 120) {
             flash('error', 'Escribe un título de entre 3 y 120 caracteres: se usa como descripción de la foto.');
             redirigir('galeria.php');
         }
 
-        if ($hayArchivo) {
-            $imagen = guardarSubida($archivo, $carpetaDisco);
+        if (hayArchivo('foto')) {
+            try {
+                $imagen = guardarFoto($_FILES['foto'], 'galeria');
+            } catch (RuntimeException $ex) {
+                flash('error', $ex->getMessage());
+                redirigir('galeria.php');
+            }
         } elseif ($url !== '') {
             if (!filter_var($url, FILTER_VALIDATE_URL) || !str_starts_with($url, 'https://')) {
                 flash('error', 'La dirección de la foto debe empezar por https://');
@@ -114,60 +107,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$id]);
         $imagen = (string) $stmt->fetchColumn();
         $pdo->prepare('DELETE FROM galeria WHERE id = ?')->execute([$id]);
-        // Si era un archivo subido, se borra también del disco (solo dentro de nuestra carpeta)
-        if (preg_match('#^' . CARPETA . '/[a-f0-9]{24}\.(jpg|png|webp)$#', $imagen) && is_file($raiz . '/' . $imagen)) {
-            unlink($raiz . '/' . $imagen);
-        }
+        borrarSubida($imagen); // si era un archivo subido, se borra también del disco
         flash('ok', 'Foto eliminada.');
     }
 
     redirigir('galeria.php');
-}
-
-/** Valida y guarda una foto subida. Devuelve su ruta relativa o redirige con el error. */
-function guardarSubida(array $archivo, string $carpetaDisco): string
-{
-    $errores = [
-        UPLOAD_ERR_INI_SIZE  => 'La foto es demasiado grande para el servidor.',
-        UPLOAD_ERR_FORM_SIZE => 'La foto es demasiado grande. El máximo son 6 MB.',
-        UPLOAD_ERR_PARTIAL   => 'La foto no se ha subido entera. Inténtalo otra vez.',
-    ];
-    if ($archivo['error'] !== UPLOAD_ERR_OK) {
-        flash('error', $errores[$archivo['error']] ?? 'No se ha podido subir la foto.');
-        redirigir('galeria.php');
-    }
-    if (!is_uploaded_file($archivo['tmp_name']) || $archivo['size'] > MAX_BYTES) {
-        flash('error', 'La foto es demasiado grande. El máximo son 6 MB.');
-        redirigir('galeria.php');
-    }
-
-    $info = @getimagesize($archivo['tmp_name']);
-    if (!$info || !isset(TIPOS[$info[2]])) {
-        flash('error', 'Ese archivo no es una imagen JPG, PNG o WEBP.');
-        redirigir('galeria.php');
-    }
-
-    if (!is_dir($carpetaDisco)) @mkdir($carpetaDisco, 0775, true);
-    if (!is_dir($carpetaDisco) || !is_writable($carpetaDisco)) {
-        flash('error', 'La carpeta ' . CARPETA . ' no existe o no tiene permiso de escritura. En Ubuntu: sudo chown -R www-data:www-data /var/www/sabor-mediterraneo/uploads');
-        redirigir('galeria.php');
-    }
-
-    $nombre = bin2hex(random_bytes(12)) . '.' . TIPOS[$info[2]];
-    if (!move_uploaded_file($archivo['tmp_name'], $carpetaDisco . '/' . $nombre)) {
-        flash('error', 'No se ha podido guardar la foto en el servidor.');
-        redirigir('galeria.php');
-    }
-    return CARPETA . '/' . $nombre;
-}
-
-/** Miniatura para el panel (las rutas locales están un nivel por encima de admin/). */
-function miniatura(string $imagen): string
-{
-    if (str_starts_with($imagen, 'https://images.unsplash.com/') && !str_contains($imagen, '?')) {
-        return $imagen . '?auto=format&fit=crop&w=480&q=70';
-    }
-    return str_starts_with($imagen, 'http') ? $imagen : '../' . $imagen;
 }
 
 $fotos = $pdo->query('SELECT * FROM galeria ORDER BY orden, id')->fetchAll();
@@ -186,7 +130,7 @@ cabecera('Galería', 'galeria');
     <h2>Añadir una foto</h2>
     <form method="post" enctype="multipart/form-data" class="form form-grid upload-form">
         <?= campoCsrf() ?><input type="hidden" name="accion" value="subir">
-        <input type="hidden" name="MAX_FILE_SIZE" value="<?= MAX_BYTES ?>">
+        <input type="hidden" name="MAX_FILE_SIZE" value="<?= SUBIDA_MAX_BYTES ?>">
         <label class="span-2 dropzone">
             <span>Foto <span class="muted">(JPG, PNG o WEBP, máximo 6 MB)</span></span>
             <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" id="foto-input">

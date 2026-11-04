@@ -2,6 +2,7 @@
 /** Crear (sin ?id) o editar (?id=5) un plato y sus alérgenos. */
 declare(strict_types=1);
 require __DIR__ . '/inc/bootstrap.php';
+require __DIR__ . '/inc/subidas.php';
 exigirLogin('admin');
 $pdo = db();
 
@@ -25,8 +26,15 @@ if ($id) {
     $marcados = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
 }
 
+$imagenAnterior = $plato['imagen'] ?? null; // para borrar la foto vieja si se cambia
+
 $errores = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Si la foto supera el límite de PHP, el formulario llega vacío
+    if (!$_POST && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+        flash('error', 'La foto es demasiado grande. El máximo son 6 MB.');
+        redirigir($id ? "plato.php?id=$id" : 'plato.php');
+    }
     comprobarCsrf();
     $plato = [
         'categoria_id' => (int) ($_POST['categoria_id'] ?? 0),
@@ -49,8 +57,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mb_strlen($plato['descripcion']) < 5 || mb_strlen($plato['descripcion']) > 255) $errores[] = 'La descripción debe tener entre 5 y 255 caracteres.';
     if (!is_numeric($plato['precio']) || $plato['precio'] < 0 || $plato['precio'] > 9999) $errores[] = 'El precio no es válido.';
     if (!in_array($plato['categoria_id'], array_map('intval', array_column($categorias, 'id')), true)) $errores[] = 'Elige una categoría.';
-    if ($plato['imagen'] !== '' && !filter_var($plato['imagen'], FILTER_VALIDATE_URL)) $errores[] = 'La imagen debe ser una dirección web (https://…).';
+    if ($plato['imagen'] !== '' && !imagenValida($plato['imagen'])) $errores[] = 'La foto debe ser una dirección https://… o una ruta del proyecto como img/platos/salmorejo.jpg.';
     if ($plato['sin_gluten'] && in_array(1, $marcados, true)) $errores[] = 'Un plato sin gluten no puede tener marcado el alérgeno «Gluten».';
+
+    // La foto se sube solo cuando todo lo demás está bien, para no dejar archivos sueltos
+    $fotoNueva = null;
+    if (!$errores && hayArchivo('foto')) {
+        try {
+            $fotoNueva = guardarFoto($_FILES['foto'], 'platos');
+            $plato['imagen'] = $fotoNueva;
+        } catch (RuntimeException $ex) {
+            $errores[] = $ex->getMessage();
+        }
+    }
 
     if (!$errores) {
         $valores = [
@@ -76,10 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ins->execute([$id, $a]);
             }
             $pdo->commit();
+            if ($imagenAnterior !== ($plato['imagen'] ?: null)) borrarSubida($imagenAnterior);
             flash('ok', '«' . $plato['nombre'] . '» guardado.');
             redirigir('carta.php');
         } catch (PDOException $ex) {
             $pdo->rollBack();
+            borrarSubida($fotoNueva); // la foto recién subida ya no se usa
             if ($ex->getCode() !== '23000') throw $ex; // 23000 = nombre repetido
             $errores[] = 'Ya existe un plato con ese nombre.';
         }
@@ -97,7 +118,8 @@ cabecera($id ? 'Editar plato' : 'Nuevo plato', 'carta');
 
 <?php foreach ($errores as $err): ?><p class="flash flash-error"><?= e($err) ?></p><?php endforeach; ?>
 
-<form method="post" class="panel form form-grid">
+<form method="post" class="panel form form-grid" enctype="multipart/form-data">
+    <input type="hidden" name="MAX_FILE_SIZE" value="<?= SUBIDA_MAX_BYTES ?>">
     <?= campoCsrf() ?>
     <label class="span-2">Nombre <input name="nombre" value="<?= e($plato['nombre']) ?>" maxlength="100" required></label>
     <label>Categoría
@@ -110,7 +132,18 @@ cabecera($id ? 'Editar plato' : 'Nuevo plato', 'carta');
     <label class="span-all">Descripción <textarea name="descripcion" rows="2" maxlength="255" required><?= e($plato['descripcion']) ?></textarea></label>
     <label>Precio (€) <input name="precio" inputmode="decimal" value="<?= e((string) $plato['precio']) ?>" required></label>
     <label><span>Unidad <span class="muted">(opcional)</span></span><input name="unidad" value="<?= e($plato['unidad']) ?>" placeholder="p.p., copa, ración" maxlength="10"></label>
-    <label>Foto (URL) <input name="imagen" type="url" value="<?= e($plato['imagen']) ?>" placeholder="https://"></label>
+
+    <div class="span-all photo-field">
+        <img class="photo-current" id="foto-preview" src="<?= e(miniatura($plato['imagen'] ?: null)) ?>" alt="Foto del plato">
+        <div class="form">
+            <label class="dropzone"><span>Cambiar foto <span class="muted">(JPG, PNG o WEBP, máximo 6 MB)</span></span>
+                <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" id="foto-input">
+            </label>
+            <label><span>…o ruta / dirección de la foto <span class="muted">(opcional)</span></span>
+                <input name="imagen" value="<?= e((string) $plato['imagen']) ?>" placeholder="img/platos/salmorejo.jpg o https://…">
+            </label>
+        </div>
+    </div>
 
     <fieldset class="span-all checks">
         <legend>Etiquetas</legend>
@@ -131,4 +164,11 @@ cabecera($id ? 'Editar plato' : 'Nuevo plato', 'carta');
         <a class="btn btn-quiet" href="carta.php">Cancelar</a>
     </div>
 </form>
+<script>
+// Vista previa de la foto elegida antes de guardar
+document.getElementById('foto-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) document.getElementById('foto-preview').src = URL.createObjectURL(file);
+});
+</script>
 <?php pie();

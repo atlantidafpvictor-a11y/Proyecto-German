@@ -23,7 +23,6 @@ const API = {
 };
 
 /* ---------- Datos de demostración (copia de la BD) ---------- */
-const IMG = (id, w = 900) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
 
 const DATOS_DEMO = {
     alergenos: [
@@ -41,27 +40,27 @@ const DATOS_DEMO = {
         { id: 5, nombre: "Bodega" },
     ],
     platos: [
-        { id: 1, categoria_id: 1, nombre: "Salmorejo con jamón y huevo", descripcion: "Tomate de la Vega, pan de pueblo y aceite de Montefrío.", precio: 7.5, imagen: IMG("1547592180-85f173990554"), vegetariano: 0, sin_gluten: 0, destacado: 0, alergenos: [1, 3] },
-        { id: 2, categoria_id: 1, nombre: "Remojón granadino", descripcion: "Naranja, bacalao desalado, aceituna negra y cebolleta.", precio: 8.5, imagen: IMG("1512621776951-a57141f2eefd"), vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [4] },
-        { id: 3, categoria_id: 1, nombre: "Berenjenas fritas con miel de caña", descripcion: "Finas, crujientes y con miel de caña de Frigiliana.", precio: 8, imagen: IMG("1512621776951-a57141f2eefd"), vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1] },
-        { id: 4, categoria_id: 1, nombre: "Croquetas caseras de puchero", descripcion: "Seis unidades, con la carne del cocido de la casa.", precio: 9, imagen: IMG("1476224203421-9ac39bcb3327"), vegetariano: 0, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7] },
+        { id: 1, categoria_id: 1, nombre: "Salmorejo con jamón y huevo", descripcion: "Tomate de la Vega, pan de pueblo y aceite de Montefrío.", precio: 7.5, imagen: "img/platos/salmorejo.jpg", vegetariano: 0, sin_gluten: 0, destacado: 0, alergenos: [1, 3] },
+        { id: 2, categoria_id: 1, nombre: "Remojón granadino", descripcion: "Naranja, bacalao desalado, aceituna negra y cebolleta.", precio: 8.5, imagen: "img/platos/remojon.jpg", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [4] },
+        { id: 3, categoria_id: 1, nombre: "Berenjenas fritas con miel de caña", descripcion: "Finas, crujientes y con miel de caña de Frigiliana.", precio: 8, imagen: "img/platos/berenjenas.jpg", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1] },
+        { id: 4, categoria_id: 1, nombre: "Croquetas caseras de puchero", descripcion: "Seis unidades, con la carne del cocido de la casa.", precio: 9, imagen: "img/platos/croquetas.jpg", vegetariano: 0, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7] },
 
-        { id: 5, categoria_id: 2, nombre: "Arroz negro con alioli", descripcion: "Sepia de Motril y su tinta. Mínimo dos personas.", precio: 16.5, unidad: "p.p.", imagen: IMG("1476224203421-9ac39bcb3327"), vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [3, 14] },
-        { id: 6, categoria_id: 2, nombre: "Arroz de verduras de la huerta", descripcion: "Alcachofa, judía verde, pimiento y ñora. Mínimo dos personas.", precio: 14, unidad: "p.p.", imagen: IMG("1547592180-85f173990554"), vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [] },
-        { id: 7, categoria_id: 2, nombre: "Arroz meloso de pato y setas", descripcion: "Pato confitado y setas de temporada de Sierra Nevada.", precio: 17, unidad: "p.p.", imagen: IMG("1476224203421-9ac39bcb3327"), vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [9, 12] },
+        { id: 5, categoria_id: 2, nombre: "Arroz negro con alioli", descripcion: "Sepia de Motril y su tinta. Mínimo dos personas.", precio: 16.5, unidad: "p.p.", imagen: "img/platos/arroz-negro.jpg", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [3, 14] },
+        { id: 6, categoria_id: 2, nombre: "Arroz de verduras de la huerta", descripcion: "Alcachofa, judía verde, pimiento y ñora. Mínimo dos personas.", precio: 14, unidad: "p.p.", imagen: "img/platos/arroz-verduras.jpg", vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [] },
+        { id: 7, categoria_id: 2, nombre: "Arroz meloso de pato y setas", descripcion: "Pato confitado y setas de temporada de Sierra Nevada.", precio: 17, unidad: "p.p.", imagen: "img/platos/arroz-pato.jpg", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [9, 12] },
 
-        { id: 8, categoria_id: 3, nombre: "Lubina a la sal", descripcion: "Pieza entera para compartir, con verduras asadas.", precio: 19.5, imagen: IMG("1544025162-d76694265947"), vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [4] },
-        { id: 9, categoria_id: 3, nombre: "Carrillada ibérica al vino tinto", descripcion: "Guisada a fuego lento durante seis horas, con puré de patata.", precio: 16, imagen: IMG("1544025162-d76694265947"), vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [7, 12] },
-        { id: 10, categoria_id: 3, nombre: "Cordero segureño al horno", descripcion: "Paletilla con patatas a lo pobre.", precio: 21, imagen: IMG("1544025162-d76694265947"), vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [] },
-        { id: 11, categoria_id: 3, nombre: "Pasta fresca al pesto de albahaca", descripcion: "Hecha cada mañana, con piñones y queso curado.", precio: 12.5, imagen: IMG("1551183053-bf91a1d81141"), vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7, 8] },
+        { id: 8, categoria_id: 3, nombre: "Lubina a la sal", descripcion: "Pieza entera para compartir, con verduras asadas.", precio: 19.5, imagen: "img/platos/lubina.jpg", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [4] },
+        { id: 9, categoria_id: 3, nombre: "Carrillada ibérica al vino tinto", descripcion: "Guisada a fuego lento durante seis horas, con puré de patata.", precio: 16, imagen: "img/platos/carrillada.jpg", vegetariano: 0, sin_gluten: 1, destacado: 1, alergenos: [7, 12] },
+        { id: 10, categoria_id: 3, nombre: "Cordero segureño al horno", descripcion: "Paletilla con patatas a lo pobre.", precio: 21, imagen: "img/platos/cordero.jpg", vegetariano: 0, sin_gluten: 1, destacado: 0, alergenos: [] },
+        { id: 11, categoria_id: 3, nombre: "Pasta fresca al pesto de albahaca", descripcion: "Hecha cada mañana, con piñones y queso curado.", precio: 12.5, imagen: "img/platos/pasta-pesto.jpg", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7, 8] },
 
-        { id: 12, categoria_id: 4, nombre: "Piononos de Santa Fe", descripcion: "Bizcocho borracho y crema tostada, el dulce de la provincia.", precio: 5.5, imagen: IMG("1488477181946-6428a0291777"), vegetariano: 1, sin_gluten: 0, destacado: 1, alergenos: [1, 3, 7] },
-        { id: 13, categoria_id: 4, nombre: "Tarta de queso al horno", descripcion: "Cremosa por dentro, con mermelada de higos.", precio: 6, imagen: IMG("1488477181946-6428a0291777"), vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7] },
-        { id: 14, categoria_id: 4, nombre: "Fruta de temporada", descripcion: "Lo que traiga ese día el mercado.", precio: 4.5, imagen: IMG("1488477181946-6428a0291777"), vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [] },
+        { id: 12, categoria_id: 4, nombre: "Piononos de Santa Fe", descripcion: "Bizcocho borracho y crema tostada, el dulce de la provincia.", precio: 5.5, imagen: "img/platos/piononos.jpg", vegetariano: 1, sin_gluten: 0, destacado: 1, alergenos: [1, 3, 7] },
+        { id: 13, categoria_id: 4, nombre: "Tarta de queso al horno", descripcion: "Cremosa por dentro, con mermelada de higos.", precio: 6, imagen: "img/platos/tarta-queso.jpg", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1, 3, 7] },
+        { id: 14, categoria_id: 4, nombre: "Fruta de temporada", descripcion: "Lo que traiga ese día el mercado.", precio: 4.5, imagen: "img/platos/fruta.jpg", vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [] },
 
-        { id: 15, categoria_id: 5, nombre: "Vino tinto de la Contraviesa", descripcion: "Copa. Tempranillo y garnacha de altura.", precio: 3.5, imagen: IMG("1414235077428-338989a2e8c0"), vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [12] },
-        { id: 16, categoria_id: 5, nombre: "Vino blanco de Granada", descripcion: "Copa. Vijiriega, fresco y aromático.", precio: 3.5, imagen: IMG("1414235077428-338989a2e8c0"), vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [12] },
-        { id: 17, categoria_id: 5, nombre: "Cerveza de barril", descripcion: "Caña o tercio, con su tapa.", precio: 2.5, imagen: IMG("1414235077428-338989a2e8c0"), vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1] },
+        { id: 15, categoria_id: 5, nombre: "Vino tinto de la Contraviesa", descripcion: "Copa. Tempranillo y garnacha de altura.", precio: 3.5, imagen: "img/platos/vino-tinto.jpg", vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [12] },
+        { id: 16, categoria_id: 5, nombre: "Vino blanco de Granada", descripcion: "Copa. Vijiriega, fresco y aromático.", precio: 3.5, imagen: "img/platos/vino-blanco.jpg", vegetariano: 1, sin_gluten: 1, destacado: 0, alergenos: [12] },
+        { id: 17, categoria_id: 5, nombre: "Cerveza de barril", descripcion: "Caña o tercio, con su tapa.", precio: 2.5, imagen: "img/platos/cerveza.jpg", vegetariano: 1, sin_gluten: 0, destacado: 0, alergenos: [1] },
     ],
     // dia_semana: 1 = lunes ... 7 = domingo (igual que en la BD)
     horarios: [
@@ -95,15 +94,19 @@ const DATOS_DEMO = {
         ];
     })(),
     galeria: [
-        ["Nuestro comedor", "1517248135467-4c7edcad34c4", "local"],
-        ["Mesa servida para compartir", "1414235077428-338989a2e8c0", "local"],
-        ["Remojón granadino", "1512621776951-a57141f2eefd", "platos"],
-        ["Arroz negro con alioli", "1476224203421-9ac39bcb3327", "platos"],
-        ["Verduras de la Vega", "1547592180-85f173990554", "platos"],
-        ["Carrillada ibérica al vino tinto", "1544025162-d76694265947", "platos"],
-        ["Pasta fresca al pesto", "1551183053-bf91a1d81141", "platos"],
-        ["Postres caseros", "1488477181946-6428a0291777", "platos"],
-    ].map(([titulo, foto, categoria], i) => ({ id: i + 1, titulo, categoria, mini: IMG(foto, 800), grande: IMG(foto, 1800) })),
+        ["Nuestra fachada en el centro de Granada", "img/galeria/fachada.jpg", "local"],
+        ["Terraza con vistas a la Alhambra", "img/galeria/terraza.jpg", "local"],
+        ["El comedor", "img/comedor.jpg", "local"],
+        ["Arroz negro con alioli", "img/platos/arroz-negro.jpg", "platos"],
+        ["Emplatando en la cocina", "img/galeria/cocina.jpg", "local"],
+        ["Pan con tomate y aceite de la tierra", "img/galeria/aceite.jpg", "platos"],
+        ["Carrillada ibérica al vino tinto", "img/platos/carrillada.jpg", "platos"],
+        ["Noche de cata de vinos", "img/galeria/cata-vinos.jpg", "eventos"],
+        ["Mesa lista para la cena", "img/galeria/detalle-mesa.jpg", "local"],
+        ["Remojón granadino", "img/platos/remojon.jpg", "platos"],
+        ["Celebraciones en el reservado", "img/galeria/celebracion.jpg", "eventos"],
+        ["Postres caseros", "img/galeria/postres.jpg", "platos"],
+    ].map(([titulo, foto, categoria], i) => ({ id: i + 1, titulo, categoria, mini: foto, grande: foto })),
     opiniones: [
         { nombre: "Lucía M.", puntuacion: 5, comentario: "El arroz negro es de los mejores que he probado en Granada. Y nos atendieron sin ninguna prisa.", fecha: "2026-09-14" },
         { nombre: "Javier R.", puntuacion: 5, comentario: "Fuimos doce para un cumpleaños y lo organizaron todo. El pionono del final, imprescindible.", fecha: "2026-08-30" },

@@ -209,3 +209,16 @@ code { background: var(--cal-2); padding: 1px 6px; border-radius: 4px; font-size
 .gallery-edit input, .gallery-edit select { width: 100%; padding: 8px 10px; border: 1.5px solid var(--linea); border-radius: 8px; background: var(--blanco); }
 .gallery-edit input:focus, .gallery-edit select:focus { outline: none; border-color: var(--anil); }
 .btn[disabled] { opacity: .4; cursor: not-allowed; }
+
+/* ---------- Fotos de los platos ---------- */
+.dish-admin-item { grid-template-columns: 72px 1fr auto !important; }
+.dish-admin-item .actions { grid-column: 2 / -1; }
+.dish-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; background: var(--cal-2); grid-row: span 2; }
+.photo-field { display: grid; grid-template-columns: 180px 1fr; gap: 20px; align-items: start; }
+.photo-current { width: 180px; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 999px 999px 10px 10px; background: var(--cal-2); }
+@media (max-width: 760px) {
+    .photo-field { grid-template-columns: 1fr; }
+    .dish-admin-item { grid-template-columns: 56px 1fr !important; }
+    .dish-thumb { width: 56px; height: 56px; }
+    .dish-admin-item .dish-admin-price { grid-column: 2; }
+}
