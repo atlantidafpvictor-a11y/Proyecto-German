@@ -384,23 +384,23 @@ INSERT INTO alergenos (id, nombre) VALUES
 (11, 'Sésamo'), (12, 'Sulfitos'), (13, 'Altramuces'), (14, 'Moluscos');
 
 INSERT INTO platos (id, categoria_id, nombre, descripcion, precio, unidad, imagen, vegetariano, vegano, sin_gluten, destacado) VALUES
-(1,  1, 'Salmorejo con jamón y huevo',       'Tomate de la Vega, pan de pueblo y aceite de Montefrío.',          7.50, NULL,  'https://images.unsplash.com/photo-1547592180-85f173990554', 0, 0, 0, 0),
-(2,  1, 'Remojón granadino',                 'Naranja, bacalao desalado, aceituna negra y cebolleta.',            8.50, NULL,  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd', 0, 0, 1, 1),
-(3,  1, 'Berenjenas fritas con miel de caña','Finas, crujientes y con miel de caña de Frigiliana.',               8.00, NULL,  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd', 1, 0, 0, 0),
-(4,  1, 'Croquetas caseras de puchero',      'Seis unidades, con la carne del cocido de la casa.',                9.00, NULL,  'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327', 0, 0, 0, 0),
-(5,  2, 'Arroz negro con alioli',            'Sepia de Motril y su tinta. Mínimo dos personas.',                 16.50, 'p.p.','https://images.unsplash.com/photo-1476224203421-9ac39bcb3327', 0, 0, 1, 1),
-(6,  2, 'Arroz de verduras de la huerta',    'Alcachofa, judía verde, pimiento y ñora. Mínimo dos personas.',    14.00, 'p.p.','https://images.unsplash.com/photo-1547592180-85f173990554', 1, 1, 1, 0),
-(7,  2, 'Arroz meloso de pato y setas',      'Pato confitado y setas de temporada de Sierra Nevada.',            17.00, 'p.p.','https://images.unsplash.com/photo-1476224203421-9ac39bcb3327', 0, 0, 1, 0),
-(8,  3, 'Lubina a la sal',                   'Pieza entera para compartir, con verduras asadas.',                19.50, NULL,  'https://images.unsplash.com/photo-1544025162-d76694265947', 0, 0, 1, 0),
-(9,  3, 'Carrillada ibérica al vino tinto',  'Guisada a fuego lento durante seis horas, con puré de patata.',    16.00, NULL,  'https://images.unsplash.com/photo-1544025162-d76694265947', 0, 0, 1, 1),
-(10, 3, 'Cordero segureño al horno',         'Paletilla con patatas a lo pobre.',                                21.00, NULL,  'https://images.unsplash.com/photo-1544025162-d76694265947', 0, 0, 1, 0),
-(11, 3, 'Pasta fresca al pesto de albahaca', 'Hecha cada mañana, con piñones y queso curado.',                   12.50, NULL,  'https://images.unsplash.com/photo-1551183053-bf91a1d81141', 1, 0, 0, 0),
-(12, 4, 'Piononos de Santa Fe',              'Bizcocho borracho y crema tostada, el dulce de la provincia.',      5.50, NULL,  'https://images.unsplash.com/photo-1488477181946-6428a0291777', 1, 0, 0, 1),
-(13, 4, 'Tarta de queso al horno',           'Cremosa por dentro, con mermelada de higos.',                       6.00, NULL,  'https://images.unsplash.com/photo-1488477181946-6428a0291777', 1, 0, 0, 0),
-(14, 4, 'Fruta de temporada',                'Lo que traiga ese día el mercado.',                                 4.50, NULL,  'https://images.unsplash.com/photo-1488477181946-6428a0291777', 1, 1, 1, 0),
-(15, 5, 'Vino tinto de la Contraviesa',      'Copa. Tempranillo y garnacha de altura.',                           3.50, 'copa','https://images.unsplash.com/photo-1414235077428-338989a2e8c0', 1, 1, 1, 0),
-(16, 5, 'Vino blanco de Granada',            'Copa. Vijiriega, fresco y aromático.',                              3.50, 'copa','https://images.unsplash.com/photo-1414235077428-338989a2e8c0', 1, 1, 1, 0),
-(17, 5, 'Cerveza de barril',                 'Caña o tercio, con su tapa.',                                       2.50, NULL,  'https://images.unsplash.com/photo-1414235077428-338989a2e8c0', 1, 1, 0, 0);
+(1,  1, 'Salmorejo con jamón y huevo',       'Tomate de la Vega, pan de pueblo y aceite de Montefrío.',          7.50, NULL,  'img/platos/salmorejo.jpg', 0, 0, 0, 0),
+(2,  1, 'Remojón granadino',                 'Naranja, bacalao desalado, aceituna negra y cebolleta.',            8.50, NULL,  'img/platos/remojon.jpg', 0, 0, 1, 1),
+(3,  1, 'Berenjenas fritas con miel de caña','Finas, crujientes y con miel de caña de Frigiliana.',               8.00, NULL,  'img/platos/berenjenas.jpg', 1, 0, 0, 0),
+(4,  1, 'Croquetas caseras de puchero',      'Seis unidades, con la carne del cocido de la casa.',                9.00, NULL,  'img/platos/croquetas.jpg', 0, 0, 0, 0),
+(5,  2, 'Arroz negro con alioli',            'Sepia de Motril y su tinta. Mínimo dos personas.',                 16.50, 'p.p.','img/platos/arroz-negro.jpg', 0, 0, 1, 1),
+(6,  2, 'Arroz de verduras de la huerta',    'Alcachofa, judía verde, pimiento y ñora. Mínimo dos personas.',    14.00, 'p.p.','img/platos/arroz-verduras.jpg', 1, 1, 1, 0),
+(7,  2, 'Arroz meloso de pato y setas',      'Pato confitado y setas de temporada de Sierra Nevada.',            17.00, 'p.p.','img/platos/arroz-pato.jpg', 0, 0, 1, 0),
+(8,  3, 'Lubina a la sal',                   'Pieza entera para compartir, con verduras asadas.',                19.50, NULL,  'img/platos/lubina.jpg', 0, 0, 1, 0),
+(9,  3, 'Carrillada ibérica al vino tinto',  'Guisada a fuego lento durante seis horas, con puré de patata.',    16.00, NULL,  'img/platos/carrillada.jpg', 0, 0, 1, 1),
+(10, 3, 'Cordero segureño al horno',         'Paletilla con patatas a lo pobre.',                                21.00, NULL,  'img/platos/cordero.jpg', 0, 0, 1, 0),
+(11, 3, 'Pasta fresca al pesto de albahaca', 'Hecha cada mañana, con piñones y queso curado.',                   12.50, NULL,  'img/platos/pasta-pesto.jpg', 1, 0, 0, 0),
+(12, 4, 'Piononos de Santa Fe',              'Bizcocho borracho y crema tostada, el dulce de la provincia.',      5.50, NULL,  'img/platos/piononos.jpg', 1, 0, 0, 1),
+(13, 4, 'Tarta de queso al horno',           'Cremosa por dentro, con mermelada de higos.',                       6.00, NULL,  'img/platos/tarta-queso.jpg', 1, 0, 0, 0),
+(14, 4, 'Fruta de temporada',                'Lo que traiga ese día el mercado.',                                 4.50, NULL,  'img/platos/fruta.jpg', 1, 1, 1, 0),
+(15, 5, 'Vino tinto de la Contraviesa',      'Copa. Tempranillo y garnacha de altura.',                           3.50, 'copa','img/platos/vino-tinto.jpg', 1, 1, 1, 0),
+(16, 5, 'Vino blanco de Granada',            'Copa. Vijiriega, fresco y aromático.',                              3.50, 'copa','img/platos/vino-blanco.jpg', 1, 1, 1, 0),
+(17, 5, 'Cerveza de barril',                 'Caña o tercio, con su tapa.',                                       2.50, NULL,  'img/platos/cerveza.jpg', 1, 1, 0, 0);
 
 INSERT INTO plato_alergeno (plato_id, alergeno_id) VALUES
 (1, 1), (1, 3),
@@ -471,18 +471,19 @@ INSERT INTO opiniones (cliente_id, nombre, puntuacion, comentario, fecha, aproba
 (3, 'Carmen P.', 4, 'Carta corta pero muy cuidada. Me avisaron de los alérgenos de cada plato sin tener que preguntar.', '2026-10-02', 1),
 (NULL, 'Anónimo', 2, 'Tardaron en traer la cuenta.', '2026-10-10', 0);
 
-INSERT INTO galeria (titulo, imagen, categoria, orden)
-SELECT * FROM (
-    SELECT 'Nuestro comedor'                 AS titulo, 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4' AS imagen, 'local'  AS categoria, 1 AS orden UNION ALL
-    SELECT 'Mesa servida para compartir',               'https://images.unsplash.com/photo-1414235077428-338989a2e8c0', 'local',  2 UNION ALL
-    SELECT 'Remojón granadino',                         'https://images.unsplash.com/photo-1512621776951-a57141f2eefd', 'platos', 3 UNION ALL
-    SELECT 'Arroz negro con alioli',                    'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327', 'platos', 4 UNION ALL
-    SELECT 'Verduras de la Vega',                       'https://images.unsplash.com/photo-1547592180-85f173990554',   'platos', 5 UNION ALL
-    SELECT 'Carrillada ibérica al vino tinto',          'https://images.unsplash.com/photo-1544025162-d76694265947',   'platos', 6 UNION ALL
-    SELECT 'Pasta fresca al pesto',                     'https://images.unsplash.com/photo-1551183053-bf91a1d81141',   'platos', 7 UNION ALL
-    SELECT 'Postres caseros',                           'https://images.unsplash.com/photo-1488477181946-6428a0291777', 'platos', 8
-) AS fotos
-WHERE NOT EXISTS (SELECT 1 FROM galeria);
+INSERT INTO galeria (titulo, imagen, categoria, orden) VALUES
+('Nuestra fachada en el centro de Granada', 'img/galeria/fachada.jpg', 'local', 1),
+('Terraza con vistas a la Alhambra', 'img/galeria/terraza.jpg', 'local', 2),
+('El comedor', 'img/comedor.jpg', 'local', 3),
+('Arroz negro con alioli', 'img/platos/arroz-negro.jpg', 'platos', 4),
+('Emplatando en la cocina', 'img/galeria/cocina.jpg', 'local', 5),
+('Pan con tomate y aceite de la tierra', 'img/galeria/aceite.jpg', 'platos', 6),
+('Carrillada ibérica al vino tinto', 'img/platos/carrillada.jpg', 'platos', 7),
+('Noche de cata de vinos', 'img/galeria/cata-vinos.jpg', 'eventos', 8),
+('Mesa lista para la cena', 'img/galeria/detalle-mesa.jpg', 'local', 9),
+('Remojón granadino', 'img/platos/remojon.jpg', 'platos', 10),
+('Celebraciones en el reservado', 'img/galeria/celebracion.jpg', 'eventos', 11),
+('Postres caseros', 'img/galeria/postres.jpg', 'platos', 12);
 
 -- =========================================================
 -- 9. CONSULTAS DE PRUEBA (para la memoria del proyecto)

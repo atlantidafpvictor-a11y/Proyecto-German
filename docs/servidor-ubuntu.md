@@ -392,6 +392,7 @@ Algunas actualizaciones añaden tablas nuevas. En vez de reimportar `restaurante
 
 ```bash
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/001_galeria.sql
+sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/002_fotos_propias.sql
 ```
 
 ### Carpeta para las fotos de la galería (una sola vez)

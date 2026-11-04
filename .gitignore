@@ -4,3 +4,6 @@ api/config.local.php
 # Fotos subidas desde el panel: son datos del servidor, no código
 uploads/galeria/*
 !uploads/galeria/.gitkeep
+
+uploads/platos/*
+!uploads/platos/.gitkeep

@@ -31,7 +31,8 @@ Proyecto-German/
 │   ├── opiniones.php       Publicar o retirar reseñas
 │   ├── mensajes.php        Bandeja del formulario de contacto
 │   └── usuarios.php        Equipo (roles Administración y Sala)
-├── uploads/galeria/        Fotos subidas desde el panel (no se suben a GitHub)
+├── img/                    Fotos del proyecto: portada, comedor, platos y galería (optimizadas para web)
+├── uploads/                Fotos subidas desde el panel (no se suben a GitHub)
 └── database/
     ├── restaurante.sql     Script completo de la base de datos
     ├── migraciones/        Cambios para bases de datos que ya existían
@@ -73,3 +74,4 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - [x] Consultar y cancelar reserva con código y teléfono
 - [x] Eventos con inscripción y plazas limitadas
 - [x] Galería de fotos con subida segura desde el panel
+- [x] Fotos propias del restaurante (generadas con IA y optimizadas: de 83 MB a 7,6 MB) y subida de foto en «Editar plato»
