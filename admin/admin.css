@@ -233,3 +233,7 @@ code { background: var(--cal-2); padding: 1px 6px; border-radius: 4px; font-size
     .dish-thumb { width: 56px; height: 56px; }
     .dish-admin-item .dish-admin-price { grid-column: 2; }
 }
+
+/* Legibilidad de Bodoni en pantallas normales (trazos más firmes) */
+h1, h2, .brand span, .stat-n, .dish-admin-name, .card blockquote { font-variation-settings: "opsz" 22; }
+.stat-n { font-weight: 480; }

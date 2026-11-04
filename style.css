@@ -158,7 +158,7 @@ h3 { font-size: var(--t-md); }
    2,3 pantallas de alto. Al bajar, JavaScript agranda la "ventana"
    del arco (clip-path) hasta ocupar toda la pantalla. */
 .hero { position: relative; height: 100svh; min-height: 620px; margin-top: calc(-1 * var(--header-h)); }
-.hero.is-anim { height: 230svh; }
+.hero.is-anim { height: 190svh; }
 .hero-stage {
     --aw: min(520px, 40vw);            /* ancho del arco */
     --ah: 52svh;                       /* alto del arco */
@@ -757,10 +757,6 @@ body::after {
 /* ---------- Opiniones: citas de revista ---------- */
 .reviews-track { gap: clamp(32px, 5vw, 72px); }
 .review blockquote { font-size: clamp(1.35rem, 1.9vw, 1.7rem); line-height: 1.35; letter-spacing: -0.01em; }
-.review blockquote::before {
-    content: "“"; display: block; height: .42em; font-family: var(--f-display); font-size: 5rem; line-height: .9;
-    color: var(--ocre); margin-bottom: 18px;
-}
 
 /* ---------- Reservas ---------- */
 .booking-text h2 { font-size: clamp(3rem, 7vw, 6rem); letter-spacing: -0.035em; }
@@ -770,11 +766,28 @@ body::after {
 .footer { overflow: hidden; }
 .footer-wordmark {
     font-family: var(--f-display); font-weight: 400; font-optical-sizing: auto;
-    font-size: 10.4vw; line-height: .78; letter-spacing: -0.045em; white-space: nowrap; text-align: center;
-    color: var(--cal); opacity: .95; margin: 8px 0 -0.14em; user-select: none;
+    font-size: 9.6vw; line-height: 1; letter-spacing: -0.04em; white-space: nowrap; text-align: center;
+    color: var(--cal); margin: 0; padding: 0 var(--gutter) clamp(24px, 3vw, 48px); user-select: none;
 }
 
 /* ---------- Movimiento reducido: el hero queda quieto ---------- */
 @media (prefers-reduced-motion: reduce) {
     .hero.is-anim { height: 100svh; }
 }
+
+/* ---------- Legibilidad de Bodoni en pantallas normales ----------
+   Por defecto Bodoni usa trazos muy finos en tamaños grandes, que en una
+   pantalla de portátil casi desaparecen ("14" parecía "1 1"). Fijamos un
+   tamaño óptico menor: trazos más firmes y el mismo estilo elegante. */
+h1, h2, .about-statement, .footer-wordmark, .hero-veil-line, .booking-text h2 {
+    font-variation-settings: "opsz" 30;
+}
+h3, legend, .logo-text, .facts dt, .event-date .day, .event-price, .review blockquote,
+.preview-caption, .hero-place, .date-strip .opt .d {
+    font-variation-settings: "opsz" 22;
+}
+.facts dt, .event-date .day, .event-price { font-weight: 470; }
+.menu .dish-name { font-weight: 520; }
+
+/* El mapa, en rectángulo redondeado: en forma de arco se perdía información */
+.visit-map { border-radius: 18px; }
