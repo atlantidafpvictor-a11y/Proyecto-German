@@ -33,7 +33,68 @@ ip a
 
 - `apt update / upgrade`: actualiza la lista de paquetes y el sistema.
 - `timedatectl`: pone la hora de España. Importante, porque las reservas dependen de qué día es "hoy".
-- `ip a`: muestra la IP del servidor (algo como `192.168.1.50`, en la interfaz `enp0s3`). Apuntadla.
+- `ip a`: muestra la IP del servidor (algo como `192.168.1.50`) y el nombre de la tarjeta de red (algo como `enp3s0` o `eno1`). Apuntad los dos.
+
+### 1b. Acceso por SSH
+
+Para no tener que trabajar delante de la torre, instalad el servidor SSH (si no lo marcasteis al instalar Ubuntu):
+
+```bash
+sudo apt install -y openssh-server
+sudo systemctl enable --now ssh
+```
+
+Desde vuestro PC con Windows, en PowerShell o Git Bash: `ssh vuestro_usuario@IP-DEL-SERVIDOR`.
+
+### 1c. IP fija
+
+Por defecto el router o el servidor DHCP del instituto puede darle otra IP cada vez que se encienda, y la web dejaría de estar en la misma dirección. **Preguntad primero al profesor** qué IP podéis usar, para no chocar con otro equipo de la red; también puede reservarla en el DHCP.
+
+Averiguad la puerta de enlace (el router):
+
+```bash
+ip route | grep default
+```
+
+Desactivad la configuración de red automática de cloud-init, para que no deshaga el cambio al reiniciar, y haced una copia del archivo actual:
+
+```bash
+echo "network: {config: disabled}" | sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+sudo cp /etc/netplan/50-cloud-init.yaml /root/50-cloud-init.yaml.copia
+```
+
+Mirad el archivo de red que ya existe (el nombre puede variar):
+
+```bash
+ls /etc/netplan/
+sudo nano /etc/netplan/50-cloud-init.yaml
+```
+
+Sustituid su contenido por esto, cambiando la tarjeta, la IP y la puerta de enlace por las vuestras (en YAML los espacios importan: usad espacios, nunca tabuladores):
+
+```yaml
+network:
+  version: 2
+  ethernets:
+    enp3s0:
+      dhcp4: false
+      addresses:
+        - 192.168.1.50/24
+      routes:
+        - to: default
+          via: 192.168.1.1
+      nameservers:
+        addresses: [8.8.8.8, 1.1.1.1]
+```
+
+```bash
+sudo chmod 600 /etc/netplan/*.yaml
+sudo netplan try
+```
+
+`netplan try` aplica el cambio y lo deshace solo a los 120 segundos si no pulsáis Enter, así que si os quedáis sin red no pasa nada. Si todo funciona (comprobadlo con `ping -c 3 google.com`), pulsad **Enter** para confirmarlo.
+
+> Si lo estáis haciendo por SSH y cambiáis la IP, la conexión se cortará: volved a entrar con la IP nueva. Lo más cómodo es hacer este paso delante de la torre.
 
 ## 2. Instalar Apache, MariaDB, PHP y Git
 
@@ -309,4 +370,5 @@ sudo mysqldump sabor_mediterraneo --routines --triggers > ~/copia_$(date +%F).sq
 | La web dice "Modo demostración" | PHP no se ejecuta o la API falla | Abrir `http://IP/api/carta.php` |
 | Página en blanco o error 500 | Error de PHP | `sudo tail -n 30 /var/log/apache2/sabor_error.log` |
 | `database/` se puede abrir | Falta `AllowOverride All` | Revisar el VirtualHost |
-| No se entra desde otro PC | Red de la VM o cortafuegos | Adaptador puente, `sudo ufw status` |
+| No se entra desde otro PC | Cable, IP o cortafuegos | `ip a`, `ping` desde el otro PC, `sudo ufw status` |
+| La web cambia de dirección al reiniciar | La IP la da el DHCP | Paso 1c: IP fija |
