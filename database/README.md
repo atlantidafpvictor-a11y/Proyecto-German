@@ -138,6 +138,17 @@ Tablas sin relaciones (configuración y gestión): `horarios`, `dias_cerrados`, 
 3. Si todo va bien se confirma (`COMMIT`) y el cliente recibe su código; si no queda mesa se deshace todo (`ROLLBACK`).
 4. El personal la ve en el panel, en «Hoy» y en «Reservas», y la marca como completada o no presentada.
 
+## Inscripción a un evento sin pasarse de plazas
+
+Si quedan 2 plazas y dos personas piden 2 a la vez, las dos podrían ver «quedan 2» y apuntarse: es una **condición de carrera**. `api/inscripcion.php` lo evita así:
+
+1. `BEGIN` (empieza una transacción).
+2. `SELECT ... FROM eventos WHERE id = ? FOR UPDATE`: **bloquea la fila** del evento. Si otra petición intenta lo mismo, espera.
+3. Cuenta las plazas ocupadas en `inscripciones_evento` y comprueba que caben.
+4. Inserta la inscripción y hace `COMMIT`, que libera el bloqueo. La segunda petición ya ve las plazas actualizadas.
+
+Además, la clave primaria `(evento_id, cliente_id)` impide que una misma persona se apunte dos veces al mismo evento.
+
 ## Consultas de ejemplo
 
 ```sql

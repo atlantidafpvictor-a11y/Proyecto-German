@@ -17,6 +17,8 @@ const API = {
     reservas: "api/reservas.php",
     contacto: "api/contacto.php",
     miReserva: "api/mi-reserva.php",
+    eventos: "api/eventos.php",
+    inscripcion: "api/inscripcion.php",
 };
 
 /* ---------- Datos de demostración (copia de la BD) ---------- */
@@ -83,6 +85,14 @@ const DATOS_DEMO = {
         { nombre: "Cata con maridaje", descripcion: "Un jueves al mes: cinco vinos de Granada con cinco platos de la casa.", precio_desde: 42 },
         { nombre: "Para llevar", descripcion: "Arroces y guisos listos para recoger. Encárgalos con una hora de antelación.", precio_desde: 12 },
     ],
+    // Eventos de ejemplo con fechas siempre futuras (solo para el modo demostración)
+    eventos: (() => {
+        const dentro = (dias) => { const d = new Date(); d.setDate(d.getDate() + dias); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+        return [
+            { id: 1, titulo: "Cata de vinos de la Contraviesa", descripcion: "Cinco vinos de bodegas de la Alpujarra con cinco platos de temporada.", fecha: dentro(8), hora: "20:30", plazas: 24, libres: 9, precio: 42 },
+            { id: 2, titulo: "Jornadas de la matanza", descripcion: "Menú especial de invierno con productos del cerdo ibérico.", fecha: dentro(29), hora: "13:30", plazas: 40, libres: 3, precio: 38 },
+        ];
+    })(),
     opiniones: [
         { nombre: "Lucía M.", puntuacion: 5, comentario: "El arroz negro es de los mejores que he probado en Granada. Y nos atendieron sin ninguna prisa.", fecha: "2026-09-14" },
         { nombre: "Javier R.", puntuacion: 5, comentario: "Fuimos doce para un cumpleaños y lo organizaron todo. El pionono del final, imprescindible.", fecha: "2026-08-30" },
@@ -321,6 +331,167 @@ function pintarOpiniones(opiniones) {
             <blockquote>“${escapeHTML(o.comentario)}”</blockquote>
             <figcaption><strong>${escapeHTML(o.nombre)}</strong> · ${new Date(o.fecha).toLocaleDateString("es-ES", { month: "long", year: "numeric" })}</figcaption>
         </figure>`).join("");
+}
+
+/* =========================================================
+   4b. EVENTOS
+   ========================================================= */
+let eventosCargados = [];
+
+function pintarEventos(eventos) {
+    eventosCargados = eventos;
+    const lista = $("#events-list");
+    if (!lista) return;
+    if (!eventos.length) {
+        lista.innerHTML = `<li class="events-empty">Ahora mismo no hay eventos programados. Pronto anunciaremos nuevas catas y jornadas.</li>`;
+        return;
+    }
+    lista.innerHTML = eventos.map((ev) => {
+        const d = new Date(ev.fecha + "T12:00:00");
+        const ocupadas = ev.plazas - ev.libres;
+        const lleno = ev.libres <= 0;
+        const pocas = !lleno && ev.libres <= 5;
+        const texto = lleno ? "Completo"
+            : pocas ? (ev.libres === 1 ? "¡Última plaza!" : `¡Últimas ${ev.libres} plazas!`)
+            : `Quedan ${ev.libres} de ${ev.plazas} plazas`;
+        return `
+        <li class="event ${lleno ? "is-full" : ""} ${pocas ? "is-few" : ""}">
+            <p class="event-date">
+                <span class="day">${d.getDate()}</span>
+                <span class="month">${d.toLocaleDateString("es-ES", { month: "long" })}</span>
+                <span class="when">${d.toLocaleDateString("es-ES", { weekday: "long" })} · ${escapeHTML(ev.hora)}</span>
+            </p>
+            <div class="event-body">
+                <h3>${escapeHTML(ev.titulo)}</h3>
+                <p>${escapeHTML(ev.descripcion)}</p>
+                <div class="seats">
+                    <div class="seats-bar" role="progressbar" aria-label="Plazas ocupadas" aria-valuemin="0" aria-valuemax="${ev.plazas}" aria-valuenow="${ocupadas}"><span style="width:${Math.round(ocupadas / ev.plazas * 100)}%"></span></div>
+                    <p class="seats-text">${texto}</p>
+                </div>
+            </div>
+            <div class="event-side">
+                <p class="event-price">${euro(ev.precio)}<small>por persona</small></p>
+                <button type="button" class="btn btn-primary" data-evento="${ev.id}" ${lleno ? "disabled" : ""}>${lleno ? "Completo" : "Apuntarme"}</button>
+            </div>
+        </li>`;
+    }).join("");
+}
+
+function iniciarEventos() {
+    const dialogo = $("#event-dialog");
+    if (!dialogo) return;
+    const form = $("#event-form");
+    const selectPlazas = $("#e-plazas");
+    const total = $("#event-total");
+    const errorGeneral = $("#event-error");
+    const boton = $("#event-submit");
+    const campos = ["e-plazas", "e-nombre", "e-telefono", "e-email", "e-privacidad"];
+    let evento = null;
+
+    const marcar = (id, msg) => {
+        const p = $(`#event-dialog .field-error[data-for="${id}"]`);
+        if (p) p.textContent = msg || "";
+        document.getElementById(id)?.closest(".field")?.classList.toggle("invalid", Boolean(msg));
+    };
+    const limpiar = () => { campos.forEach((id) => marcar(id, "")); errorGeneral.textContent = ""; };
+    const actualizarTotal = () => {
+        const n = Number(selectPlazas.value);
+        total.textContent = `Total: ${euro(n * evento.precio)} (${n} ${n === 1 ? "plaza" : "plazas"} × ${euro(evento.precio)})`;
+    };
+
+    function abrir(ev) {
+        evento = ev;
+        const d = new Date(ev.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+        $("#event-dialog-title").textContent = ev.titulo;
+        $("#event-dialog-meta").textContent = `${d.charAt(0).toUpperCase() + d.slice(1)} a las ${ev.hora} · ${euro(ev.precio)} por persona`;
+        const max = Math.min(6, ev.libres);
+        selectPlazas.innerHTML = Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? "plazas" : "plaza"}</option>`).join("");
+        selectPlazas.value = String(Math.min(2, max));
+        actualizarTotal();
+        limpiar();
+        $("#event-done").hidden = true;
+        $("#event-signup").hidden = false;
+        dialogo.showModal();
+        selectPlazas.focus();
+    }
+
+    $("#events-list").addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-evento]:not([disabled])");
+        if (!b) return;
+        const ev = eventosCargados.find((x) => String(x.id) === b.dataset.evento);
+        if (ev) abrir(ev);
+    });
+
+    selectPlazas.addEventListener("change", actualizarTotal);
+    campos.forEach((id) => document.getElementById(id).addEventListener("input", () => marcar(id, "")));
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        limpiar();
+        const datos = {
+            evento_id: evento.id,
+            plazas: Number(selectPlazas.value),
+            nombre: $("#e-nombre").value.trim(),
+            telefono: $("#e-telefono").value.replace(/\s/g, ""),
+            email: $("#e-email").value.trim(),
+            web: $("#e-web").value,
+        };
+        let ok = true;
+        if (datos.nombre.length < 3) { marcar("e-nombre", "Escribe tu nombre y apellidos."); ok = false; }
+        if (!/^\+?[0-9]{9,14}$/.test(datos.telefono)) { marcar("e-telefono", "Escribe un teléfono de 9 cifras."); ok = false; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) { marcar("e-email", "Revisa el email: falta algo como nombre@correo.com."); ok = false; }
+        if (!$("#e-privacidad").checked) { marcar("e-privacidad", "Necesitamos tu permiso para guardar la inscripción."); ok = false; }
+        if (!ok) { dialogo.querySelector(".invalid input")?.focus(); return; }
+
+        boton.disabled = true;
+        boton.textContent = "Apuntando…";
+        const { datos: r, demo } = await pedir(API.inscripcion, () => ({
+            ok: true, evento: evento.titulo, fecha: evento.fecha, hora: evento.hora, plazas: datos.plazas, libres: evento.libres - datos.plazas,
+        }), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+        boton.disabled = false;
+        boton.textContent = "Confirmar inscripción";
+
+        if (!r.ok) {
+            Object.entries(r.campos || {}).forEach(([id, msg]) => marcar(id, msg));
+            if (!r.campos) errorGeneral.textContent = r.error || "No se ha podido completar la inscripción.";
+            // Si han cambiado las plazas, actualizamos la lista
+            if (typeof r.libres === "number") {
+                evento.libres = r.libres;
+                pintarEventos(eventosCargados);
+                if (r.libres > 0) abrirSinBorrar();
+            }
+            return;
+        }
+
+        evento.libres = r.libres;
+        pintarEventos(eventosCargados);
+        const f = new Date(r.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+        $("#event-done-text").textContent =
+            `${datos.nombre.split(" ")[0]}, tienes ${r.plazas} ${r.plazas === 1 ? "plaza" : "plazas"} para «${r.evento}» el ${f} a las ${r.hora}.` +
+            (demo ? " Modo demostración: la inscripción no se ha guardado." : " Si no puedes venir, llámanos para liberar tu sitio.");
+        form.reset();
+        $("#event-signup").hidden = true;
+        $("#event-done").hidden = false;
+        $("#event-done-title").focus();
+    });
+
+    // Rehace el desplegable de plazas sin borrar lo que ya ha escrito la persona
+    function abrirSinBorrar() {
+        const max = Math.min(6, evento.libres);
+        const actual = Math.min(Number(selectPlazas.value), max);
+        selectPlazas.innerHTML = Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? "plazas" : "plaza"}</option>`).join("");
+        selectPlazas.value = String(actual || 1);
+        actualizarTotal();
+    }
+
+    const cerrar = () => dialogo.close();
+    $("#event-close").addEventListener("click", cerrar);
+    $("#event-done-close").addEventListener("click", cerrar);
+    dialogo.addEventListener("click", (e) => {
+        if (e.target !== dialogo) return;
+        const r = dialogo.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) cerrar();
+    });
 }
 
 /* =========================================================
@@ -781,4 +952,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     iniciarReservas(info.horarios, info.dias_cerrados || []);
     iniciarContacto();
     iniciarMiReserva();
+    iniciarEventos();
+    const { datos: ev } = await pedir(API.eventos, { eventos: DATOS_DEMO.eventos });
+    pintarEventos(Array.isArray(ev.eventos) ? ev.eventos : DATOS_DEMO.eventos);
 });

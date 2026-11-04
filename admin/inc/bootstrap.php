@@ -161,6 +161,7 @@ function cabecera(string $titulo, string $activa): void
             <?= $enlace('reservas.php', 'reservas', 'Reservas', $pendientes) ?>
             <?php if ($u['rol'] === 'admin'): ?>
                 <?= $enlace('carta.php', 'carta', 'Carta') ?>
+                <?= $enlace('eventos.php', 'eventos', 'Eventos') ?>
                 <?= $enlace('opiniones.php', 'opiniones', 'Opiniones') ?>
                 <?= $enlace('mensajes.php', 'mensajes', 'Mensajes', $sinLeer) ?>
                 <?= $enlace('usuarios.php', 'usuarios', 'Equipo') ?>

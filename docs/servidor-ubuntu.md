@@ -329,13 +329,10 @@ Para una red local sin dominio. El navegador avisará de que el certificado no e
 
 ```bash
 sudo a2enmod ssl
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/ssl/private/sabor.key \
-  -out /etc/ssl/certs/sabor.crt \
-  -subj "/C=ES/ST=Granada/L=Granada/O=Sabor Mediterraneo/CN=sabor.local"
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/sabor.key -out /etc/ssl/certs/sabor.crt -subj "/C=ES/ST=Granada/L=Granada/O=Sabor Mediterraneo/CN=192.168.4.121" -addext "subjectAltName=IP:192.168.4.121"
 ```
 
-Añadid al final de `/etc/apache2/sites-available/sabor-mediterraneo.conf`:
+Cread un archivo nuevo, `/etc/apache2/sites-available/sabor-mediterraneo-ssl.conf`, con:
 
 ```apache
 <VirtualHost *:443>
@@ -363,10 +360,11 @@ Añadid al final de `/etc/apache2/sites-available/sabor-mediterraneo.conf`:
 Y dentro del bloque `<VirtualHost *:80>`, para redirigir todo a HTTPS:
 
 ```apache
-    Redirect permanent / https://IP-DEL-SERVIDOR/
+    Redirect permanent / https://192.168.4.121/
 ```
 
 ```bash
+sudo a2ensite sabor-mediterraneo-ssl
 sudo apache2ctl configtest
 sudo systemctl reload apache2
 ```

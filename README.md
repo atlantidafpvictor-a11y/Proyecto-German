@@ -17,12 +17,15 @@ Proyecto-German/
 │   ├── disponibilidad.php  GET  · horas libres para una fecha y nº de personas
 │   ├── reservas.php        POST · crea una reserva y le asigna mesa
 │   ├── mi-reserva.php      POST · el cliente consulta o cancela su reserva con código y teléfono
+│   ├── eventos.php         GET  · próximos eventos con plazas libres
+│   ├── inscripcion.php     POST · apuntarse a un evento (control de plazas con FOR UPDATE)
 │   └── contacto.php        POST · guarda un mensaje del formulario
 ├── admin/                  Panel de administración
 │   ├── login.php / logout.php / instalar.php
 │   ├── index.php           Resumen del día y gráfico de ocupación
 │   ├── reservas.php        Agenda, filtros, asignar mesa, reservas por teléfono
 │   ├── carta.php, plato.php  Gestión de la carta y los alérgenos
+│   ├── eventos.php, evento.php  Crear y publicar eventos, ver y quitar inscritos
 │   ├── opiniones.php       Publicar o retirar reseñas
 │   ├── mensajes.php        Bandeja del formulario de contacto
 │   └── usuarios.php        Equipo (roles Administración y Sala)
@@ -63,4 +66,5 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - [x] Paso 4 · Panel de administración con login y roles
 - [x] Servidor Ubuntu Server con HTTPS (ver `docs/servidor-ubuntu.md`)
 - [x] Consultar y cancelar reserva con código y teléfono
-- [ ] Paso 5 · Más extras: eventos con inscripción, galería de fotos
+- [x] Eventos con inscripción y plazas limitadas
+- [ ] Galería de fotos
