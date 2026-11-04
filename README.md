@@ -16,6 +16,7 @@ Proyecto-German/
 │   ├── info.php            GET  · horario, servicios, opiniones y días cerrados
 │   ├── disponibilidad.php  GET  · horas libres para una fecha y nº de personas
 │   ├── reservas.php        POST · crea una reserva y le asigna mesa
+│   ├── mi-reserva.php      POST · el cliente consulta o cancela su reserva con código y teléfono
 │   └── contacto.php        POST · guarda un mensaje del formulario
 ├── admin/                  Panel de administración
 │   ├── login.php / logout.php / instalar.php
@@ -60,4 +61,6 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - [x] Paso 2 · Base de datos (16 tablas, vistas, función, procedimiento y trigger)
 - [x] Paso 3 · API en PHP: carta, horarios, disponibilidad, reservas y contacto
 - [x] Paso 4 · Panel de administración con login y roles
-- [ ] Paso 5 · Extras: consultar/cancelar reserva con el código, eventos con inscripción, galería, emails, despliegue en un hosting
+- [x] Servidor Ubuntu Server con HTTPS (ver `docs/servidor-ubuntu.md`)
+- [x] Consultar y cancelar reserva con código y teléfono
+- [ ] Paso 5 · Más extras: eventos con inscripción, galería de fotos

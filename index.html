@@ -220,6 +220,10 @@
                         confirmación al momento. Para grupos de más de 8
                         personas, llámanos y lo organizamos juntos.
                     </p>
+                    <div class="manage-cta">
+                        <p>¿Ya tienes una reserva?</p>
+                        <button type="button" class="btn btn-ghost-light" id="manage-open" aria-haspopup="dialog">Consultar o cancelar</button>
+                    </div>
                 </div>
 
                 <form class="booking-form" id="booking-form" novalidate>
@@ -290,10 +294,57 @@
                     <h3>Reserva confirmada</h3>
                     <p id="booking-done-text"></p>
                     <p class="code">Código de reserva <strong id="booking-code"></strong></p>
+                    <p class="small-note">Con este código y tu teléfono puedes consultar o cancelar la reserva desde «Consultar o cancelar».</p>
                     <button type="button" class="btn btn-ghost-light" id="booking-new">Hacer otra reserva</button>
                 </div>
             </div>
         </section>
+
+        <!-- ============ CONSULTAR / CANCELAR RESERVA ============ -->
+        <dialog class="manage" id="manage-dialog" aria-labelledby="manage-title">
+            <button type="button" class="manage-close" id="manage-close" aria-label="Cerrar">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+
+            <div id="manage-lookup">
+                <h3 id="manage-title">Tu reserva</h3>
+                <p class="manage-lead">Escribe el código que recibiste al reservar y el teléfono que diste.</p>
+                <form id="manage-form" novalidate>
+                    <div class="field">
+                        <label for="m-codigo">Código de reserva</label>
+                        <input type="text" id="m-codigo" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7Q2XB" required>
+                        <p class="field-error" data-for="m-codigo"></p>
+                    </div>
+                    <div class="field">
+                        <label for="m-telefono">Teléfono</label>
+                        <input type="tel" id="m-telefono" autocomplete="tel" required>
+                        <p class="field-error" data-for="m-telefono"></p>
+                    </div>
+                    <p class="manage-error" id="manage-error" role="alert"></p>
+                    <button type="submit" class="btn btn-primary btn-block" id="manage-search">Buscar reserva</button>
+                </form>
+            </div>
+
+            <div id="manage-result" hidden>
+                <h3 id="manage-result-title" tabindex="-1"></h3>
+                <p class="manage-status" id="manage-status"></p>
+                <dl class="manage-details" id="manage-details"></dl>
+                <p class="manage-note" id="manage-note"></p>
+
+                <div class="manage-actions" id="manage-actions">
+                    <button type="button" class="btn btn-danger" id="manage-cancel">Cancelar reserva</button>
+                    <button type="button" class="btn btn-ghost" id="manage-back">Buscar otra reserva</button>
+                </div>
+
+                <div class="manage-confirm" id="manage-confirm" hidden>
+                    <p><strong>¿Cancelar esta reserva?</strong> La mesa quedará libre para otras personas y no se puede deshacer.</p>
+                    <div class="manage-actions">
+                        <button type="button" class="btn btn-danger" id="manage-cancel-yes">Sí, cancelar reserva</button>
+                        <button type="button" class="btn btn-ghost" id="manage-cancel-no">No, mantenerla</button>
+                    </div>
+                </div>
+            </div>
+        </dialog>
     </main>
 
     <!-- ============ PIE ============ -->

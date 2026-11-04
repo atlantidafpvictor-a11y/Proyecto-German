@@ -32,6 +32,8 @@ $config = [
     'dias_max_reserva' => 90,
     // Máximo de personas por reserva online (grupos mayores, por teléfono)
     'max_personas_online' => 8,
+    // Hasta cuántas horas antes puede el cliente cancelar online
+    'horas_min_cancelacion' => 2,
 ];
 
 $local = __DIR__ . '/config.local.php';

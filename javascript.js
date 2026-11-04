@@ -16,6 +16,7 @@ const API = {
     disponibilidad: "api/disponibilidad.php",
     reservas: "api/reservas.php",
     contacto: "api/contacto.php",
+    miReserva: "api/mi-reserva.php",
 };
 
 /* ---------- Datos de demostración (copia de la BD) ---------- */
@@ -529,6 +530,7 @@ function iniciarReservas(horarios, diasCerrados = []) {
             (demo ? "Modo demostración: la reserva aún no se ha guardado en la base de datos."
                   : "Guarda este código: te lo pediremos si necesitas cambiar o cancelar la reserva.");
         $("#booking-code").textContent = datos.codigo;
+        ultimaReserva = { codigo: datos.codigo, telefono: reserva.telefono };
         form.hidden = true;
         hecho.hidden = false;
         hecho.focus();
@@ -544,6 +546,157 @@ function iniciarReservas(horarios, diasCerrados = []) {
     });
 
     cargarHoras();
+}
+
+/* =========================================================
+   5b. CONSULTAR O CANCELAR UNA RESERVA
+   ========================================================= */
+let ultimaReserva = null; // se rellena al reservar, para no tener que copiar el código
+
+function iniciarMiReserva() {
+    const dialogo = $("#manage-dialog");
+    if (!dialogo) return;
+    const form = $("#manage-form");
+    const buscar = $("#manage-search");
+    const errorGeneral = $("#manage-error");
+    const vistaBuscar = $("#manage-lookup");
+    const vistaResultado = $("#manage-result");
+    const confirmar = $("#manage-confirm");
+    const acciones = $("#manage-actions");
+    const botonCancelar = $("#manage-cancel");
+    const ESTADOS = {
+        pendiente: "Pendiente de mesa",
+        confirmada: "Confirmada",
+        cancelada: "Cancelada",
+        completada: "Completada",
+        no_presentado: "No presentada",
+    };
+    let actual = null; // { codigo, telefono } de la reserva que se está viendo
+
+    const marcar = (id, msg) => {
+        const campo = document.getElementById(id).closest(".field");
+        campo.classList.toggle("invalid", Boolean(msg));
+        $(".field-error", campo).textContent = msg || "";
+    };
+
+    function abrir() {
+        mostrarBuscar();
+        if (ultimaReserva) {
+            $("#m-codigo").value = ultimaReserva.codigo;
+            $("#m-telefono").value = ultimaReserva.telefono;
+        }
+        dialogo.showModal();
+        $("#m-codigo").focus();
+    }
+
+    function mostrarBuscar() {
+        vistaResultado.hidden = true;
+        vistaBuscar.hidden = false;
+        errorGeneral.textContent = "";
+        ["m-codigo", "m-telefono"].forEach((id) => marcar(id, ""));
+    }
+
+    function mostrarReserva(r) {
+        const fecha = new Date(r.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+        $("#manage-result-title").textContent = r.estado === "cancelada" ? "Reserva cancelada" : `Hola, ${r.nombre}`;
+        const estado = $("#manage-status");
+        estado.textContent = ESTADOS[r.estado] || r.estado;
+        estado.className = "manage-status is-" + r.estado;
+        $("#manage-details").innerHTML = `
+            <dt>Código</dt><dd>${escapeHTML(r.codigo)}</dd>
+            <dt>Día</dt><dd>${escapeHTML(fecha.charAt(0).toUpperCase() + fecha.slice(1))}</dd>
+            <dt>Hora</dt><dd>${escapeHTML(r.hora)}</dd>
+            <dt>Personas</dt><dd>${r.personas}</dd>
+            ${r.zona ? `<dt>Zona</dt><dd>${escapeHTML(r.zona)}</dd>` : ""}`;
+        $("#manage-note").textContent = r.estado === "cancelada"
+            ? "La mesa ha quedado libre. Si cambias de idea, puedes hacer una reserva nueva."
+            : r.motivo;
+        botonCancelar.hidden = !r.puede_cancelar;
+        confirmar.hidden = true;
+        acciones.hidden = false;
+        vistaBuscar.hidden = true;
+        vistaResultado.hidden = false;
+        $("#manage-result-title").focus();
+    }
+
+    async function enviar(accion) {
+        const { datos, demo } = await pedir(API.miReserva, () => ({
+            ok: false,
+            error: "Para consultar reservas hace falta el servidor (XAMPP o Ubuntu). En modo demostración no se guardan.",
+        }), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...actual, accion }),
+        });
+        return { datos, demo };
+    }
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const codigo = $("#m-codigo").value.trim().toUpperCase();
+        const telefono = $("#m-telefono").value.trim();
+        let ok = true;
+        if (!/^[A-Z0-9]{6}$/.test(codigo)) { marcar("m-codigo", "El código tiene 6 letras y números."); ok = false; }
+        if (telefono.replace(/\D/g, "").length < 9) { marcar("m-telefono", "Escribe el teléfono de la reserva."); ok = false; }
+        if (!ok) return;
+
+        actual = { codigo, telefono };
+        errorGeneral.textContent = "";
+        buscar.disabled = true;
+        buscar.textContent = "Buscando…";
+        const { datos } = await enviar("consultar");
+        buscar.disabled = false;
+        buscar.textContent = "Buscar reserva";
+
+        if (!datos.ok) {
+            if (datos.campo) marcar(datos.campo, datos.error);
+            else errorGeneral.textContent = datos.error || "No se ha podido consultar la reserva.";
+            return;
+        }
+        mostrarReserva(datos.reserva);
+    });
+
+    ["m-codigo", "m-telefono"].forEach((id) => document.getElementById(id).addEventListener("input", () => {
+        marcar(id, "");
+        errorGeneral.textContent = "";
+    }));
+
+    botonCancelar.addEventListener("click", () => {
+        acciones.hidden = true;
+        confirmar.hidden = false;
+        $("#manage-cancel-no").focus();
+    });
+    $("#manage-cancel-no").addEventListener("click", () => {
+        confirmar.hidden = true;
+        acciones.hidden = false;
+        botonCancelar.focus();
+    });
+    $("#manage-cancel-yes").addEventListener("click", async (e) => {
+        const b = e.currentTarget;
+        b.disabled = true;
+        b.textContent = "Cancelando…";
+        const { datos } = await enviar("cancelar");
+        b.disabled = false;
+        b.textContent = "Sí, cancelar reserva";
+        if (datos.reserva) mostrarReserva(datos.reserva);
+        if (!datos.ok && !datos.reserva) {
+            confirmar.hidden = true;
+            acciones.hidden = false;
+            $("#manage-note").textContent = datos.error || "No se ha podido cancelar. Llámanos al 958 000 000.";
+        }
+    });
+
+    $("#manage-back").addEventListener("click", () => { mostrarBuscar(); form.reset(); $("#m-codigo").focus(); });
+    $("#manage-open").addEventListener("click", abrir);
+    $("#manage-close").addEventListener("click", () => dialogo.close());
+    // Cerrar al pulsar fuera de la ventana
+    dialogo.addEventListener("click", (e) => {
+        if (e.target !== dialogo) return;
+        const r = dialogo.getBoundingClientRect();
+        const fuera = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+        if (fuera) dialogo.close();
+    });
+    dialogo.addEventListener("close", () => $("#manage-open").focus());
 }
 
 /* =========================================================
@@ -627,4 +780,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     pintarOpiniones(info.opiniones);
     iniciarReservas(info.horarios, info.dias_cerrados || []);
     iniciarContacto();
+    iniciarMiReserva();
 });

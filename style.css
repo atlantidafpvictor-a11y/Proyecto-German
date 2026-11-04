@@ -55,6 +55,7 @@ body {
     overflow-x: hidden;
 }
 
+[hidden] { display: none !important; }
 img { display: block; max-width: 100%; }
 a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -405,6 +406,55 @@ h3 { font-size: var(--t-md); }
 .booking-done .code strong { display: block; font-family: var(--f-display); font-size: 2rem; letter-spacing: .12em; color: var(--blanco); margin-top: 4px; }
 @media (prefers-reduced-motion: no-preference) {
     .booking-done:not([hidden]) { animation: rise .6s cubic-bezier(.2, .7, .2, 1); }
+}
+
+
+/* ---------- 11b. Consultar / cancelar reserva ---------- */
+.manage-cta {
+    margin-top: 40px; padding-top: 24px; border-top: 1px solid rgba(246, 245, 241, .25);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+}
+.manage-cta p { opacity: .85; }
+.booking-done .small-note { font-size: var(--t-sm); opacity: .75; margin-bottom: 24px; }
+
+.btn-danger { background: var(--error); color: var(--blanco); }
+.btn-danger:hover { background: #8A2821; }
+
+.manage {
+    width: min(460px, calc(100% - 32px)); max-height: calc(100% - 32px); margin: auto;
+    border: 0; border-radius: 18px; padding: clamp(24px, 5vw, 36px);
+    background: var(--cal); color: var(--tinta);
+    box-shadow: 0 24px 60px rgba(23, 44, 102, .35);
+}
+.manage::backdrop { background: rgba(23, 44, 102, .55); backdrop-filter: blur(3px); }
+.manage h3 { font-size: var(--t-lg); margin-bottom: 8px; padding-right: 40px; }
+.manage h3:focus { outline: none; }
+.manage-lead { color: var(--tinta-2); margin-bottom: 22px; }
+.manage-close {
+    position: absolute; top: 14px; right: 14px; width: 40px; height: 40px;
+    display: grid; place-items: center; border: 0; border-radius: 50%; background: none; cursor: pointer; color: var(--tinta-2);
+}
+.manage-close:hover { background: var(--cal-2); color: var(--tinta); }
+.manage-close svg { width: 20px; height: 20px; }
+#m-codigo { text-transform: uppercase; letter-spacing: .15em; font-weight: 600; }
+.manage-error { color: var(--error); font-weight: 500; margin-bottom: 12px; }
+.manage-error:empty { display: none; }
+
+.manage-status { display: inline-block; font-size: var(--t-sm); font-weight: 600; padding: 3px 12px; border-radius: 999px; margin-bottom: 18px; }
+.manage-status.is-confirmada { background: #E2E8F5; color: var(--anil-oscuro); }
+.manage-status.is-pendiente { background: #FBEBD0; color: #8A5C17; }
+.manage-status.is-cancelada, .manage-status.is-completada, .manage-status.is-no_presentado { background: var(--cal-2); color: var(--tinta-2); }
+
+.manage-details { display: grid; grid-template-columns: auto 1fr; gap: 10px 20px; padding: 18px 0; border-block: 1px solid var(--cal-2); margin-bottom: 16px; }
+.manage-details dt { color: var(--tinta-2); font-size: var(--t-sm); }
+.manage-details dd { font-weight: 600; }
+.manage-note { color: var(--tinta-2); font-size: var(--t-sm); margin-bottom: 18px; }
+.manage-note:empty { display: none; }
+.manage-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.manage-confirm { margin-top: 4px; padding: 18px; border-radius: 12px; background: #F6E1DE; }
+.manage-confirm p { margin-bottom: 14px; }
+@media (prefers-reduced-motion: no-preference) {
+    .manage[open] { animation: rise .35s cubic-bezier(.2, .7, .2, 1); }
 }
 
 /* ---------- 12. Pie ---------- */

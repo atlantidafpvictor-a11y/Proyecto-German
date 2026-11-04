@@ -69,14 +69,16 @@ ejecutar(function () {
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        // Inserta el cliente; si el email ya existe, actualiza nombre y teléfono
-        // y LAST_INSERT_ID(id) nos devuelve el id del cliente existente.
-        $stmt = $pdo->prepare(
+        // Inserta el cliente; si el email ya existe, actualiza su nombre y teléfono
+        $pdo->prepare(
             'INSERT INTO clientes (nombre, telefono, email) VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), telefono = VALUES(telefono), id = LAST_INSERT_ID(id)'
-        );
-        $stmt->execute([$nombre, $telefono, strtolower($email)]);
-        $clienteId = (int) $pdo->lastInsertId();
+             ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), telefono = VALUES(telefono)'
+        )->execute([$nombre, $telefono, strtolower($email)]);
+
+        // Buscamos su id por el email: funciona tanto si es nuevo como si ya existía
+        $buscar = $pdo->prepare('SELECT id FROM clientes WHERE email = ?');
+        $buscar->execute([strtolower($email)]);
+        $clienteId = (int) $buscar->fetchColumn();
 
         $codigo = generarCodigo($pdo);
 

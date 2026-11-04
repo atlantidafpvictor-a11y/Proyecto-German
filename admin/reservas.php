@@ -44,13 +44,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->beginTransaction();
         try {
             if ($email) {
+                // Cliente con email: se crea o se actualiza, y se busca su id por el email
                 $pdo->prepare('INSERT INTO clientes (nombre, telefono, email) VALUES (?, ?, ?)
-                               ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), telefono = VALUES(telefono), id = LAST_INSERT_ID(id)')
+                               ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), telefono = VALUES(telefono)')
                     ->execute([$nombre, $telefono, $email]);
+                $buscar = $pdo->prepare('SELECT id FROM clientes WHERE email = ?');
+                $buscar->execute([$email]);
+                $clienteId = (int) $buscar->fetchColumn();
             } else {
                 $pdo->prepare('INSERT INTO clientes (nombre, telefono) VALUES (?, ?)')->execute([$nombre, $telefono]);
+                $clienteId = (int) $pdo->lastInsertId();
             }
-            $clienteId = (int) $pdo->lastInsertId();
 
             $alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
             do {
