@@ -1,2 +1,6 @@
 # Configuración con contraseñas de cada servidor: nunca se sube a GitHub
 api/config.local.php
+
+# Fotos subidas desde el panel: son datos del servidor, no código
+uploads/galeria/*
+!uploads/galeria/.gitkeep

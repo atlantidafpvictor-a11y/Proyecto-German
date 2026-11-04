@@ -7,7 +7,18 @@ Base de datos `sabor_mediterraneo` (MySQL / MariaDB en XAMPP). Script completo e
 1. Abre XAMPP y arranca **Apache** y **MySQL**.
 2. Entra en <http://localhost/phpmyadmin>.
 3. Pestaña **Importar** → selecciona `database/restaurante.sql` → **Continuar**.
-4. Comprueba que aparece la base `sabor_mediterraneo` con 16 tablas, 3 vistas, 1 función, 1 procedimiento y 1 trigger.
+4. Comprueba que aparece la base `sabor_mediterraneo` con 17 tablas, 3 vistas, 1 función, 1 procedimiento y 1 trigger.
+
+## Migraciones (bases de datos que ya existían)
+
+`restaurante.sql` **borra y vuelve a crear** la base de datos: solo se usa la primera vez. Si la base ya tiene datos reales, los cambios nuevos se aplican con los archivos de `database/migraciones/`, que **solo añaden** lo que falta:
+
+| Archivo | Qué añade |
+|---|---|
+| `001_galeria.sql` | Tabla `galeria` y 8 fotos de ejemplo |
+
+- **XAMPP:** phpMyAdmin → base `sabor_mediterraneo` → Importar → el archivo de la migración.
+- **Ubuntu:** `sudo mysql sabor_mediterraneo < database/migraciones/001_galeria.sql`
 
 ## Diagrama entidad-relación
 
@@ -95,7 +106,7 @@ erDiagram
     }
 ```
 
-Tablas sin relaciones (configuración y gestión): `horarios`, `dias_cerrados`, `servicios`, `mensajes_contacto`, `usuarios`.
+Tablas sin relaciones (configuración y gestión): `horarios`, `dias_cerrados`, `servicios`, `mensajes_contacto`, `galeria`, `usuarios`.
 
 ## Tablas
 
@@ -115,6 +126,7 @@ Tablas sin relaciones (configuración y gestión): `horarios`, `dias_cerrados`, 
 | `eventos` / `inscripciones_evento` | Eventos con plazas limitadas y quién se apunta. |
 | `opiniones` | Reseñas; solo se publican las `aprobada = 1`. |
 | `mensajes_contacto` | Mensajes del formulario de contacto. |
+| `galeria` | Fotos de la web: dirección o archivo subido, categoría, orden y si se ve. |
 | `usuarios` | Personal con acceso al panel (contraseña cifrada con bcrypt). |
 
 ## Decisiones de diseño (para defender en la exposición)

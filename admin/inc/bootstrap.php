@@ -162,6 +162,7 @@ function cabecera(string $titulo, string $activa): void
             <?php if ($u['rol'] === 'admin'): ?>
                 <?= $enlace('carta.php', 'carta', 'Carta') ?>
                 <?= $enlace('eventos.php', 'eventos', 'Eventos') ?>
+                <?= $enlace('galeria.php', 'galeria', 'Galería') ?>
                 <?= $enlace('opiniones.php', 'opiniones', 'Opiniones') ?>
                 <?= $enlace('mensajes.php', 'mensajes', 'Mensajes', $sinLeer) ?>
                 <?= $enlace('usuarios.php', 'usuarios', 'Equipo') ?>

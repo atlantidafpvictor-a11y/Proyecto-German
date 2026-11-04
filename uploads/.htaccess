@@ -1,0 +1,10 @@
+# Carpeta de archivos subidos desde el panel.
+# Aquí solo puede haber imágenes: nunca se ejecuta código, aunque alguien
+# consiguiera subir un .php.
+Options -Indexes
+<FilesMatch "\.(php|phtml|phar|php\d|pl|py|cgi|sh|html?|js|svg)$">
+    Require all denied
+</FilesMatch>
+<IfModule php_module>
+    php_flag engine off
+</IfModule>

@@ -1,0 +1,5 @@
+# Permite subir fotos de hasta 6 MB desde el panel (Ubuntu trae 2 MB por defecto)
+<IfModule php_module>
+    php_value upload_max_filesize 8M
+    php_value post_max_size 10M
+</IfModule>

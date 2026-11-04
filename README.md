@@ -19,6 +19,7 @@ Proyecto-German/
 │   ├── mi-reserva.php      POST · el cliente consulta o cancela su reserva con código y teléfono
 │   ├── eventos.php         GET  · próximos eventos con plazas libres
 │   ├── inscripcion.php     POST · apuntarse a un evento (control de plazas con FOR UPDATE)
+│   ├── galeria.php         GET  · fotos visibles de la galería
 │   └── contacto.php        POST · guarda un mensaje del formulario
 ├── admin/                  Panel de administración
 │   ├── login.php / logout.php / instalar.php
@@ -26,11 +27,14 @@ Proyecto-German/
 │   ├── reservas.php        Agenda, filtros, asignar mesa, reservas por teléfono
 │   ├── carta.php, plato.php  Gestión de la carta y los alérgenos
 │   ├── eventos.php, evento.php  Crear y publicar eventos, ver y quitar inscritos
+│   ├── galeria.php         Subir, ordenar, ocultar y borrar fotos
 │   ├── opiniones.php       Publicar o retirar reseñas
 │   ├── mensajes.php        Bandeja del formulario de contacto
 │   └── usuarios.php        Equipo (roles Administración y Sala)
+├── uploads/galeria/        Fotos subidas desde el panel (no se suben a GitHub)
 └── database/
     ├── restaurante.sql     Script completo de la base de datos
+    ├── migraciones/        Cambios para bases de datos que ya existían
     └── README.md           Diagrama E-R y decisiones de diseño
 ```
 
@@ -57,14 +61,15 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - **Roles:** el personal de Sala solo ve las reservas; Administración gestiona todo.
 - **Validación doble:** en el navegador (comodidad) y en el servidor (seguridad).
 - **Anti-spam:** campo trampa oculto en los formularios públicos.
+- **Subida de fotos:** máximo 6 MB, se comprueba que el contenido es una imagen real con `getimagesize()`, nombre aleatorio y extensión según el tipo real, y la carpeta `uploads/` no puede ejecutar código.
 
 ## Hoja de ruta
 
 - [x] Paso 1 · Rediseño visual y carta dinámica
-- [x] Paso 2 · Base de datos (16 tablas, vistas, función, procedimiento y trigger)
+- [x] Paso 2 · Base de datos (17 tablas, vistas, función, procedimiento y trigger)
 - [x] Paso 3 · API en PHP: carta, horarios, disponibilidad, reservas y contacto
 - [x] Paso 4 · Panel de administración con login y roles
 - [x] Servidor Ubuntu Server con HTTPS (ver `docs/servidor-ubuntu.md`)
 - [x] Consultar y cancelar reserva con código y teléfono
 - [x] Eventos con inscripción y plazas limitadas
-- [ ] Galería de fotos
+- [x] Galería de fotos con subida segura desde el panel

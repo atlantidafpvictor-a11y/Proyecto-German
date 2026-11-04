@@ -19,6 +19,7 @@ const API = {
     miReserva: "api/mi-reserva.php",
     eventos: "api/eventos.php",
     inscripcion: "api/inscripcion.php",
+    galeria: "api/galeria.php",
 };
 
 /* ---------- Datos de demostración (copia de la BD) ---------- */
@@ -93,6 +94,16 @@ const DATOS_DEMO = {
             { id: 2, titulo: "Jornadas de la matanza", descripcion: "Menú especial de invierno con productos del cerdo ibérico.", fecha: dentro(29), hora: "13:30", plazas: 40, libres: 3, precio: 38 },
         ];
     })(),
+    galeria: [
+        ["Nuestro comedor", "1517248135467-4c7edcad34c4", "local"],
+        ["Mesa servida para compartir", "1414235077428-338989a2e8c0", "local"],
+        ["Remojón granadino", "1512621776951-a57141f2eefd", "platos"],
+        ["Arroz negro con alioli", "1476224203421-9ac39bcb3327", "platos"],
+        ["Verduras de la Vega", "1547592180-85f173990554", "platos"],
+        ["Carrillada ibérica al vino tinto", "1544025162-d76694265947", "platos"],
+        ["Pasta fresca al pesto", "1551183053-bf91a1d81141", "platos"],
+        ["Postres caseros", "1488477181946-6428a0291777", "platos"],
+    ].map(([titulo, foto, categoria], i) => ({ id: i + 1, titulo, categoria, mini: IMG(foto, 800), grande: IMG(foto, 1800) })),
     opiniones: [
         { nombre: "Lucía M.", puntuacion: 5, comentario: "El arroz negro es de los mejores que he probado en Granada. Y nos atendieron sin ninguna prisa.", fecha: "2026-09-14" },
         { nombre: "Javier R.", puntuacion: 5, comentario: "Fuimos doce para un cumpleaños y lo organizaron todo. El pionono del final, imprescindible.", fecha: "2026-08-30" },
@@ -492,6 +503,92 @@ function iniciarEventos() {
         const r = dialogo.getBoundingClientRect();
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) cerrar();
     });
+}
+
+/* =========================================================
+   4c. GALERÍA
+   ========================================================= */
+function iniciarGaleria(fotos) {
+    const grid = $("#gallery-grid");
+    const filtros = $("#gallery-filters");
+    const visor = $("#lightbox");
+    if (!grid) return;
+
+    const NOMBRES = { local: "El local", platos: "Platos", eventos: "Eventos" };
+    let filtro = "todo";
+    let visibles = fotos;
+    let actual = 0;
+
+    // Solo se ofrecen los filtros de las categorías que tienen fotos
+    const categorias = Object.keys(NOMBRES).filter((c) => fotos.some((f) => f.categoria === c));
+    filtros.innerHTML = categorias.length > 1
+        ? [["todo", "Todo"], ...categorias.map((c) => [c, NOMBRES[c]])]
+            .map(([id, txt]) => `<button type="button" class="tab" data-filtro="${id}" aria-pressed="${id === "todo"}">${txt}</button>`).join("")
+        : "";
+
+    function pintar() {
+        visibles = filtro === "todo" ? fotos : fotos.filter((f) => f.categoria === filtro);
+        if (!visibles.length) {
+            grid.innerHTML = `<li class="gallery-empty">Pronto subiremos fotos.</li>`;
+            return;
+        }
+        grid.innerHTML = visibles.map((f, i) => `
+            <li><button type="button" class="foto" data-i="${i}" aria-label="Ampliar: ${escapeHTML(f.titulo)}">
+                <img src="${escapeHTML(f.mini)}" alt="${escapeHTML(f.titulo)}" loading="lazy">
+                <span class="foto-title" aria-hidden="true">${escapeHTML(f.titulo)}</span>
+            </button></li>`).join("");
+    }
+
+    filtros.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-filtro]");
+        if (!b) return;
+        filtro = b.dataset.filtro;
+        $$("[data-filtro]", filtros).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+        pintar();
+    });
+
+    /* --- Visor --- */
+    const img = $("#lb-img");
+    function mostrar(i) {
+        actual = (i + visibles.length) % visibles.length; // da la vuelta al llegar al final
+        const f = visibles[actual];
+        img.src = f.grande;
+        img.alt = f.titulo;
+        $("#lb-title").textContent = f.titulo;
+        $("#lb-count").textContent = `${actual + 1} / ${visibles.length}`;
+        // Precarga la siguiente para que el paso sea instantáneo
+        new Image().src = visibles[(actual + 1) % visibles.length].grande;
+    }
+
+    grid.addEventListener("click", (e) => {
+        const b = e.target.closest(".foto");
+        if (!b) return;
+        mostrar(Number(b.dataset.i));
+        visor.showModal();
+        $("#lb-next").focus();
+    });
+    $("#lb-prev").addEventListener("click", () => mostrar(actual - 1));
+    $("#lb-next").addEventListener("click", () => mostrar(actual + 1));
+    $("#lb-close").addEventListener("click", () => visor.close());
+    visor.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") { e.preventDefault(); mostrar(actual - 1); }
+        if (e.key === "ArrowRight") { e.preventDefault(); mostrar(actual + 1); }
+    });
+    // Cerrar al pulsar en el fondo oscuro
+    visor.addEventListener("click", (e) => { if (e.target === visor || e.target.classList.contains("lb-figure")) visor.close(); });
+    visor.addEventListener("close", () => grid.querySelector(`.foto[data-i="${actual}"]`)?.focus());
+
+    // Deslizar con el dedo en el móvil
+    let inicioX = null;
+    visor.addEventListener("touchstart", (e) => { inicioX = e.touches[0].clientX; }, { passive: true });
+    visor.addEventListener("touchend", (e) => {
+        if (inicioX === null) return;
+        const dx = e.changedTouches[0].clientX - inicioX;
+        if (Math.abs(dx) > 50) mostrar(actual + (dx < 0 ? 1 : -1));
+        inicioX = null;
+    });
+
+    pintar();
 }
 
 /* =========================================================
@@ -955,4 +1052,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     iniciarEventos();
     const { datos: ev } = await pedir(API.eventos, { eventos: DATOS_DEMO.eventos });
     pintarEventos(Array.isArray(ev.eventos) ? ev.eventos : DATOS_DEMO.eventos);
+    // Fotos reales si el servidor responde; las de ejemplo si no hay servidor o falta la migración
+    const { datos: gal, demo: galDemo } = await pedir(API.galeria, { fotos: DATOS_DEMO.galeria });
+    iniciarGaleria(!galDemo && Array.isArray(gal.fotos) && !gal.aviso ? gal.fotos : DATOS_DEMO.galeria);
 });
