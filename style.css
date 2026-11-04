@@ -7,8 +7,8 @@
 /* ---------- 0. Tipografías incluidas en el proyecto (licencia OFL, carpeta fonts/) ----------
    Van dentro de la web para que se vean igual aunque no haya internet. */
 @font-face {
-    font-family: "Bodoni Moda"; src: url("fonts/bodoni-moda.woff") format("woff");
-    font-weight: 400 900; font-style: normal; font-display: swap;
+    font-family: "Source Serif 4"; src: url("fonts/source-serif-4.woff") format("woff");
+    font-weight: 200 900; font-style: normal; font-display: swap;
 }
 @font-face {
     font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk.woff") format("woff");
@@ -30,7 +30,7 @@
     --error: #A8322A;
 
     /* Tipografía */
-    --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+    --f-display: "Source Serif 4", Georgia, "Times New Roman", serif;
     --f-body: "Hanken Grotesk", system-ui, sans-serif;
 
     /* Escala tipográfica (proporción 1.25) */
@@ -172,7 +172,7 @@ h3 { font-size: var(--t-md); }
     padding: 0 var(--gutter); text-align: center; z-index: 2; will-change: opacity, transform;
 }
 .hero-title {
-    font-size: var(--t-hero); font-weight: 400; line-height: .98; letter-spacing: -0.035em; color: var(--anil);
+    font-size: var(--t-hero); font-weight: 500; line-height: 1; letter-spacing: -0.025em; color: var(--anil);
     font-optical-sizing: auto; text-wrap: balance;
 }
 .hero-title .line { display: block; }
@@ -689,12 +689,12 @@ h3 { font-size: var(--t-md); }
 
 /* =========================================================
    14. CAPA PREMIUM
-   Tipografía de revista, secciones de noche y detalles finos.
+   Tipografía editorial, secciones de noche y detalles finos.
    ========================================================= */
 
-/* Títulos: Bodoni Moda ajusta su contraste según el tamaño (optical sizing) */
+/* Títulos: Source Serif 4 ajusta su diseño según el tamaño (optical sizing) */
 h1, h2, h3 { font-optical-sizing: auto; }
-h2 { font-weight: 400; letter-spacing: -0.03em; line-height: 1; max-width: 16ch; text-wrap: balance; }
+h2 { font-weight: 500; letter-spacing: -0.02em; line-height: 1.05; max-width: 16ch; text-wrap: balance; }
 h3 { font-weight: 500; letter-spacing: -0.01em; }
 body { line-height: 1.65; }
 ::selection { background: var(--anil); color: var(--cal); }
@@ -775,19 +775,10 @@ body::after {
     .hero.is-anim { height: 100svh; }
 }
 
-/* ---------- Legibilidad de Bodoni en pantallas normales ----------
-   Por defecto Bodoni usa trazos muy finos en tamaños grandes, que en una
-   pantalla de portátil casi desaparecen ("14" parecía "1 1"). Fijamos un
-   tamaño óptico menor: trazos más firmes y el mismo estilo elegante. */
-h1, h2, .about-statement, .footer-wordmark, .hero-veil-line, .booking-text h2 {
-    font-variation-settings: "opsz" 30;
-}
-h3, legend, .logo-text, .facts dt, .event-date .day, .event-price, .review blockquote,
-.preview-caption, .hero-place, .date-strip .opt .d {
-    font-variation-settings: "opsz" 22;
-}
-.facts dt, .event-date .day, .event-price { font-weight: 470; }
-.menu .dish-name { font-weight: 520; }
+/* ---------- Pesos de Source Serif ---------- */
+h1, h2, .about-statement, .booking-text h2, .footer-wordmark, .hero-veil-line { font-weight: 500; }
+h3, legend, .facts dt, .event-date .day, .event-price { font-weight: 600; }
+.menu .dish-name { font-weight: 600; }
 
 /* El mapa, en rectángulo redondeado: en forma de arco se perdía información */
 .visit-map { border-radius: 18px; }

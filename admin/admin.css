@@ -6,8 +6,8 @@
 /* ---------- 0. Tipografías incluidas en el proyecto (licencia OFL, carpeta fonts/) ----------
    Van dentro de la web para que se vean igual aunque no haya internet. */
 @font-face {
-    font-family: "Bodoni Moda"; src: url("../fonts/bodoni-moda.woff") format("woff");
-    font-weight: 400 900; font-style: normal; font-display: swap;
+    font-family: "Source Serif 4"; src: url("../fonts/source-serif-4.woff") format("woff");
+    font-weight: 200 900; font-style: normal; font-display: swap;
 }
 @font-face {
     font-family: "Hanken Grotesk"; src: url("../fonts/hanken-grotesk.woff") format("woff");
@@ -26,7 +26,7 @@
     --oliva: #5E6B34;
     --blanco: #FFFFFF;
     --error: #A8322A;
-    --f-display: "Bodoni Moda", "Didot", Georgia, serif;
+    --f-display: "Source Serif 4", Georgia, serif;
     --f-body: "Hanken Grotesk", system-ui, sans-serif;
 }
 
@@ -34,7 +34,7 @@
 body { font-family: var(--f-body); font-size: 15px; line-height: 1.5; color: var(--tinta); background: var(--cal); -webkit-font-smoothing: antialiased; }
 a { color: var(--anil); }
 button, input, select, textarea { font: inherit; color: inherit; }
-h1, h2 { font-family: var(--f-display); font-weight: 500; line-height: 1.15; letter-spacing: -0.01em; font-optical-sizing: auto; }
+h1, h2 { font-family: var(--f-display); font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; font-optical-sizing: auto; }
 h1 { font-size: 1.9rem; }
 h2 { font-size: 1.25rem; margin-bottom: 16px; }
 :focus-visible { outline: 3px solid var(--ocre); outline-offset: 2px; }
@@ -234,6 +234,4 @@ code { background: var(--cal-2); padding: 1px 6px; border-radius: 4px; font-size
     .dish-admin-item .dish-admin-price { grid-column: 2; }
 }
 
-/* Legibilidad de Bodoni en pantallas normales (trazos más firmes) */
-h1, h2, .brand span, .stat-n, .dish-admin-name, .card blockquote { font-variation-settings: "opsz" 22; }
-.stat-n { font-weight: 480; }
+.stat-n { font-weight: 600; }
