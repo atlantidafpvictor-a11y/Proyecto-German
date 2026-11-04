@@ -422,6 +422,7 @@ h3 { font-size: var(--t-md); }
 
 /* ---------- 13. Responsive ---------- */
 @media (max-width: 1080px) {
+    .hero { grid-template-columns: 1.1fr .9fr; }
     .services-grid { grid-template-columns: repeat(2, 1fr); }
     .reviews-track { grid-template-columns: 1fr; max-width: 640px; }
     .booking-inner { grid-template-columns: 1fr; }

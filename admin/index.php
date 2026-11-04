@@ -38,7 +38,8 @@ cabecera('Hoy', 'inicio');
 ?>
 <header class="page-head">
     <div>
-        <h1>Buenos días, <?= e(explode(' ', $u['nombre'])[0]) ?></h1>
+        <?php $h = (int) date('G'); $saludo = $h >= 6 && $h < 13 ? 'Buenos días' : ($h >= 13 && $h < 21 ? 'Buenas tardes' : 'Buenas noches'); ?>
+        <h1><?= $saludo ?>, <?= e(explode(' ', $u['nombre'])[0]) ?></h1>
         <p class="muted">Hoy es <?= e(fechaLarga('today')) ?>.</p>
     </div>
     <a class="btn btn-primary" href="reservas.php?nueva=1">Añadir reserva por teléfono</a>

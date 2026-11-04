@@ -2,6 +2,43 @@
 
 Guía para publicar Sabor Mediterráneo en un servidor Linux con Apache, MariaDB y PHP (pila **LAMP**).
 
+## Nuestro servidor
+
+| Dato | Valor |
+|---|---|
+| Equipo | Ordenador de torre físico con Ubuntu Server 24.04 LTS |
+| Nombre | `proyectoserver` |
+| Tarjeta de red | `eno1` (cable) |
+| IP fija | `192.168.4.121/23` |
+| Puerta de enlace | `192.168.4.1` |
+| DNS | `10.150.1.1`, `8.8.8.8`, `8.8.4.4` |
+| Web | `http://192.168.4.121/` |
+| Panel | `http://192.168.4.121/admin/` |
+| Servicios | Apache 2.4, MariaDB, PHP 8.3, OpenSSH, UFW |
+
+Configuración de red usada (`/etc/netplan/50-cloud-init.yaml`):
+
+```yaml
+network:
+  version: 2
+  ethernets:
+    eno1:
+      dhcp4: false
+      addresses:
+        - 192.168.4.121/23
+      routes:
+        - to: default
+          via: 192.168.4.1
+      nameservers:
+        addresses: [10.150.1.1, 8.8.8.8, 8.8.4.4]
+```
+
+Pruebas superadas: la API devuelve la carta desde MariaDB; `database/restaurante.sql`, `api/config.local.php` y `.git/config` responden **403**; el cortafuegos está activo con OpenSSH y Apache Full; las reservas hechas desde otro PC se guardan y reciben mesa automáticamente.
+
+> Nota de red: el PC de trabajo estaba en otras redes (`192.168.50.x` por cable y `192.168.22.x` por Wi-Fi) y no veía el servidor. Se solucionó conectando el PC por cable a la misma red que la torre (`192.168.4.0/23`).
+
+---
+
 Repositorio: `https://github.com/atlantidafpvictor-a11y/Proyecto-German.git`
 
 ---
