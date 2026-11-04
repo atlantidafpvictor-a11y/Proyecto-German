@@ -2,6 +2,7 @@
 /** Crear (sin ?id) o editar (?id=3) un evento, y ver o quitar sus inscritos. */
 declare(strict_types=1);
 require __DIR__ . '/inc/bootstrap.php';
+require __DIR__ . '/inc/subidas.php';
 exigirLogin('admin');
 $pdo = db();
 
@@ -61,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($plazas === false) $errores[] = 'Las plazas deben ser un número entre 1 y 500.';
     elseif ($plazas < $ocupadas) $errores[] = "Ya hay $ocupadas plazas ocupadas: no puedes dejar menos plazas que eso.";
     if (!is_numeric($evento['precio']) || $evento['precio'] < 0 || $evento['precio'] > 9999) $errores[] = 'El precio no es válido.';
-    if ($evento['imagen'] !== '' && !filter_var($evento['imagen'], FILTER_VALIDATE_URL)) $errores[] = 'La imagen debe ser una dirección web (https://…).';
+    if ($evento['imagen'] !== '' && !imagenValida($evento['imagen'])) $errores[] = 'La foto debe ser una dirección https://… o una ruta del proyecto como img/galeria/cata-vinos.webp.';
     if (!$id && $fecha && new DateTimeImmutable($evento['fecha'] . ' ' . $evento['hora']) < new DateTimeImmutable()) {
         $errores[] = 'La fecha del evento ya ha pasado.';
     }

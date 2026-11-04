@@ -61,33 +61,94 @@ function responder(array $datos, int $codigo = 200): void
  */
 function limitar(string $accion, int $max, int $ventana): void
 {
-    $dir = sys_get_temp_dir() . '/sabor-limites';
-    if (!is_dir($dir)) @mkdir($dir, 0700, true);
-
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'cli';
-    $archivo = $dir . '/' . hash('sha256', $accion . '|' . $ip) . '.json';
-    $fh = @fopen($archivo, 'c+');
-    if (!$fh) return; // si no se puede escribir, no bloqueamos a nadie
-
-    flock($fh, LOCK_EX);
-    $ahora = time();
-    $marcas = json_decode(stream_get_contents($fh) ?: '[]', true) ?: [];
-    $marcas = array_values(array_filter($marcas, fn($t) => $t > $ahora - $ventana));
-
-    if (count($marcas) >= $max) {
-        flock($fh, LOCK_UN);
-        fclose($fh);
-        $espera = max(1, $marcas[0] + $ventana - $ahora);
+    $espera = contador(claveIp($accion), $ventana, function (array $marcas) use ($max, $ventana): array {
+        if (count($marcas) >= $max) {
+            return [$marcas, max(1, $marcas[0] + $ventana - time())];
+        }
+        $marcas[] = time();
+        return [$marcas, 0];
+    });
+    if ($espera) {
         header('Retry-After: ' . $espera);
         responder(['ok' => false, 'error' => 'Has hecho demasiados intentos seguidos. Espera ' . ceil($espera / 60) . ' min o llámanos al 958 000 000.'], 429);
     }
+}
 
-    $marcas[] = $ahora;
+/** Clave del contador para esta IP. */
+function claveIp(string $accion): string
+{
+    return $accion . '|' . ($_SERVER['REMOTE_ADDR'] ?? 'cli');
+}
+
+/**
+ * Lee las marcas de tiempo (de los últimos $ventana segundos) guardadas para
+ * $clave, se las pasa a $fn y guarda las que $fn devuelva.
+ * $fn devuelve [marcas nuevas, resultado]; contador() devuelve el resultado.
+ */
+function contador(string $clave, int $ventana, callable $fn): mixed
+{
+    $dir = sys_get_temp_dir() . '/sabor-limites';
+    if (!is_dir($dir)) @mkdir($dir, 0700, true);
+    $fh = @fopen($dir . '/' . hash('sha256', $clave) . '.json', 'c+');
+    if (!$fh) return $fn([])[1]; // si no se puede escribir, no bloqueamos a nadie
+
+    flock($fh, LOCK_EX);
+    $limite = time() - $ventana;
+    $marcas = json_decode(stream_get_contents($fh) ?: '[]', true) ?: [];
+    $marcas = array_values(array_filter($marcas, fn($t) => is_int($t) && $t > $limite));
+    [$nuevas, $resultado] = $fn($marcas);
     ftruncate($fh, 0);
     rewind($fh);
-    fwrite($fh, json_encode($marcas));
+    fwrite($fh, json_encode(array_values($nuevas)));
     flock($fh, LOCK_UN);
     fclose($fh);
+    return $resultado;
+}
+
+/** Segundos que faltan para poder volver a intentarlo (0 = no está bloqueado). */
+function segundosBloqueado(string $clave, int $max, int $ventana): int
+{
+    return contador($clave, $ventana, fn(array $m): array => [$m, count($m) >= $max ? max(1, $m[0] + $ventana - time()) : 0]);
+}
+
+function anotarFallo(string $clave, int $ventana): void
+{
+    contador($clave, $ventana, fn(array $m): array => [[...$m, time()], null]);
+}
+
+function olvidarFallos(string $clave): void
+{
+    contador($clave, 1, fn(): array => [[], null]);
+}
+
+/**
+ * Cerrojo con nombre de MySQL/MariaDB (GET_LOCK).
+ *
+ * Problema: si quedan una mesa libre y dos personas reservan a la vez, las
+ * dos consultas pueden ver la mesa libre y quedarse con la misma.
+ * Solución: todo lo que asigna mesas se ejecuta dentro de este cerrojo, de
+ * uno en uno. La segunda petición espera (máximo 10 s) a que la primera
+ * termine y, al entrar, ya ve la mesa ocupada.
+ *
+ * El cerrojo se pide ANTES de empezar la transacción: así la transacción
+ * "ve" la base de datos tal y como la dejó la petición anterior.
+ * Si el script termina de golpe, MySQL lo suelta solo al cerrar la conexión.
+ */
+function conCerrojo(string $nombre, callable $fn): mixed
+{
+    $pdo = db();
+    $pedir = $pdo->prepare('SELECT GET_LOCK(?, 10)');
+    $pedir->execute(['sabor_' . $nombre]);
+    if ((int) $pedir->fetchColumn() !== 1) {
+        throw new RuntimeException("El cerrojo «{$nombre}» sigue ocupado tras 10 segundos");
+    }
+    try {
+        return $fn($pdo);
+    } finally {
+        $soltar = $pdo->prepare('SELECT RELEASE_LOCK(?)');
+        $soltar->execute(['sabor_' . $nombre]);
+        $soltar->closeCursor();
+    }
 }
 
 /** Ejecuta la función de un endpoint y convierte cualquier fallo en un JSON de error. */
@@ -102,6 +163,17 @@ function ejecutar(callable $endpoint): void
         error_log('[API] ' . $e->getMessage());
         responder(['ok' => false, 'error' => 'Ha ocurrido un error inesperado.'], 500);
     }
+}
+
+/**
+ * Lee un campo de texto del JSON recibido. Si alguien manda un objeto o una
+ * lista en lugar de texto (p. ej. {"nombre": {"a": 1}}), se trata como vacío
+ * en vez de convertirlo en la palabra "Array".
+ */
+function texto(array $datos, string $campo): string
+{
+    $v = $datos[$campo] ?? '';
+    return is_scalar($v) ? (string) $v : '';
 }
 
 /** Valida una fecha en formato AAAA-MM-DD. */

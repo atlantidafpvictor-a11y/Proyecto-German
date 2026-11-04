@@ -33,15 +33,15 @@ ejecutar(function () {
     }
 
     /* ---------- 1. Validación ---------- */
-    $nombre      = trim((string) ($d['nombre'] ?? ''));
-    $telefono    = preg_replace('/\s+/', '', (string) ($d['telefono'] ?? ''));
-    $email       = trim((string) ($d['email'] ?? ''));
-    $fecha       = fechaValida((string) ($d['fecha'] ?? ''));
-    $hora        = (string) ($d['hora'] ?? '');
+    $nombre      = trim(texto($d, 'nombre'));
+    $telefono    = preg_replace('/\s+/', '', texto($d, 'telefono'));
+    $email       = trim(texto($d, 'email'));
+    $fecha       = fechaValida(texto($d, 'fecha'));
+    $hora        = texto($d, 'hora');
     $personas    = filter_var($d['personas'] ?? null, FILTER_VALIDATE_INT,
                     ['options' => ['min_range' => 1, 'max_range' => (int) config('max_personas_online')]]);
     $zonaId      = filter_var($d['zona_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: null;
-    $comentarios = trim((string) ($d['comentarios'] ?? ''));
+    $comentarios = trim(texto($d, 'comentarios'));
 
     $errores = [];
     if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 100) $errores['nombre'] = 'Escribe tu nombre y apellidos.';
@@ -66,49 +66,71 @@ ejecutar(function () {
         responder(['ok' => false, 'error' => reset($errores), 'campos' => $errores], 422);
     }
 
-    /* ---------- 2-4. Guardado en una transacción ---------- */
-    $pdo = db();
-    $pdo->beginTransaction();
-    try {
-        // Inserta el cliente; si el email ya existe, actualiza su nombre y teléfono
-        $pdo->prepare(
-            'INSERT INTO clientes (nombre, telefono, email) VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), telefono = VALUES(telefono)'
-        )->execute([$nombre, $telefono, strtolower($email)]);
+    /* ---------- 2-4. Guardado: de una en una (cerrojo) y en una transacción ---------- */
+    $email = strtolower($email);
+    $resultado = conCerrojo('mesas', function (PDO $pdo) use ($nombre, $telefono, $email, $fecha, $hora, $personas, $zonaId, $comentarios): array {
+        $pdo->beginTransaction();
+        try {
+            // Crea el cliente si es nuevo. Si el email ya existía NO se cambian sus
+            // datos: desde la web cualquiera puede escribir cualquier email, así que
+            // nadie debe poder modificar los datos de otra persona.
+            $pdo->prepare(
+                'INSERT INTO clientes (nombre, telefono, email) VALUES (?, ?, ?)
+                 ON DUPLICATE KEY UPDATE id = id'
+            )->execute([$nombre, $telefono, $email]);
 
-        // Buscamos su id por el email: funciona tanto si es nuevo como si ya existía
-        $buscar = $pdo->prepare('SELECT id FROM clientes WHERE email = ?');
-        $buscar->execute([strtolower($email)]);
-        $clienteId = (int) $buscar->fetchColumn();
+            // Buscamos su id por el email: funciona tanto si es nuevo como si ya existía
+            $buscar = $pdo->prepare('SELECT id FROM clientes WHERE email = ?');
+            $buscar->execute([$email]);
+            $clienteId = (int) $buscar->fetchColumn();
 
-        $codigo = generarCodigo($pdo);
+            // Una misma persona no puede acaparar mesas: si ya tiene una reserva
+            // activa ese día a menos de 3 horas, se le avisa (comer y cenar sí se puede)
+            $suyas = $pdo->prepare(
+                "SELECT TIME_FORMAT(hora, '%H:%i') FROM reservas
+                 WHERE cliente_id = ? AND fecha = ? AND estado IN ('pendiente', 'confirmada')"
+            );
+            $suyas->execute([$clienteId, $fecha->format('Y-m-d')]);
+            foreach ($suyas->fetchAll(PDO::FETCH_COLUMN) as $otra) {
+                if (abs(aMinutos($otra) - aMinutos($hora)) < 180) {
+                    $pdo->rollBack();
+                    return ['ok' => false, 'error' => "Ya tienes una reserva ese día a las $otra. Si quieres cambiarla, cancélala con tu código («¿Ya tienes una reserva?») y haz una nueva.", 'http' => 409];
+                }
+            }
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO reservas (codigo, cliente_id, zona_id, fecha, hora, personas, comentarios)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
-        );
-        $stmt->execute([$codigo, $clienteId, $zonaId, $fecha->format('Y-m-d'), $hora, $personas, $comentarios ?: null]);
-        $reservaId = (int) $pdo->lastInsertId();
+            $codigo = generarCodigo($pdo);
 
-        // Asigna la mesa y deja la reserva confirmada
-        $call = $pdo->prepare('CALL sp_asignar_mesa(?)');
-        $call->execute([$reservaId]);
-        $call->closeCursor(); // libera la conexión tras un CALL
+            // El nombre y el teléfono se guardan en la propia reserva: el teléfono es
+            // el que sirve para consultarla o cancelarla
+            $pdo->prepare(
+                'INSERT INTO reservas (codigo, cliente_id, nombre, telefono, zona_id, fecha, hora, personas, comentarios)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            )->execute([$codigo, $clienteId, $nombre, $telefono, $zonaId, $fecha->format('Y-m-d'), $hora, $personas, $comentarios ?: null]);
+            $reservaId = (int) $pdo->lastInsertId();
 
-        $pdo->commit();
-    } catch (PDOException $e) {
-        $pdo->rollBack();
-        // SQLSTATE 45000 = error lanzado a propósito por nuestro trigger o procedimiento
-        if ($e->getCode() === '45000') {
-            $mensaje = str_contains($e->getMessage(), 'mesas')
-                ? 'Esa hora se acaba de completar. Elige otra, por favor.'
-                : 'No se puede reservar ese día.';
-            responder(['ok' => false, 'error' => $mensaje], 409);
+            // Asigna la mesa y deja la reserva confirmada
+            $call = $pdo->prepare('CALL sp_asignar_mesa(?)');
+            $call->execute([$reservaId]);
+            $call->closeCursor(); // libera la conexión tras un CALL
+
+            $pdo->commit();
+            return ['ok' => true, 'codigo' => $codigo, 'http' => 201];
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            // SQLSTATE 45000 = error lanzado a propósito por nuestro trigger o procedimiento
+            if ($e->getCode() === '45000') {
+                $mensaje = str_contains($e->getMessage(), 'mesas')
+                    ? 'Esa hora se acaba de completar. Elige otra, por favor.'
+                    : 'No se puede reservar ese día.';
+                return ['ok' => false, 'error' => $mensaje, 'http' => 409];
+            }
+            throw $e;
         }
-        throw $e;
-    }
+    });
 
-    responder(['ok' => true, 'codigo' => $codigo], 201);
+    $http = $resultado['http'];
+    unset($resultado['http']);
+    responder($resultado, $http);
 });
 
 /** Código de 6 caracteres sin letras que se confundan (0/O, 1/I). */

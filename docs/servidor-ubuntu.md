@@ -394,6 +394,7 @@ Algunas actualizaciones añaden tablas nuevas. En vez de reimportar `restaurante
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/001_galeria.sql
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/002_fotos_propias.sql
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/003_fotos_webp.sql
+sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/004_contacto_reserva.sql
 ```
 
 Se ejecutan en orden y solo una vez cada una (aunque repetirlas no rompe nada).

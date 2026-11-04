@@ -63,7 +63,11 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - **Contraseñas:** cifradas con `password_hash` (bcrypt), nunca en texto plano.
 - **CSRF:** cada formulario del panel lleva un token secreto que se comprueba en el servidor.
 - **Sesiones:** cookie `HttpOnly` y `SameSite=Strict`, id nuevo al entrar, cierre tras 30 min de inactividad.
-- **Fuerza bruta:** bloqueo de 5 minutos tras 5 intentos fallidos de login.
+- **Fuerza bruta:** 10 fallos de login en 15 minutos bloquean esa IP y esa cuenta (contados en el servidor, no en la cookie). El login tarda lo mismo exista o no el email, para no revelar quién es del equipo.
+- **Accesos revocados al momento:** en cada página se comprueba en la base de datos que el usuario sigue activo y su rol.
+- **Datos de los clientes:** desde la web nadie puede cambiar el nombre o el teléfono de otro cliente escribiendo su email; cada reserva guarda los datos con los que se hizo, y para consultarla o cancelarla hacen falta el código y ese teléfono.
+- **Datos recibidos:** se valida el tipo de cada campo (un objeto en lugar de un texto se rechaza) y una misma persona no puede reservar dos mesas a menos de 3 horas.
+- **Concurrencia:** las mesas se asignan de una en una con un cerrojo de MySQL (`GET_LOCK`), y las plazas de los eventos con `SELECT … FOR UPDATE`: dos personas a la vez nunca se quedan con la misma mesa ni sobrepasan el aforo.
 - **Roles:** el personal de Sala solo ve las reservas; Administración gestiona todo.
 - **Validación doble:** en el navegador (comodidad) y en el servidor (seguridad).
 - **Anti-spam:** campo trampa oculto en los formularios públicos.

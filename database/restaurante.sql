@@ -125,6 +125,8 @@ CREATE TABLE reservas (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     codigo      CHAR(6) NOT NULL UNIQUE COMMENT 'Código que ve el cliente, p.ej. K7Q2XB',
     cliente_id  INT UNSIGNED NOT NULL,
+    nombre      VARCHAR(100) NULL COMMENT 'Nombre con el que se hizo la reserva',
+    telefono    VARCHAR(15) NULL COMMENT 'Teléfono con el que se hizo: sirve para consultarla o cancelarla',
     mesa_id     SMALLINT UNSIGNED NULL COMMENT 'Se asigna al confirmar',
     zona_id     TINYINT UNSIGNED NULL COMMENT 'Zona que prefiere el cliente',
     fecha       DATE NOT NULL,
@@ -265,8 +267,8 @@ CREATE VIEW vista_reservas_hoy AS
 SELECT  r.codigo,
         r.hora,
         r.personas,
-        cl.nombre   AS cliente,
-        cl.telefono,
+        COALESCE(r.nombre, cl.nombre)     AS cliente,
+        COALESCE(r.telefono, cl.telefono) AS telefono,
         z.nombre    AS zona,
         m.numero    AS mesa,
         r.estado,
@@ -464,6 +466,9 @@ INSERT INTO reservas (codigo, cliente_id, mesa_id, zona_id, fecha, hora, persona
 ('M3D8RA', 2, 21, 3, CURRENT_DATE + INTERVAL 3 DAY, '21:00', 12, 'confirmada', 'Cumpleaños, traen tarta'),
 ('P9W4LC', 3, NULL, 2, CURRENT_DATE + INTERVAL 2 DAY, '20:30', 2, 'pendiente', NULL),
 ('T5H6NV', 4, NULL, 1, CURRENT_DATE + INTERVAL 1 DAY, '14:30', 3, 'pendiente', 'Con carrito de bebé');
+
+-- Cada reserva guarda el nombre y el teléfono con los que se hizo
+UPDATE reservas r JOIN clientes c ON c.id = r.cliente_id SET r.nombre = c.nombre, r.telefono = c.telefono;
 
 INSERT INTO opiniones (cliente_id, nombre, puntuacion, comentario, fecha, aprobada) VALUES
 (1, 'Lucía M.',  5, 'El arroz negro es de los mejores que he probado en Granada. Y nos atendieron sin ninguna prisa.', '2026-09-14', 1),

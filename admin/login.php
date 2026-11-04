@@ -14,26 +14,43 @@ if ((int) db()->query('SELECT COUNT(*) FROM usuarios')->fetchColumn() === 0) {
 $error = '';
 $email = '';
 
-// Bloqueo sencillo contra fuerza bruta: 5 intentos fallidos = 5 minutos de espera
-$_SESSION['intentos'] ??= 0;
-$bloqueadoHasta = $_SESSION['bloqueado_hasta'] ?? 0;
+/*
+ * Bloqueo contra fuerza bruta. Los fallos se cuentan en el servidor, no en la
+ * sesión (un programa que borra su cookie empezaría de cero cada vez):
+ *  - por IP:     10 fallos en 15 minutos bloquean esa IP 15 minutos
+ *  - por cuenta: 10 fallos en 15 minutos bloquean ese email, aunque el
+ *                atacante vaya cambiando de IP
+ */
+const LOGIN_MAX_FALLOS = 10;
+const LOGIN_VENTANA = 900;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     comprobarCsrf();
-    $email = trim((string) ($_POST['email'] ?? ''));
+    $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     $clave = (string) ($_POST['password'] ?? '');
+    $porIp     = claveIp('login');
+    $porCuenta = 'login-cuenta|' . $email;
 
-    if ($bloqueadoHasta > time()) {
-        $error = 'Demasiados intentos. Espera ' . ceil(($bloqueadoHasta - time()) / 60) . ' minutos.';
+    $espera = max(
+        segundosBloqueado($porIp, LOGIN_MAX_FALLOS, LOGIN_VENTANA),
+        segundosBloqueado($porCuenta, LOGIN_MAX_FALLOS, LOGIN_VENTANA)
+    );
+
+    if ($espera > 0) {
+        $error = 'Demasiados intentos fallidos. Espera ' . ceil($espera / 60) . ' minutos.';
     } else {
         $stmt = db()->prepare('SELECT id, nombre, email, password_hash, rol FROM usuarios WHERE email = ? AND activo = 1');
-        $stmt->execute([strtolower($email)]);
+        $stmt->execute([$email]);
         $u = $stmt->fetch();
 
-        if ($u && password_verify($clave, $u['password_hash'])) {
+        // Si el email no existe se comprueba igualmente una contraseña: así tarda
+        // lo mismo y no se puede averiguar qué emails son del equipo
+        $hash = $u['password_hash'] ?? '$2y$10$hDkXEyaMfx7zI/DS2GEXN.bybbauac3kVBUbbKowu4FEHzKjnMqZC';
+        if (password_verify($clave, $hash) && $u) {
             session_regenerate_id(true); // nuevo id de sesión: evita robo de sesión
             $_SESSION['usuario'] = ['id' => (int) $u['id'], 'nombre' => $u['nombre'], 'email' => $u['email'], 'rol' => $u['rol']];
-            $_SESSION['intentos'] = 0;
+            olvidarFallos($porIp);
+            olvidarFallos($porCuenta);
             db()->prepare('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?')->execute([$u['id']]);
 
             // Si el hash es antiguo, se actualiza al algoritmo actual
@@ -44,11 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirigir('index.php');
         }
 
-        $_SESSION['intentos']++;
-        if ($_SESSION['intentos'] >= 5) {
-            $_SESSION['bloqueado_hasta'] = time() + 300;
-            $_SESSION['intentos'] = 0;
-        }
+        anotarFallo($porIp, LOGIN_VENTANA);
+        anotarFallo($porCuenta, LOGIN_VENTANA);
         usleep(500000); // medio segundo de espera en cada fallo
         $error = 'El email o la contraseña no son correctos.';
     }

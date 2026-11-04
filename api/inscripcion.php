@@ -35,9 +35,9 @@ ejecutar(function () {
     /* ---------- Validación ---------- */
     $eventoId = filter_var($d['evento_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     $plazas   = filter_var($d['plazas'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => MAX_PLAZAS_POR_PERSONA]]);
-    $nombre   = trim((string) ($d['nombre'] ?? ''));
-    $telefono = preg_replace('/\s+/', '', (string) ($d['telefono'] ?? ''));
-    $email    = strtolower(trim((string) ($d['email'] ?? '')));
+    $nombre   = trim(texto($d, 'nombre'));
+    $telefono = preg_replace('/\s+/', '', texto($d, 'telefono'));
+    $email    = strtolower(trim(texto($d, 'email')));
 
     $errores = [];
     if (!$eventoId)                                          $errores['evento'] = 'Elige un evento.';
@@ -76,9 +76,9 @@ ejecutar(function () {
             responder(['ok' => false, 'error' => $libres === 1 ? 'Solo queda 1 plaza.' : "Solo quedan $libres plazas.", 'campos' => ['e-plazas' => "Elige como mucho $libres."], 'libres' => $libres], 409);
         }
 
-        // 2. Crear o actualizar el cliente y obtener su id
+        // 2. Crear el cliente si es nuevo (sin tocar los datos de uno que ya existe) y obtener su id
         $pdo->prepare('INSERT INTO clientes (nombre, telefono, email) VALUES (?, ?, ?)
-                       ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), telefono = VALUES(telefono)')
+                       ON DUPLICATE KEY UPDATE id = id')
             ->execute([$nombre, $telefono, $email]);
         $buscar = $pdo->prepare('SELECT id FROM clientes WHERE email = ?');
         $buscar->execute([$email]);

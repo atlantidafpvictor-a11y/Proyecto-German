@@ -41,49 +41,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirigir('reservas.php?nueva=1');
         }
 
-        $pdo->beginTransaction();
-        try {
-            if ($email) {
-                // Cliente con email: se crea o se actualiza, y se busca su id por el email
-                $pdo->prepare('INSERT INTO clientes (nombre, telefono, email) VALUES (?, ?, ?)
-                               ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), telefono = VALUES(telefono)')
-                    ->execute([$nombre, $telefono, $email]);
-                $buscar = $pdo->prepare('SELECT id FROM clientes WHERE email = ?');
-                $buscar->execute([$email]);
-                $clienteId = (int) $buscar->fetchColumn();
-            } else {
-                $pdo->prepare('INSERT INTO clientes (nombre, telefono) VALUES (?, ?)')->execute([$nombre, $telefono]);
-                $clienteId = (int) $pdo->lastInsertId();
-            }
+        // Igual que en la web: todo lo que asigna mesas va de uno en uno (ver conCerrojo en api/db.php)
+        $codigo = conCerrojo('mesas', function (PDO $pdo) use ($nombre, $telefono, $email, $fecha, $hora, $personas, $zona, $notas): string {
+            $pdo->beginTransaction();
+            try {
+                if ($email) {
+                    // Cliente con email: se crea o se actualiza, y se busca su id por el email
+                    $pdo->prepare('INSERT INTO clientes (nombre, telefono, email) VALUES (?, ?, ?)
+                                   ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), telefono = VALUES(telefono)')
+                        ->execute([$nombre, $telefono, $email]);
+                    $buscar = $pdo->prepare('SELECT id FROM clientes WHERE email = ?');
+                    $buscar->execute([$email]);
+                    $clienteId = (int) $buscar->fetchColumn();
+                } else {
+                    $pdo->prepare('INSERT INTO clientes (nombre, telefono) VALUES (?, ?)')->execute([$nombre, $telefono]);
+                    $clienteId = (int) $pdo->lastInsertId();
+                }
 
-            $alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            do {
-                $codigo = '';
-                for ($i = 0; $i < 6; $i++) $codigo .= $alfabeto[random_int(0, 31)];
+                $alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
                 $s = $pdo->prepare('SELECT 1 FROM reservas WHERE codigo = ?');
-                $s->execute([$codigo]);
-            } while ($s->fetchColumn());
+                do {
+                    $codigo = '';
+                    for ($i = 0; $i < 6; $i++) $codigo .= $alfabeto[random_int(0, 31)];
+                    $s->execute([$codigo]);
+                } while ($s->fetchColumn());
 
-            $pdo->prepare('INSERT INTO reservas (codigo, cliente_id, zona_id, fecha, hora, personas, comentarios) VALUES (?, ?, ?, ?, ?, ?, ?)')
-                ->execute([$codigo, $clienteId, $zona, $fecha->format('Y-m-d'), $hora, $personas, $notas]);
-            $id = (int) $pdo->lastInsertId();
-            $pdo->commit();
-        } catch (PDOException $ex) {
-            $pdo->rollBack();
-            if ($ex->getCode() === '45000') {
-                flash('error', 'No se puede reservar ese día: es una fecha pasada o el restaurante está cerrado.');
-                redirigir('reservas.php?nueva=1');
+                $pdo->prepare('INSERT INTO reservas (codigo, cliente_id, nombre, telefono, zona_id, fecha, hora, personas, comentarios) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                    ->execute([$codigo, $clienteId, $nombre, $telefono, $zona, $fecha->format('Y-m-d'), $hora, $personas, $notas]);
+                $id = (int) $pdo->lastInsertId();
+                $pdo->commit();
+            } catch (PDOException $ex) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                if ($ex->getCode() === '45000') {
+                    flash('error', 'No se puede reservar ese día: es una fecha pasada o el restaurante está cerrado.');
+                    redirigir('reservas.php?nueva=1');
+                }
+                throw $ex;
             }
-            throw $ex;
-        }
 
-        // Intentamos asignar mesa; si no hay, se queda pendiente para resolverlo a mano
-        try {
-            $call = $pdo->prepare('CALL sp_asignar_mesa(?)'); $call->execute([$id]); $call->closeCursor();
-            flash('ok', "Reserva $codigo creada y confirmada con mesa.");
-        } catch (PDOException) {
-            flash('info', "Reserva $codigo creada, pero no hay mesa libre a esa hora. Queda pendiente.");
-        }
+            // Intentamos asignar mesa; si no hay, se queda pendiente para resolverlo a mano
+            try {
+                $call = $pdo->prepare('CALL sp_asignar_mesa(?)'); $call->execute([$id]); $call->closeCursor();
+                flash('ok', "Reserva $codigo creada y confirmada con mesa.");
+            } catch (PDOException $ex) {
+                if ($ex->getCode() !== '45000') throw $ex;
+                flash('info', "Reserva $codigo creada, pero no hay mesa libre a esa hora. Queda pendiente.");
+            }
+            return $codigo;
+        });
         redirigir('reservas.php?desde=' . $fecha->format('Y-m-d'));
     }
 
@@ -91,13 +96,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
     if ($id) {
         if ($accion === 'confirmar') {
-            try {
-                $call = $pdo->prepare('CALL sp_asignar_mesa(?)'); $call->execute([$id]); $call->closeCursor();
-                flash('ok', 'Mesa asignada. La reserva queda confirmada.');
-            } catch (PDOException $ex) {
-                if ($ex->getCode() !== '45000') throw $ex;
-                flash('error', 'No hay ninguna mesa libre para ese grupo a esa hora.');
-            }
+            conCerrojo('mesas', function (PDO $pdo) use ($id): void {
+                // Solo se asigna mesa a reservas pendientes (no a una cancelada o ya celebrada)
+                $estado = $pdo->prepare('SELECT estado FROM reservas WHERE id = ?');
+                $estado->execute([$id]);
+                if ($estado->fetchColumn() !== 'pendiente') {
+                    flash('error', 'Esa reserva ya no está pendiente.');
+                    return;
+                }
+                try {
+                    $call = $pdo->prepare('CALL sp_asignar_mesa(?)'); $call->execute([$id]); $call->closeCursor();
+                    flash('ok', 'Mesa asignada. La reserva queda confirmada.');
+                } catch (PDOException $ex) {
+                    if ($ex->getCode() !== '45000') throw $ex;
+                    flash('error', 'No hay ninguna mesa libre para ese grupo a esa hora.');
+                }
+            });
         } elseif (in_array($accion, ['cancelada', 'completada', 'no_presentado'], true)) {
             $pdo->prepare('UPDATE reservas SET estado = ? WHERE id = ?')->execute([$accion, $id]);
             flash('ok', 'Reserva marcada como «' . $ESTADOS[$accion] . '».');
@@ -114,7 +128,7 @@ $estado = array_key_exists($_GET['estado'] ?? '', $ESTADOS) ? $_GET['estado'] : 
 $q      = trim((string) ($_GET['q'] ?? ''));
 
 $sql = "SELECT r.id, r.codigo, r.fecha, TIME_FORMAT(r.hora, '%H:%i') AS hora, r.personas, r.estado, r.comentarios,
-               c.nombre, c.telefono, c.email, z.nombre AS zona, m.numero AS mesa
+               COALESCE(r.nombre, c.nombre) AS nombre, COALESCE(r.telefono, c.telefono) AS telefono, c.email, z.nombre AS zona, m.numero AS mesa
         FROM reservas r
         JOIN clientes c ON c.id = r.cliente_id
         LEFT JOIN zonas z ON z.id = r.zona_id
@@ -126,7 +140,7 @@ if ($estado) {
     $params[] = $estado;
 }
 if ($q !== '') {
-    $sql .= ' AND (c.nombre LIKE ? OR c.telefono LIKE ? OR r.codigo = ?)';
+    $sql .= ' AND (COALESCE(r.nombre, c.nombre) LIKE ? OR COALESCE(r.telefono, c.telefono) LIKE ? OR r.codigo = ?)';
     array_push($params, "%$q%", "%$q%", strtoupper($q));
 }
 $sql .= ' ORDER BY r.fecha, r.hora LIMIT 200';

@@ -6,7 +6,7 @@
  * Cancelar:   { "codigo": "K7Q2XB", "telefono": "600111222", "accion": "cancelar" }
  *
  * Para ver o cancelar una reserva hay que saber DOS cosas: el código y el
- * teléfono con el que se hizo. Así nadie puede cancelar la reserva de otro
+ * teléfono con el que se hizo (guardado en la propia reserva). Así nadie puede cancelar la reserva de otro
  * probando códigos al azar.
  */
 declare(strict_types=1);
@@ -23,8 +23,8 @@ ejecutar(function () {
         responder(['ok' => false, 'error' => 'Los datos enviados no son válidos.'], 400);
     }
 
-    $codigo   = strtoupper(trim((string) ($d['codigo'] ?? '')));
-    $telefono = soloDigitos((string) ($d['telefono'] ?? ''));
+    $codigo   = strtoupper(trim(texto($d, 'codigo')));
+    $telefono = soloDigitos(texto($d, 'telefono'));
     $accion   = ($d['accion'] ?? '') === 'cancelar' ? 'cancelar' : 'consultar';
 
     if (!preg_match('/^[A-Z0-9]{6}$/', $codigo)) {
@@ -37,7 +37,7 @@ ejecutar(function () {
     $pdo = db();
     $stmt = $pdo->prepare(
         "SELECT r.id, r.codigo, r.fecha, TIME_FORMAT(r.hora, '%H:%i') AS hora, r.personas, r.estado,
-                c.nombre, c.telefono, z.nombre AS zona
+                COALESCE(r.nombre, c.nombre) AS nombre, COALESCE(r.telefono, c.telefono) AS telefono, z.nombre AS zona
          FROM reservas r
          JOIN clientes c ON c.id = r.cliente_id
          LEFT JOIN zonas z ON z.id = r.zona_id

@@ -105,8 +105,27 @@ function comprobarCsrf(): void
 }
 
 /* ---------- Control de acceso ---------- */
+/**
+ * Usuario identificado, comprobado contra la base de datos en cada petición:
+ * si un administrador le quita el acceso o le cambia el rol, se aplica al
+ * momento, sin esperar a que caduque su sesión.
+ */
 function usuario(): ?array
 {
+    static $comprobado = false;
+    if (!$comprobado && isset($_SESSION['usuario'])) {
+        $comprobado = true;
+        $stmt = db()->prepare('SELECT nombre, email, rol FROM usuarios WHERE id = ? AND activo = 1');
+        $stmt->execute([$_SESSION['usuario']['id']]);
+        $fila = $stmt->fetch();
+        if (!$fila) {
+            unset($_SESSION['usuario']);
+            session_regenerate_id(true);
+            $_SESSION['flash'] = ['tipo' => 'error', 'texto' => 'Tu acceso al panel ya no está activo.'];
+        } else {
+            $_SESSION['usuario'] = ['id' => (int) $_SESSION['usuario']['id']] + $fila;
+        }
+    }
     return $_SESSION['usuario'] ?? null;
 }
 

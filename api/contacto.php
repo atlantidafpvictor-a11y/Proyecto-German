@@ -21,10 +21,10 @@ ejecutar(function () {
         responder(['ok' => true]);
     }
 
-    $nombre  = trim((string) ($d['nombre'] ?? ''));
-    $email   = trim((string) ($d['email'] ?? ''));
-    $asunto  = trim((string) ($d['asunto'] ?? ''));
-    $mensaje = trim((string) ($d['mensaje'] ?? ''));
+    $nombre  = trim(texto($d, 'nombre'));
+    $email   = trim(texto($d, 'email'));
+    $asunto  = trim(texto($d, 'asunto'));
+    $mensaje = trim(texto($d, 'mensaje'));
 
     $errores = [];
     if (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100)  $errores['c-nombre'] = 'Escribe tu nombre.';
