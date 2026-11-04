@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sabor Mediterráneo, cocina mediterránea con producto de la Vega de Granada. Consulta la carta, los horarios y reserva tu mesa online.">
-    <meta name="theme-color" content="#23408E">
+    <meta name="theme-color" content="#F6F5F1">
+    <link rel="preload" as="image" href="img/portada.jpg">
     <title>Sabor Mediterráneo | Restaurante en Granada</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="preload" href="fonts/bodoni-moda.woff" as="font" type="font/woff" crossorigin>
 
     <link rel="stylesheet" href="style.css">
     <script src="javascript.js" defer></script>
@@ -45,59 +44,84 @@
 
     <main id="contenido">
 
-        <!-- ============ HERO ============ -->
+        <!-- ============ HERO ============
+             Al hacer scroll, el arco se abre hasta ocupar toda la pantalla:
+             como cruzar la puerta del restaurante. (javascript.js → iniciarHero) -->
         <section class="hero" id="inicio">
-            <div class="hero-text">
-                <p class="open-status" id="open-status" aria-live="polite">
-                    <span class="dot"></span><span class="open-status-text">Consultando horario…</span>
-                </p>
-                <h1 class="hero-title">
-                    <span class="line">Cocina de la Vega,</span>
-                    <span class="line">mesa de</span>
-                    <span class="line">Granada.</span>
-                </h1>
-                <p class="hero-lead">
-                    Arroces, guisos y pescado del día con producto de huertas
-                    a menos de 30 km. Sin prisas, como se ha comido siempre aquí.
-                </p>
-                <div class="hero-actions">
-                    <a href="#reservas" class="btn btn-primary">Reservar mesa</a>
-                    <a href="#carta" class="btn btn-ghost">Ver la carta</a>
+            <div class="hero-stage" id="hero-stage">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        <span class="line">Cocina de la Vega,</span>
+                        <span class="line">mesa de Granada.</span>
+                    </h1>
                 </div>
-            </div>
 
-            <figure class="hero-arch">
-                <img src="img/portada.jpg" width="1344" height="1800"
-                     alt="Mesa servida con arroz, salmorejo, berenjenas con miel y vino tinto">
-            </figure>
+                <div class="hero-side hero-side-left">
+                    <p class="hero-lead">
+                        Arroces, guisos y pescado del día con producto de huertas
+                        a menos de 30 km. Sin prisas, como se ha comido siempre aquí.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#reservas" class="btn btn-primary">Reservar mesa</a>
+                        <a href="#carta" class="btn btn-ghost">Ver la carta</a>
+                    </div>
+                </div>
+
+                <div class="hero-side hero-side-right">
+                    <p class="open-status" id="open-status" aria-live="polite">
+                        <span class="dot"></span><span class="open-status-text">Consultando horario…</span>
+                    </p>
+                    <p class="hero-place">Centro de Granada<br>Cocina mediterránea de temporada</p>
+                </div>
+
+                <figure class="hero-arch" id="hero-arch">
+                    <img src="img/portada.jpg" width="1344" height="1800"
+                         alt="Mesa servida con arroz, salmorejo, berenjenas con miel y vino tinto" fetchpriority="high">
+                    <figcaption class="hero-veil" id="hero-veil" aria-hidden="true">
+                        <span class="hero-veil-line">La mesa ya está puesta.</span>
+                    </figcaption>
+                </figure>
+
+                <a class="hero-cue" href="#nosotros" id="hero-cue">
+                    <span>Entrar</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+            </div>
         </section>
 
         <div class="tile-band" aria-hidden="true"></div>
 
         <!-- ============ NOSOTROS ============ -->
         <section class="about section" id="nosotros">
-            <figure class="about-arch">
-                <img src="img/comedor.jpg" width="1450" height="1800"
-                     alt="Comedor encalado con arco nazarí y zócalo de azulejos" loading="lazy">
-            </figure>
+            <p class="about-statement">
+                Compramos cada mañana en la Vega y en la lonja de Motril.
+                Lo que no está bueno ese día, no entra en la carta.
+            </p>
 
-            <div class="about-text">
-                <h2>Una casa de comidas con la puerta abierta</h2>
-                <p>
-                    Sabor Mediterráneo nace con una idea sencilla: cocinar lo que
-                    da la tierra en cada estación y servirlo en un comedor donde
-                    apetezca quedarse a la sobremesa.
-                </p>
-                <p>
-                    Compramos cada mañana en la Vega y en la lonja de Motril.
-                    Lo que no está bueno ese día, no entra en la carta.
-                </p>
+            <div class="about-grid">
+                <figure class="about-arch">
+                    <img src="img/comedor.jpg" width="1450" height="1800"
+                         alt="Comedor encalado con arco nazarí y zócalo de azulejos" loading="lazy">
+                </figure>
 
-                <dl class="facts">
-                    <div><dt>30 km</dt><dd>radio máximo de nuestros proveedores de huerta</dd></div>
-                    <div><dt>14</dt><dd>alérgenos señalados en cada plato</dd></div>
-                    <div><dt>60</dt><dd>comensales entre salón, terraza y reservado</dd></div>
-                </dl>
+                <div class="about-text">
+                    <h2>Una casa de comidas con la puerta abierta</h2>
+                    <p>
+                        Sabor Mediterráneo nace con una idea sencilla: cocinar lo que
+                        da la tierra en cada estación y servirlo en un comedor donde
+                        apetezca quedarse a la sobremesa.
+                    </p>
+                    <p>
+                        Paredes encaladas, azulejo de cobalto y un arco que recuerda
+                        a la Alhambra. Aquí se viene a comer bien y a hablar sin mirar el reloj.
+                    </p>
+
+                    <dl class="facts">
+                        <div><dt>30 km</dt><dd>radio máximo de nuestros proveedores de huerta</dd></div>
+                        <div><dt>14</dt><dd>alérgenos señalados en cada plato</dd></div>
+                        <div><dt>60</dt><dd>comensales entre salón, terraza y reservado</dd></div>
+                    </dl>
+                </div>
             </div>
         </section>
 
@@ -458,6 +482,7 @@
             </nav>
             <p class="footer-copy">© <span id="year"></span> Sabor Mediterráneo. Proyecto intermodular 2º SMR. Restaurante ficticio: imágenes de ejemplo creadas con IA.</p>
         </div>
+        <p class="footer-wordmark" aria-hidden="true">Sabor Mediterráneo</p>
     </footer>
 
 </body>

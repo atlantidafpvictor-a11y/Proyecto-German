@@ -180,6 +180,78 @@ function iniciarCabecera() {
 }
 
 /* =========================================================
+   1b. HERO: EL ARCO QUE SE ABRE
+   ---------------------------------------------------------
+   La sección mide 2,3 pantallas y su escenario se queda fijo.
+   Según lo que se ha bajado (de 0 a 1) se calcula el tamaño
+   de la "ventana" del arco y se le pasa al CSS como variables.
+   ========================================================= */
+function iniciarHero() {
+    const hero = $("#inicio");
+    const stage = $("#hero-stage");
+    if (!hero || !stage || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    hero.classList.add("is-anim");
+    const texto = $(".hero-text", stage);
+    const lados = $$(".hero-side", stage);
+    const ladoIzq = $(".hero-side-left", stage);
+    const img = $("#hero-arch img");
+    const velo = $("#hero-veil");
+    const pista = $("#hero-cue");
+    let ancho0 = 0, alto0 = 0, ancho = 0, alto = 0, recorrido = 1, pendiente = false, movil = false;
+
+    // Suave al principio y al final
+    const suavizar = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const entre = (a, b, t) => a + (b - a) * t;
+    const limitar = (v) => Math.min(1, Math.max(0, v));
+
+    function medir() {
+        ancho = stage.clientWidth;
+        alto = stage.clientHeight;
+        movil = ancho < 861;
+        // El arco empieza justo debajo del texto (en móvil, debajo de los botones)
+        const ref = movil ? ladoIzq : texto;
+        const finTexto = ref.offsetTop + ref.offsetHeight;
+        alto0 = Math.max(220, alto - finTexto - (movil ? 18 : 28));
+        ancho0 = movil ? Math.min(ancho - 32, alto0 * 0.95) : Math.min(ancho * 0.38, alto0 * 0.8);
+        stage.style.setProperty("--aw0", `${ancho0}px`);
+        recorrido = Math.max(1, hero.offsetHeight - alto);
+        pintar();
+    }
+
+    function pintar() {
+        pendiente = false;
+        const p = limitar(-hero.getBoundingClientRect().top / recorrido);
+        const e = suavizar(p);
+        const w = entre(ancho0, ancho, e);
+        const h = entre(alto0, alto, e);
+        stage.style.setProperty("--aw", `${w}px`);
+        stage.style.setProperty("--ah", `${h}px`);
+        stage.style.setProperty("--ar", `${(w / 2) * (1 - e)}px`);
+        img.style.transform = `scale(${1.14 - 0.14 * e})`;
+
+        const fuera = limitar(p * 3);           // el texto se va en el primer tercio
+        texto.style.opacity = String(1 - fuera);
+        texto.style.transform = `translateY(${-70 * fuera}px)`;
+        lados.forEach((l) => {
+            l.style.opacity = String(1 - fuera);
+            // En móvil todo está apilado y sube junto; en escritorio los laterales bajan
+            l.style.transform = `translateY(${(movil ? -70 : 30) * fuera}px)`;
+            l.style.visibility = fuera > 0.98 ? "hidden" : "";
+        });
+        pista.style.opacity = String(limitar(1 - p * 5));
+        pista.style.visibility = p > 0.2 ? "hidden" : "";
+        velo.style.opacity = String(limitar((p - 0.68) / 0.26));
+    }
+
+    const alBajar = () => { if (!pendiente) { pendiente = true; requestAnimationFrame(pintar); } };
+    addEventListener("scroll", alBajar, { passive: true });
+    addEventListener("resize", medir);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(medir);
+    medir();
+}
+
+/* =========================================================
    2. HORARIO: "Abierto ahora" + tabla semanal
    ========================================================= */
 function turnosDelDia(horarios, dia) {
@@ -342,7 +414,7 @@ function pintarOpiniones(opiniones) {
     $("#reviews-track").innerHTML = opiniones.map((o) => `
         <figure class="review">
             <p class="stars" aria-label="${o.puntuacion} de 5 estrellas">${"★".repeat(o.puntuacion)}${"☆".repeat(5 - o.puntuacion)}</p>
-            <blockquote>“${escapeHTML(o.comentario)}”</blockquote>
+            <blockquote>${escapeHTML(o.comentario)}</blockquote>
             <figcaption><strong>${escapeHTML(o.nombre)}</strong> · ${new Date(o.fecha).toLocaleDateString("es-ES", { month: "long", year: "numeric" })}</figcaption>
         </figure>`).join("");
 }
@@ -1036,6 +1108,7 @@ function iniciarContacto() {
    ========================================================= */
 document.addEventListener("DOMContentLoaded", async () => {
     iniciarCabecera();
+    iniciarHero();
 
     const cartaDemo = { categorias: DATOS_DEMO.categorias, platos: DATOS_DEMO.platos, alergenos: DATOS_DEMO.alergenos };
     const infoDemo = { horarios: DATOS_DEMO.horarios, servicios: DATOS_DEMO.servicios, opiniones: DATOS_DEMO.opiniones };

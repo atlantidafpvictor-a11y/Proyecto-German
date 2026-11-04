@@ -4,6 +4,17 @@
    nazarí de Granada como forma que se repite en las imágenes.
    ========================================================= */
 
+/* ---------- 0. Tipografías incluidas en el proyecto (licencia OFL, carpeta fonts/) ----------
+   Van dentro de la web para que se vean igual aunque no haya internet. */
+@font-face {
+    font-family: "Bodoni Moda"; src: url("fonts/bodoni-moda.woff") format("woff");
+    font-weight: 400 900; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk.woff") format("woff");
+    font-weight: 100 900; font-style: normal; font-display: swap;
+}
+
 /* ---------- 1. Variables (tokens de diseño) ---------- */
 :root {
     /* Color */
@@ -19,7 +30,7 @@
     --error: #A8322A;
 
     /* Tipografía */
-    --f-display: "Young Serif", Georgia, serif;
+    --f-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
     --f-body: "Hanken Grotesk", system-ui, sans-serif;
 
     /* Escala tipográfica (proporción 1.25) */
@@ -27,14 +38,17 @@
     --t-base: 1.0625rem;
     --t-md: 1.3rem;
     --t-lg: 1.75rem;
-    --t-xl: clamp(2.1rem, 4vw, 3rem);
-    --t-hero: clamp(2.8rem, 6.6vw, 6rem);
+    --t-xl: clamp(2.5rem, 5.4vw, 4.6rem);
+    --t-hero: clamp(2.9rem, 8.6vw, 8.6rem);
 
     /* Espaciado y forma */
     --gutter: clamp(16px, 5vw, 72px);
     --section: clamp(72px, 10vw, 140px);
     --arch: 999px 999px 0 0;  /* forma de arco para imágenes */
     --radius: 6px;
+    --header-h: 74px;
+    --noche: #11160E;        /* fondo de las secciones de noche */
+    --linea-noche: rgba(246, 245, 241, .14);
 
     /* Azulejo: estrella de ocho puntas en SVG */
     --tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%2323408E'/%3E%3Cpath d='M24 6l5.3 12.7L42 24l-12.7 5.3L24 42l-5.3-12.7L6 24l12.7-5.3z' fill='%23F6F5F1'/%3E%3Cpath d='M24 13l3.2 7.8L35 24l-7.8 3.2L24 35l-3.2-7.8L13 24l7.8-3.2z' fill='%23C98A2E'/%3E%3Cpath d='M0 0l8 0-8 8zM48 0l-8 0 8 8zM0 48l8 0-8-8zM48 48l-8 0 8-8z' fill='%23F6F5F1'/%3E%3C/svg%3E");
@@ -139,67 +153,102 @@ h3 { font-size: var(--t-md); }
 .menu-toggle[aria-expanded="true"] span:first-child { top: 22px; transform: rotate(45deg); }
 .menu-toggle[aria-expanded="true"] span:last-child { top: 22px; transform: rotate(-45deg); }
 
-/* ---------- 5. Hero ---------- */
-.hero {
-    display: grid; grid-template-columns: 1.3fr .7fr; align-items: end; gap: clamp(32px, 5vw, 80px);
-    padding: clamp(40px, 6vw, 80px) var(--gutter) 0;
-    min-height: calc(100svh - 74px);
+/* ---------- 5. Hero: el arco que se abre ----------
+   El escenario (.hero-stage) se queda fijo mientras la sección mide
+   2,3 pantallas de alto. Al bajar, JavaScript agranda la "ventana"
+   del arco (clip-path) hasta ocupar toda la pantalla. */
+.hero { position: relative; height: 100svh; min-height: 620px; margin-top: calc(-1 * var(--header-h)); }
+.hero.is-anim { height: 230svh; }
+.hero-stage {
+    --aw: min(520px, 40vw);            /* ancho del arco */
+    --ah: 52svh;                       /* alto del arco */
+    --ar: calc(var(--aw) / 2);         /* radio del arco */
+    --aw0: min(520px, 40vw);           /* ancho inicial, para colocar los laterales */
+    position: sticky; top: 0; height: 100svh; min-height: 620px; overflow: hidden;
 }
-.hero-text { padding-bottom: clamp(40px, 7vw, 100px); }
+
+.hero-text {
+    position: absolute; left: 0; right: 0; top: calc(var(--header-h) + clamp(12px, 3.5vh, 44px));
+    padding: 0 var(--gutter); text-align: center; z-index: 2; will-change: opacity, transform;
+}
+.hero-title {
+    font-size: var(--t-hero); font-weight: 400; line-height: .98; letter-spacing: -0.035em; color: var(--anil);
+    font-optical-sizing: auto; text-wrap: balance;
+}
+.hero-title .line { display: block; }
+@media (min-width: 861px) { .hero-title .line { white-space: nowrap; } }
+
+.hero-side {
+    position: absolute; bottom: clamp(28px, 7vh, 72px); z-index: 2;
+    width: calc((100% - var(--aw0)) / 2 - var(--gutter) - 32px); will-change: opacity, transform;
+}
+.hero-side-left { left: var(--gutter); }
+.hero-side-right { right: var(--gutter); text-align: right; }
+.hero-lead { font-size: 1.08rem; line-height: 1.6; max-width: 34ch; color: var(--tinta-2); margin-bottom: 26px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-place { font-family: var(--f-display); font-size: 1.35rem; line-height: 1.3; margin-top: 14px; }
 
 .open-status {
     display: inline-flex; align-items: center; gap: 10px;
     font-size: var(--t-sm); font-weight: 500; color: var(--tinta-2);
-    margin-bottom: 28px;
 }
 .open-status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--tinta-2); }
 .open-status.is-open .dot { background: #3C8A4A; box-shadow: 0 0 0 4px rgba(60, 138, 74, .18); }
 .open-status.is-closed .dot { background: var(--error); }
 
-.hero-title {
-    font-size: var(--t-hero); line-height: .95; letter-spacing: -0.025em; color: var(--anil);
-    margin-bottom: 32px;
-}
-.hero-title .line { display: block; }
-@media (min-width: 861px) { .hero-title .line { white-space: nowrap; } }
-.hero-title .line:nth-child(2) { padding-left: 1.1em; color: var(--tinta); }
-
-.hero-lead { font-size: var(--t-md); line-height: 1.5; max-width: 34ch; color: var(--tinta-2); margin-bottom: 36px; }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
-
 .hero-arch {
-    align-self: stretch; position: relative; min-height: 420px;
-    border-radius: var(--arch); overflow: hidden; background: var(--cal-2);
+    position: absolute; inset: 0; margin: 0; z-index: 1; background: var(--cal-2);
+    clip-path: inset(calc(100% - var(--ah)) calc((100% - var(--aw)) / 2) 0 round var(--ar) var(--ar) 0 0);
 }
-.hero-arch img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero-arch img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 70%; }
+.hero-veil {
+    position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center;
+    padding: 0 var(--gutter) clamp(56px, 12vh, 120px);
+    background: linear-gradient(180deg, transparent 45%, rgba(14, 18, 12, .62));
+    opacity: 0; pointer-events: none;
+}
+.hero-veil-line {
+    font-family: var(--f-display); color: var(--cal); text-align: center;
+    font-size: clamp(2.2rem, 6vw, 5.6rem); line-height: 1; letter-spacing: -0.02em;
+}
+.hero-cue {
+    position: absolute; left: 50%; bottom: 22px; z-index: 3; transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px 9px 18px; border-radius: 999px;
+    color: var(--blanco); text-decoration: none; font-size: var(--t-sm); font-weight: 600;
+    background: rgba(17, 22, 14, .35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.hero-cue svg { width: 18px; height: 18px; }
+.hero-cue:hover { background: rgba(17, 22, 14, .55); }
 
-/* Entrada orquestada: solo en el hero */
+/* Entrada orquestada: el titular sube línea a línea y la ventana aparece */
 @media (prefers-reduced-motion: no-preference) {
-    .hero-title .line, .hero-lead, .hero-actions, .open-status {
-        opacity: 0; transform: translateY(18px);
-        animation: rise .8s cubic-bezier(.2, .7, .2, 1) forwards;
+    .hero-title .line, .hero-side > * {
+        opacity: 0; transform: translateY(22px);
+        animation: rise .9s cubic-bezier(.2, .7, .2, 1) forwards;
     }
-    .open-status { animation-delay: .05s; }
-    .hero-title .line:nth-child(1) { animation-delay: .15s; }
-    .hero-title .line:nth-child(2) { animation-delay: .27s; }
-    .hero-title .line:nth-child(3) { animation-delay: .39s; }
-    .hero-lead { animation-delay: .55s; }
-    .hero-actions { animation-delay: .65s; }
-    .hero-arch { clip-path: inset(100% 0 0 0); animation: archUp 1.2s .2s cubic-bezier(.7, 0, .2, 1) forwards; }
-    .hero-arch img { transform: scale(1.12); animation: settle 1.8s .2s cubic-bezier(.2, .7, .2, 1) forwards; }
+    .hero-title .line:nth-child(1) { animation-delay: .1s; }
+    .hero-title .line:nth-child(2) { animation-delay: .22s; }
+    .hero-side > *:nth-child(1) { animation-delay: .5s; }
+    .hero-side > *:nth-child(2) { animation-delay: .6s; }
+    .hero-arch { animation: archIn 1.3s .25s cubic-bezier(.2, .7, .2, 1) both; }
+    .hero-cue { animation: cueIn .8s 1.2s both; }
+    .hero-cue svg { animation: cueBob 2.2s 2s ease-in-out infinite; }
 }
 @keyframes rise { to { opacity: 1; transform: none; } }
-@keyframes archUp { to { clip-path: inset(0 0 0 0); } }
-@keyframes settle { to { transform: scale(1); } }
+@keyframes archIn { from { opacity: 0; translate: 0 40px; } to { opacity: 1; translate: 0 0; } }
+@keyframes cueIn { from { opacity: 0; } }
+@keyframes cueBob { 50% { transform: translateY(3px); } }
 
 /* Banda de azulejos */
 .tile-band { height: 48px; background: var(--tile) repeat-x; background-size: 48px 48px; }
 .tile-band-thin { height: 24px; background-size: 24px 24px; }
 
-/* ---------- 6. Nosotros ---------- */
-.about {
-    display: grid; grid-template-columns: .8fr 1fr; gap: clamp(40px, 7vw, 120px); align-items: center;
+/* ---------- 6. Nosotros: editorial ---------- */
+.about-statement {
+    font-family: var(--f-display); font-size: clamp(1.9rem, 4.3vw, 4.1rem); line-height: 1.12; letter-spacing: -0.02em;
+    max-width: 24ch; margin: 0 auto clamp(64px, 9vw, 140px); text-align: center; text-wrap: balance;
 }
+.about-grid { display: grid; grid-template-columns: .85fr 1fr; gap: clamp(40px, 7vw, 120px); align-items: center; }
 .about-arch { border-radius: var(--arch); overflow: hidden; aspect-ratio: 4 / 5; background: var(--cal-2); }
 .about-arch img { width: 100%; height: 100%; object-fit: cover; }
 .about-text h2 { margin-bottom: 28px; }
@@ -207,10 +256,10 @@ h3 { font-size: var(--t-md); }
 
 .facts {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
-    margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--cal-2);
+    margin-top: 48px; padding-top: 30px; border-top: 1px solid var(--tinta);
 }
-.facts dt { font-family: var(--f-display); font-size: var(--t-lg); color: var(--anil); line-height: 1; margin-bottom: 8px; }
-.facts dd { font-size: var(--t-sm); color: var(--tinta-2); line-height: 1.4; }
+.facts dt { font-family: var(--f-display); font-size: clamp(2.2rem, 3.6vw, 3.2rem); color: var(--anil); line-height: 1; margin-bottom: 10px; letter-spacing: -0.02em; }
+.facts dd { font-size: var(--t-sm); color: var(--tinta-2); line-height: 1.45; }
 
 /* ---------- 7. Carta ---------- */
 .menu { background: var(--blanco); }
@@ -579,7 +628,6 @@ h3 { font-size: var(--t-md); }
 
 /* ---------- 13. Responsive ---------- */
 @media (max-width: 1080px) {
-    .hero { grid-template-columns: 1.1fr .9fr; }
     .services-grid { grid-template-columns: repeat(2, 1fr); }
     .reviews-track { grid-template-columns: 1fr; max-width: 640px; }
     .booking-inner { grid-template-columns: minmax(0, 1fr); }
@@ -599,11 +647,21 @@ h3 { font-size: var(--t-md); }
     .nav a::after { display: none; }
     .nav-cta { margin-top: 16px; text-align: center; border-bottom: 0 !important; }
 
-    .hero { grid-template-columns: 1fr; min-height: 0; }
-    .hero-text { padding-bottom: 0; }
-    .hero-arch { min-height: 0; aspect-ratio: 4 / 4.4; }
+    :root { --header-h: 70px; }
+    .hero, .hero-stage { min-height: 560px; }
+    .hero-stage {
+        --aw: calc(100vw - 2 * var(--gutter)); --aw0: var(--aw); --ah: 40svh;
+        display: flex; flex-direction: column; align-items: center; text-align: center;
+        padding: calc(var(--header-h) + 14px) var(--gutter) 0;
+    }
+    .hero-text, .hero-side { position: static; width: auto; padding: 0; }
+    .hero-side-right { order: -1; text-align: center; margin-bottom: 14px; }
+    .hero-place { display: none; }
+    .hero-text { margin-bottom: 16px; }
+    .hero-lead { margin: 0 auto 18px; font-size: 1rem; }
+    .hero-actions { justify-content: center; }
 
-    .about, .visit, .contact { grid-template-columns: 1fr; }
+    .about-grid, .visit, .contact { grid-template-columns: 1fr; }
     .about-arch { max-width: 420px; }
 
     .menu-body { grid-template-columns: 1fr; }
@@ -627,4 +685,96 @@ h3 { font-size: var(--t-md); }
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* =========================================================
+   14. CAPA PREMIUM
+   Tipografía de revista, secciones de noche y detalles finos.
+   ========================================================= */
+
+/* Títulos: Bodoni Moda ajusta su contraste según el tamaño (optical sizing) */
+h1, h2, h3 { font-optical-sizing: auto; }
+h2 { font-weight: 400; letter-spacing: -0.03em; line-height: 1; max-width: 16ch; text-wrap: balance; }
+h3 { font-weight: 500; letter-spacing: -0.01em; }
+body { line-height: 1.65; }
+::selection { background: var(--anil); color: var(--cal); }
+
+/* Grano de película muy sutil sobre toda la página */
+body::after {
+    content: ""; position: fixed; inset: 0; z-index: 95; pointer-events: none; opacity: .07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Cabecera */
+.header { background: rgba(246, 245, 241, .82); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); }
+.logo-text { font-size: 1.12rem; font-weight: 500; letter-spacing: -0.01em; }
+.nav { gap: 26px; }
+.nav a { font-size: .94rem; }
+
+/* Botones con un poco más de presencia */
+.btn { min-height: 52px; padding: 0 28px; letter-spacing: .005em; }
+.btn-primary { box-shadow: 0 10px 24px -12px rgba(35, 64, 142, .6); }
+.btn-primary:hover { transform: translateY(-1px); }
+
+/* ---------- La carta, de noche ---------- */
+.menu { background: var(--noche); color: var(--cal); }
+.menu h2 { color: var(--cal); }
+.menu-head p { color: rgba(246, 245, 241, .66); }
+.menu-controls { border-bottom-color: var(--linea-noche); }
+.menu .tab { color: rgba(246, 245, 241, .7); }
+.menu .tab:hover { color: var(--cal); background: rgba(246, 245, 241, .07); }
+.menu .tab[aria-selected="true"] { background: var(--cal); color: var(--tinta); }
+.menu .chip-check { border-color: var(--linea-noche); color: rgba(246, 245, 241, .85); }
+.menu .chip-check:has(input:checked) { border-color: var(--ocre); background: rgba(201, 138, 46, .14); }
+.menu .chip-check input { accent-color: var(--ocre); }
+.menu .dish { border-bottom-color: var(--linea-noche); }
+.menu .dish-name { color: var(--cal); font-size: 1.45rem; font-weight: 500; }
+.menu .dish:hover .dish-name, .menu .dish:focus-within .dish-name, .menu .dish.is-preview .dish-name { color: #E7B868; }
+.menu .dish-leader { border-bottom-color: rgba(246, 245, 241, .22); }
+.menu .dish-price { color: var(--cal); }
+.menu .dish-price small { color: rgba(246, 245, 241, .55); }
+.menu .dish-desc { color: rgba(246, 245, 241, .66); }
+.menu .tag { background: rgba(246, 245, 241, .07); color: rgba(246, 245, 241, .72); }
+.menu .tag-diet { background: rgba(140, 160, 80, .2); color: #CBD79E; }
+.menu .tag-star { background: rgba(201, 138, 46, .2); color: #E7B868; }
+.menu .preview-arch { background: #1B2217; box-shadow: 0 40px 80px -40px rgba(0, 0, 0, .8); }
+.menu .preview-caption { color: rgba(246, 245, 241, .66); font-size: 1.1rem; }
+.menu .allergen-legend { color: rgba(246, 245, 241, .6); }
+.menu .allergen-legend summary { color: var(--cal); }
+.menu .dish-empty, .menu .dish-empty button { color: rgba(246, 245, 241, .7); }
+.menu .dish-empty button { color: #E7B868; }
+
+/* ---------- Servicios ---------- */
+.services-grid { gap: clamp(28px, 4vw, 56px); }
+.service { border-top: 1px solid var(--tinta); padding-top: 26px; }
+.service h3 { font-size: 1.6rem; line-height: 1.15; }
+
+/* ---------- Eventos ---------- */
+.event-date .day { font-size: 4.4rem; font-weight: 400; letter-spacing: -0.04em; }
+.event-body h3 { font-size: 1.75rem; }
+.event-price { font-size: 2rem; }
+
+/* ---------- Opiniones: citas de revista ---------- */
+.reviews-track { gap: clamp(32px, 5vw, 72px); }
+.review blockquote { font-size: clamp(1.35rem, 1.9vw, 1.7rem); line-height: 1.35; letter-spacing: -0.01em; }
+.review blockquote::before {
+    content: "“"; display: block; height: .42em; font-family: var(--f-display); font-size: 5rem; line-height: .9;
+    color: var(--ocre); margin-bottom: 18px;
+}
+
+/* ---------- Reservas ---------- */
+.booking-text h2 { font-size: clamp(3rem, 7vw, 6rem); letter-spacing: -0.035em; }
+.booking-form { box-shadow: 0 50px 100px -50px rgba(10, 20, 50, .7); }
+
+/* ---------- Pie con el nombre gigante ---------- */
+.footer { overflow: hidden; }
+.footer-wordmark {
+    font-family: var(--f-display); font-weight: 400; font-optical-sizing: auto;
+    font-size: 10.4vw; line-height: .78; letter-spacing: -0.045em; white-space: nowrap; text-align: center;
+    color: var(--cal); opacity: .95; margin: 8px 0 -0.14em; user-select: none;
+}
+
+/* ---------- Movimiento reducido: el hero queda quieto ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .hero.is-anim { height: 100svh; }
 }
