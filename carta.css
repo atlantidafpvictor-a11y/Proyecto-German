@@ -1,0 +1,91 @@
+/* =========================================================
+   Carta para el móvil (carta.html): ligera y pensada para leerse
+   en la mesa, con poca luz. Usa la misma paleta que la web.
+   ========================================================= */
+@font-face { font-family: "Source Serif 4"; src: url("fonts/source-serif-4.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+
+:root {
+    --noche: #11160E; --noche-2: #1A2116; --linea: rgba(246, 245, 241, .14);
+    --cal: #F6F5F1; --cal-2: rgba(246, 245, 241, .68); --ocre: #E0A64E; --anil: #23408E; --oliva: #A9B97A;
+    --f-display: "Source Serif 4", Georgia, serif; --f-body: "Hanken Grotesk", system-ui, sans-serif;
+    --g: 20px;
+}
+* { box-sizing: border-box; margin: 0; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+    background: var(--noche); color: var(--cal);
+    font: 1rem/1.55 var(--f-body);
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+}
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--ocre); outline-offset: 2px; }
+
+/* Cabecera */
+.c-head { display: flex; align-items: center; gap: 12px; padding: 16px var(--g); border-bottom: 1px solid var(--linea); }
+.c-logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 500 1rem/1.05 var(--f-display); }
+.c-logo svg { width: 24px; height: 29px; color: var(--ocre); }
+.c-mesa { margin-left: auto; font-weight: 700; font-size: .85rem; padding: 4px 12px; border-radius: 999px; background: var(--ocre); color: var(--noche); }
+.lang-switch { display: flex; gap: 2px; margin-left: auto; }
+.c-mesa:not([hidden]) + .lang-switch { margin-left: 0; }
+.lang-switch button {
+    font: 600 .8rem var(--f-body); color: var(--cal-2); background: none; border: 1px solid transparent;
+    padding: 6px 9px; border-radius: 999px; cursor: pointer; min-width: 40px; min-height: 36px;
+}
+.lang-switch button[aria-pressed="true"] { color: var(--cal); border-color: var(--linea); }
+
+/* Contenido */
+.c-main { padding: 28px var(--g) 8px; max-width: 720px; margin: 0 auto; }
+h1 { font: 500 2.6rem/1 var(--f-display); letter-spacing: -0.02em; margin-bottom: 8px; }
+.c-lead { color: var(--cal-2); margin-bottom: 22px; }
+
+/* Pestañas de categorías: fijas arriba al bajar */
+.c-tabs {
+    position: sticky; top: 0; z-index: 2; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    margin: 0 calc(-1 * var(--g)); padding: 10px var(--g); background: var(--noche);
+}
+.c-tabs::-webkit-scrollbar { display: none; }
+.c-tabs a {
+    flex: none; text-decoration: none; font-weight: 600; font-size: .92rem; padding: 8px 16px;
+    border-radius: 999px; border: 1px solid var(--linea); white-space: nowrap;
+}
+.c-tabs a[aria-current="true"] { background: var(--cal); color: var(--noche); border-color: var(--cal); }
+
+/* Filtro de alérgenos */
+.c-filtro { margin: 14px 0 6px; border: 1px solid var(--linea); border-radius: 14px; padding: 12px 16px; }
+.c-filtro summary { cursor: pointer; font-weight: 600; list-style-position: outside; }
+.c-filtro-n { color: var(--ocre); }
+.c-filtro-help { color: var(--cal-2); font-size: .9rem; margin: 8px 0 12px; }
+.c-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.c-chips button {
+    font: 600 .85rem var(--f-body); color: var(--cal); background: none; cursor: pointer;
+    border: 1px solid var(--linea); border-radius: 999px; padding: 7px 13px; min-height: 36px;
+}
+.c-chips button[aria-pressed="true"] { background: var(--ocre); border-color: var(--ocre); color: var(--noche); }
+
+/* Platos */
+.c-cat { scroll-margin-top: 64px; padding-top: 26px; }
+.c-cat h2 { font: 500 1.7rem/1.1 var(--f-display); margin-bottom: 2px; }
+.c-cat-desc { color: var(--cal-2); font-size: .9rem; margin-bottom: 10px; }
+.c-plato { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid var(--linea); }
+.c-plato h3 { font: 600 1.15rem/1.25 var(--f-display); }
+.c-precio { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.c-precio small { font-weight: 500; color: var(--cal-2); }
+.c-desc { grid-column: 1 / -1; color: var(--cal-2); font-size: .95rem; }
+.c-tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.c-tag { font-size: .76rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--linea); color: var(--cal-2); }
+.c-tag-star { color: var(--ocre); border-color: rgba(224, 166, 78, .5); }
+.c-tag-diet { color: var(--oliva); border-color: rgba(169, 185, 122, .45); }
+.c-ocultos { color: var(--cal-2); font-size: .9rem; padding: 14px 0; }
+.c-msg { color: var(--cal-2); padding: 32px 0; }
+.c-legal { color: var(--cal-2); font-size: .85rem; margin: 28px 0 8px; }
+
+/* Barra inferior */
+.c-foot {
+    position: fixed; inset: auto 0 0 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px var(--g) calc(12px + env(safe-area-inset-bottom)); background: rgba(17, 22, 14, .94);
+    border-top: 1px solid var(--linea); backdrop-filter: blur(8px);
+}
+.c-btn { display: inline-flex; align-items: center; min-height: 46px; padding: 0 22px; border-radius: 999px; background: var(--cal); color: var(--noche); font-weight: 700; text-decoration: none; }
+.c-link { font-weight: 600; text-decoration: none; color: var(--cal-2); }

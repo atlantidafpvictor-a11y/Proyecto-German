@@ -235,3 +235,27 @@ code { background: var(--cal-2); padding: 1px 6px; border-radius: 4px; font-size
 }
 
 .stat-n { font-weight: 600; }
+
+/* ---------- Códigos QR de las mesas ---------- */
+.qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
+.qr-card {
+    background: #fff; border: 1px solid var(--linea, #E4E2DA); border-radius: 16px; padding: 22px 20px 16px;
+    text-align: center; break-inside: avoid; page-break-inside: avoid;
+}
+.qr-mesa { font-family: var(--f-display); font-size: 2rem; font-weight: 600; line-height: 1; color: #11160E; }
+.qr-zona { font-size: .85rem; color: #6B6F63; margin: 6px 0 14px; }
+.qr-code svg { width: 100%; max-width: 190px; height: auto; display: block; margin: 0 auto; }
+.qr-texto { font-weight: 600; margin-top: 12px; line-height: 1.35; color: #11160E; }
+.qr-texto span { font-weight: 400; color: #6B6F63; }
+.qr-url { font-size: .7rem; color: #9A9D92; margin-top: 8px; word-break: break-all; }
+
+@page { size: A4; margin: 12mm; }
+@media print {
+    body { background: #fff !important; }
+    .sidebar, .no-print, .flash { display: none !important; }
+    body.with-nav { display: block !important; }
+    .main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+    .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 8mm; }
+    .qr-card { border: 1px dashed #999; border-radius: 0; }
+    .qr-card[hidden] { display: none; }
+}
