@@ -1,2 +1,73 @@
+# =========================================================
+#  Configuración de Apache para toda la web
+#  Cada bloque va dentro de <IfModule>: si un módulo no está
+#  activado, Apache lo ignora en lugar de dar error 500.
+#  En Ubuntu: sudo a2enmod headers expires deflate rewrite
+# =========================================================
+
 # No mostrar listados de carpetas (como "Index of /database")
 Options -Indexes
+
+# Página de error propia. La ruta es desde la raíz del servidor, así que
+# funciona en Ubuntu (la web está en la raíz); en XAMPP, al estar en
+# localhost/Proyecto-German/, se sigue viendo la página de error de Apache.
+ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html
+
+# Tipos de archivo modernos
+AddType font/woff2 .woff2
+AddType image/webp .webp
+AddType image/svg+xml .svg
+AddType application/manifest+json .webmanifest
+
+# Archivos que nunca deben verse desde el navegador
+<FilesMatch "(^\.|\.(sql|md|sh|log|bak|ini)$|^composer\.)">
+    Require all denied
+</FilesMatch>
+
+# ---------- Cabeceras de seguridad ----------
+<IfModule mod_headers.c>
+    # "setifempty": si una página ya pone su propia cabecera (el panel pone
+    # una todavía más estricta), se respeta la suya.
+    # Content-Security-Policy: el navegador solo ejecuta JavaScript de nuestro
+    # propio servidor (nada en línea ni de otras webs). Aunque alguien colara
+    # un <script> en una opinión o un mensaje, no se ejecutaría (protege de XSS).
+    Header setifempty Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; frame-src https://www.openstreetmap.org; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    # Nadie puede meter nuestra web dentro de un iframe (clickjacking)
+    Header setifempty X-Frame-Options "SAMEORIGIN"
+    # El navegador no "adivina" tipos de archivo (una foto nunca se ejecuta como script)
+    Header set X-Content-Type-Options "nosniff"
+    # A otras webs solo les decimos el dominio, no la página exacta
+    Header setifempty Referrer-Policy "strict-origin-when-cross-origin"
+    # La web no usa cámara, micrófono, ubicación ni pagos: se desactivan
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Header set Cross-Origin-Opener-Policy "same-origin"
+    # Por HTTPS, el navegador recordará usar siempre HTTPS durante 1 año (HSTS)
+    Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+    # No decir qué versión de PHP usamos
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+</IfModule>
+
+# ---------- Rendimiento: compresión ----------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript application/json image/svg+xml application/manifest+json
+</IfModule>
+
+# ---------- Rendimiento: caché del navegador ----------
+# CSS y JS llevan ?v=fecha en index.html: al cambiarlos se cambia la versión
+# y el navegador descarga el nuevo, así que se pueden guardar mucho tiempo.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 0 seconds"
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>

@@ -1,0 +1,17 @@
+# Se copia a /etc/fail2ban/jail.d/sabor.local
+#
+# Si alguien falla la contraseña de SSH 5 veces en 10 minutos,
+# su IP queda bloqueada 1 hora. Cada vez que reincide, el bloqueo
+# se duplica (hasta 1 semana).
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+bantime.increment = true
+bantime.maxtime   = 1w
+# Nunca bloquear el propio servidor
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+enabled = true
+backend = systemd

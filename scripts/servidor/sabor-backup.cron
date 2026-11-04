@@ -1,0 +1,11 @@
+# Copia de seguridad de Sabor Mediterráneo
+# Se copia a /etc/cron.d/sabor-backup
+#
+# La torre no está encendida de noche, así que en vez de las 3:00
+# se hace a las 14:00 (después del turno de comidas) y además
+# 10 minutos después de cada arranque.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+0 14 * * *  root  sabor-backup >/dev/null
+@reboot     root  sleep 600 && sabor-backup >/dev/null

@@ -1,0 +1,7 @@
+# Los scripts y archivos del servidor Linux siempre con saltos de línea de Linux (LF),
+# aunque se editen en Windows: con CRLF bash y cron fallan.
+*.sh     text eol=lf
+*.cron   text eol=lf
+*.conf   text eol=lf
+*.local  text eol=lf
+*.sql    text eol=lf

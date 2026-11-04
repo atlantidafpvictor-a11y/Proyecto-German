@@ -22,6 +22,7 @@ ejecutar(function () {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         responder(['ok' => false, 'error' => 'Usa POST para apuntarte a un evento.'], 405);
     }
+    limitar('inscribir', 8, 900); // 8 inscripciones cada 15 minutos por IP
 
     $d = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($d)) {

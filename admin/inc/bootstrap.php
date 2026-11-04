@@ -8,6 +8,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../api/db.php';
 
 /* ---------- Sesión ---------- */
+ini_set('session.use_strict_mode', '1'); // rechaza identificadores de sesión inventados (session fixation)
 session_name('sm_admin');
 session_set_cookie_params([
     'lifetime' => 0,
@@ -39,8 +40,15 @@ set_exception_handler(function (Throwable $e) {
        . '</div></main></body></html>';
 });
 
+/* ---------- Cabeceras de seguridad ----------
+   El .htaccess de la raíz pone las de toda la web; estas son las del panel,
+   más estrictas, y funcionan aunque Apache no tenga mod_headers. */
+const ADMIN_VERSION = '20261105';
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: same-origin');
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+header('Cache-Control: no-store'); // los datos del panel nunca se guardan en la caché del navegador
 
 /* ---------- Utilidades ---------- */
 
@@ -144,7 +152,9 @@ function cabecera(string $titulo, string $activa): void
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
     <title><?= e($titulo) ?> · Panel Sabor Mediterráneo</title>
-    <link rel="stylesheet" href="admin.css">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="admin.css?v=<?= ADMIN_VERSION ?>">
+    <script src="admin.js?v=<?= ADMIN_VERSION ?>" defer></script>
 </head>
 <body class="<?= $u ? 'with-nav' : 'no-nav' ?>">
 <?php if ($u): ?>

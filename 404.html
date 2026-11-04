@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#F6F5F1">
+    <title>Página no encontrada | Sabor Mediterráneo</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <!-- Página autónoma: Apache la sirve en cualquier ruta (/lo-que-sea/mal),
+         así que todas las direcciones son absolutas y el estilo va aquí dentro. -->
+    <style>
+        @font-face { font-family: "Source Serif 4"; src: url("/fonts/source-serif-4.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+        @font-face { font-family: "Hanken Grotesk"; src: url("/fonts/hanken-grotesk.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+        :root { --cal: #F6F5F1; --tinta: #1C2318; --tinta-2: #4E5548; --anil: #23408E; --ocre: #C98A2E; }
+        * { box-sizing: border-box; margin: 0; }
+        body {
+            min-height: 100svh; display: grid; grid-template-rows: auto 1fr auto;
+            background: var(--cal); color: var(--tinta);
+            font: 1.0625rem/1.6 "Hanken Grotesk", system-ui, sans-serif;
+        }
+        header { padding: 24px clamp(16px, 5vw, 72px); }
+        .logo { display: inline-flex; align-items: center; gap: 10px; color: var(--anil); text-decoration: none; font: 500 1.05rem/1.05 "Source Serif 4", Georgia, serif; }
+        .logo span { color: var(--tinta); }
+        main { display: grid; place-items: center; padding: 24px clamp(16px, 5vw, 72px) 64px; text-align: center; }
+        .arch {
+            width: min(260px, 60vw); aspect-ratio: 3 / 4; margin: 0 auto 36px;
+            border: 2px solid var(--anil); border-bottom: 0; border-radius: 999px 999px 0 0;
+            display: grid; place-items: center;
+            font: 500 clamp(4rem, 14vw, 6.5rem)/1 "Source Serif 4", Georgia, serif; color: var(--anil); letter-spacing: -0.03em;
+        }
+        h1 { font: 500 clamp(2rem, 5vw, 3.2rem)/1.08 "Source Serif 4", Georgia, serif; letter-spacing: -0.02em; margin-bottom: 14px; }
+        p { color: var(--tinta-2); max-width: 34ch; margin: 0 auto 32px; }
+        .acciones { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .btn { display: inline-block; padding: 14px 26px; border-radius: 999px; font-weight: 600; text-decoration: none; border: 1.5px solid var(--anil); }
+        .btn-1 { background: var(--anil); color: #fff; }
+        .btn-2 { color: var(--anil); }
+        .btn:focus-visible { outline: 3px solid var(--ocre); outline-offset: 3px; }
+        .azulejo {
+            height: 28px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%2323408E'/%3E%3Cpath d='M24 6l5.3 12.7L42 24l-12.7 5.3L24 42l-5.3-12.7L6 24l12.7-5.3z' fill='%23F6F5F1'/%3E%3Cpath d='M24 13l3.2 7.8L35 24l-7.8 3.2L24 35l-3.2-7.8L13 24l7.8-3.2z' fill='%23C98A2E'/%3E%3C/svg%3E") repeat-x center / 28px 28px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a class="logo" href="/" aria-label="Sabor Mediterráneo, ir al inicio">
+            <svg width="26" height="32" viewBox="0 0 40 48" aria-hidden="true">
+                <path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/>
+                <path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/>
+            </svg>
+            <span>Sabor<br>Mediterráneo</span>
+        </a>
+    </header>
+    <main>
+        <div>
+            <div class="arch" aria-hidden="true">404</div>
+            <h1>Esta mesa no existe</h1>
+            <p>La página que buscas se ha movido o nunca ha estado en la carta. Te llevamos de vuelta.</p>
+            <div class="acciones">
+                <a class="btn btn-1" href="/#reservas">Reservar mesa</a>
+                <a class="btn btn-2" href="/">Volver al inicio</a>
+            </div>
+        </div>
+    </main>
+    <div class="azulejo" aria-hidden="true"></div>
+</body>
+</html>

@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mb_strlen($plato['descripcion']) < 5 || mb_strlen($plato['descripcion']) > 255) $errores[] = 'La descripción debe tener entre 5 y 255 caracteres.';
     if (!is_numeric($plato['precio']) || $plato['precio'] < 0 || $plato['precio'] > 9999) $errores[] = 'El precio no es válido.';
     if (!in_array($plato['categoria_id'], array_map('intval', array_column($categorias, 'id')), true)) $errores[] = 'Elige una categoría.';
-    if ($plato['imagen'] !== '' && !imagenValida($plato['imagen'])) $errores[] = 'La foto debe ser una dirección https://… o una ruta del proyecto como img/platos/salmorejo.jpg.';
+    if ($plato['imagen'] !== '' && !imagenValida($plato['imagen'])) $errores[] = 'La foto debe ser una dirección https://… o una ruta del proyecto como img/platos/salmorejo.webp.';
     if ($plato['sin_gluten'] && in_array(1, $marcados, true)) $errores[] = 'Un plato sin gluten no puede tener marcado el alérgeno «Gluten».';
 
     // La foto se sube solo cuando todo lo demás está bien, para no dejar archivos sueltos
@@ -137,10 +137,10 @@ cabecera($id ? 'Editar plato' : 'Nuevo plato', 'carta');
         <img class="photo-current" id="foto-preview" src="<?= e(miniatura($plato['imagen'] ?: null)) ?>" alt="Foto del plato">
         <div class="form">
             <label class="dropzone"><span>Cambiar foto <span class="muted">(JPG, PNG o WEBP, máximo 6 MB)</span></span>
-                <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" id="foto-input">
+                <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" id="foto-input" data-preview="foto-preview">
             </label>
             <label><span>…o ruta / dirección de la foto <span class="muted">(opcional)</span></span>
-                <input name="imagen" value="<?= e((string) $plato['imagen']) ?>" placeholder="img/platos/salmorejo.jpg o https://…">
+                <input name="imagen" value="<?= e((string) $plato['imagen']) ?>" placeholder="img/platos/salmorejo.webp o https://…">
             </label>
         </div>
     </div>
@@ -164,11 +164,4 @@ cabecera($id ? 'Editar plato' : 'Nuevo plato', 'carta');
         <a class="btn btn-quiet" href="carta.php">Cancelar</a>
     </div>
 </form>
-<script>
-// Vista previa de la foto elegida antes de guardar
-document.getElementById('foto-input').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) document.getElementById('foto-preview').src = URL.createObjectURL(file);
-});
-</script>
 <?php pie();

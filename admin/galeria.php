@@ -133,7 +133,7 @@ cabecera('Galería', 'galeria');
         <input type="hidden" name="MAX_FILE_SIZE" value="<?= SUBIDA_MAX_BYTES ?>">
         <label class="span-2 dropzone">
             <span>Foto <span class="muted">(JPG, PNG o WEBP, máximo 6 MB)</span></span>
-            <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" id="foto-input">
+            <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" id="foto-input" data-preview="upload-preview">
             <img class="upload-preview" id="upload-preview" alt="" hidden>
         </label>
         <label><span>…o su dirección web <span class="muted">(opcional)</span></span><input type="url" name="url" placeholder="https://"></label>
@@ -167,7 +167,7 @@ cabecera('Galería', 'galeria');
                 <button class="btn btn-small btn-quiet" name="accion" value="arriba" <?= $i === 0 ? 'disabled' : '' ?> aria-label="Mover antes">↑</button>
                 <button class="btn btn-small btn-quiet" name="accion" value="abajo" <?= $i === $total - 1 ? 'disabled' : '' ?> aria-label="Mover después">↓</button>
                 <button class="btn btn-small btn-quiet" name="accion" value="visible"><?= $f['visible'] ? 'Ocultar' : 'Mostrar' ?></button>
-                <button class="btn btn-small btn-danger" name="accion" value="borrar" onclick="return confirm('¿Eliminar esta foto de la galería?')">Eliminar</button>
+                <button class="btn btn-small btn-danger" name="accion" value="borrar" data-confirm="¿Eliminar esta foto de la galería?">Eliminar</button>
             </div>
         </form>
     </article>
@@ -175,14 +175,4 @@ cabecera('Galería', 'galeria');
 </section>
 <?php endif; ?>
 
-<script>
-// Vista previa de la foto elegida antes de subirla
-document.getElementById('foto-input').addEventListener('change', (e) => {
-    const img = document.getElementById('upload-preview');
-    const file = e.target.files[0];
-    if (!file) { img.hidden = true; return; }
-    img.src = URL.createObjectURL(file);
-    img.hidden = false;
-});
-</script>
 <?php pie();

@@ -393,7 +393,10 @@ Algunas actualizaciones añaden tablas nuevas. En vez de reimportar `restaurante
 ```bash
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/001_galeria.sql
 sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/002_fotos_propias.sql
+sudo mysql sabor_mediterraneo < /var/www/sabor-mediterraneo/database/migraciones/003_fotos_webp.sql
 ```
+
+Se ejecutan en orden y solo una vez cada una (aunque repetirlas no rompe nada).
 
 ### Carpeta para las fotos de la galería (una sola vez)
 
@@ -409,13 +412,102 @@ Solo esa carpeta es de `www-data`: el resto del código sigue siendo de `root`, 
 
 > ⚠️ **No volváis a importar `restaurante.sql` en el servidor** salvo que queráis empezar de cero: el script empieza con `DROP DATABASE` y borra todas las reservas, mensajes y usuarios reales.
 
-## Copia de seguridad de la base de datos
+## 11. Puesta en producción
+
+Lo que separa un servidor "que funciona" de uno preparado para un negocio real: copias automáticas, protección contra ataques y cabeceras de seguridad. Todo está en la carpeta `scripts/` del proyecto.
+
+### 11a. Módulos de Apache para seguridad y rendimiento
+
+El `.htaccess` de la raíz manda cabeceras de seguridad (Content-Security-Policy, HSTS…), comprime los archivos y le dice al navegador cuánto tiempo guardarlos. Para eso Apache necesita estos módulos:
 
 ```bash
-sudo mysqldump sabor_mediterraneo --routines --triggers > ~/copia_$(date +%F).sql
+sudo a2enmod headers expires deflate
+sudo cp /var/www/sabor-mediterraneo/scripts/servidor/apache-seguridad.conf /etc/apache2/conf-available/sabor-seguridad.conf
+sudo a2enconf sabor-seguridad
+sudo apache2ctl configtest
+sudo systemctl reload apache2
 ```
 
-`--routines` y `--triggers` incluyen la función, el procedimiento y el trigger.
+Comprobación (debe salir `content-security-policy`, `x-frame-options`, `strict-transport-security`… y `Server: Apache` sin versión):
+
+```bash
+curl -skI https://localhost | grep -iE "server|content-security|x-frame|strict-transport|x-content"
+```
+
+### 11b. Copias de seguridad automáticas
+
+```bash
+sudo install -m 700 /var/www/sabor-mediterraneo/scripts/backup.sh /usr/local/sbin/sabor-backup
+sudo install -m 700 /var/www/sabor-mediterraneo/scripts/restaurar.sh /usr/local/sbin/sabor-restaurar
+sudo install -m 644 /var/www/sabor-mediterraneo/scripts/servidor/sabor-backup.cron /etc/cron.d/sabor-backup
+```
+
+- Los scripts se **copian** a `/usr/local/sbin` (de root, permisos 700) en vez de ejecutarse desde `/var/www`: cron los lanza como root, así que nunca deben estar en una carpeta de la web.
+- Cada copia guarda la base de datos completa (con procedimiento, función, trigger y vistas) y la carpeta `uploads/`, en `/var/backups/sabor-mediterraneo/`, con permisos solo para root.
+- Se hace a las 14:00 y 10 minutos después de cada arranque (la torre no está encendida de noche). Se guardan 7 días.
+
+Probarla ahora mismo y ver el resultado:
+
+```bash
+sudo sabor-backup
+sudo ls -lh /var/backups/sabor-mediterraneo
+journalctl -t sabor-backup --no-pager | tail
+```
+
+Restaurar (lista las copias; luego se le pasa la que se quiera y pide escribir `SI`):
+
+```bash
+sudo sabor-restaurar
+sudo sabor-restaurar /var/backups/sabor-mediterraneo/bd_AAAA-MM-DD_HHMM.sql.gz
+```
+
+Antes de restaurar guarda automáticamente el estado actual, por si hay que deshacerlo.
+
+> Una copia de seguridad en el mismo disco no protege si el disco se rompe. En un negocio real se copiaría además a otro equipo (`rsync`/`scp`) o a la nube. Para el proyecto podéis demostrarlo copiándola a vuestro PC: `scp usuario@192.168.4.121:/ruta/copia.sql.gz .` (antes `sudo cp` a vuestra carpeta personal y `sudo chown`).
+
+### 11c. Bloquear ataques de fuerza bruta (fail2ban)
+
+```bash
+sudo apt install -y fail2ban
+sudo cp /var/www/sabor-mediterraneo/scripts/servidor/fail2ban-sabor.local /etc/fail2ban/jail.d/sabor.local
+sudo systemctl enable --now fail2ban
+sudo systemctl restart fail2ban
+sudo fail2ban-client status sshd
+```
+
+5 contraseñas de SSH mal en 10 minutos → esa IP queda bloqueada 1 hora (y el doble cada vez que reincide). El panel de la web tiene su propio bloqueo de intentos de login, y la API limita las peticiones por IP (error 429).
+
+Si os bloqueáis a vosotros mismos probando: `sudo fail2ban-client set sshd unbanip 192.168.X.X`.
+
+### 11d. Endurecer SSH
+
+```bash
+sudo cp /var/www/sabor-mediterraneo/scripts/servidor/ssh-sabor.conf /etc/ssh/sshd_config.d/99-sabor.conf
+sudo sshd -t && sudo systemctl restart ssh
+```
+
+`sshd -t` comprueba el archivo antes de reiniciar: si da error, **no reiniciéis**. Y no cerréis la sesión SSH actual hasta comprobar desde otra ventana de PowerShell que podéis entrar.
+
+Prohíbe entrar como `root`, limita los intentos y cierra sesiones abandonadas.
+
+### 11e. Actualizaciones de seguridad automáticas
+
+Ubuntu Server ya trae `unattended-upgrades`. Comprobar que está activo:
+
+```bash
+systemctl status unattended-upgrades --no-pager
+cat /etc/apt/apt.conf.d/20auto-upgrades
+```
+
+Las dos líneas deben acabar en `"1"`. Si no: `sudo dpkg-reconfigure -plow unattended-upgrades` → Sí.
+
+### 11f. La base de datos solo escucha en el propio servidor
+
+```bash
+sudo ss -tlnp | grep -E "3306|mysql|mariadb"
+```
+
+Debe salir `127.0.0.1:3306`, nunca `0.0.0.0:3306`: así nadie de la red puede conectarse a MariaDB directamente, solo PHP desde dentro del servidor. Además el cortafuegos (paso 8) solo deja pasar SSH, HTTP y HTTPS.
 
 ## Si algo falla
 

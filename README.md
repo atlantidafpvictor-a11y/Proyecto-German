@@ -31,8 +31,12 @@ Proyecto-German/
 │   ├── opiniones.php       Publicar o retirar reseñas
 │   ├── mensajes.php        Bandeja del formulario de contacto
 │   └── usuarios.php        Equipo (roles Administración y Sala)
-├── fonts/                  Tipografías incluidas (Source Serif 4 y Hanken Grotesk, licencia OFL): funcionan sin internet
-├── img/                    Fotos del proyecto: portada, comedor, platos y galería (optimizadas para web)
+├── 404.html                Página de error propia
+├── .htaccess               Cabeceras de seguridad (CSP, HSTS…), compresión y caché
+├── favicon.svg, manifest.webmanifest, robots.txt
+├── fonts/                  Tipografías incluidas en WOFF2 (Source Serif 4 y Hanken Grotesk, licencia OFL)
+├── img/                    Fotos del proyecto en WebP: portada, comedor, platos y galería
+├── scripts/                Copias de seguridad automáticas y configuración del servidor (fail2ban, SSH, Apache)
 ├── uploads/                Fotos subidas desde el panel (no se suben a GitHub)
 └── database/
     ├── restaurante.sql     Script completo de la base de datos
@@ -63,6 +67,10 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - **Roles:** el personal de Sala solo ve las reservas; Administración gestiona todo.
 - **Validación doble:** en el navegador (comodidad) y en el servidor (seguridad).
 - **Anti-spam:** campo trampa oculto en los formularios públicos.
+- **Content-Security-Policy:** el navegador solo ejecuta JavaScript de nuestro servidor; no hay ni una línea de JS dentro del HTML (ni en la web ni en el panel), así que un `<script>` colado en una opinión nunca se ejecutaría.
+- **Cabeceras de seguridad:** HSTS, X-Frame-Options (anti-clickjacking), X-Content-Type-Options, Referrer-Policy y Permissions-Policy. Apache y PHP no dicen su versión.
+- **Límite de peticiones (rate limiting):** la API pública limita reservas, inscripciones, consultas y mensajes por IP (error `429 Too Many Requests`), contra bots y contra quien intente adivinar códigos de reserva.
+- **Servidor:** copias de seguridad automáticas con rotación de 7 días, fail2ban contra fuerza bruta en SSH, SSH sin acceso de root, MariaDB solo en `127.0.0.1` y cortafuegos UFW.
 - **Subida de fotos:** máximo 6 MB, se comprueba que el contenido es una imagen real con `getimagesize()`, nombre aleatorio y extensión según el tipo real, y la carpeta `uploads/` no puede ejecutar código.
 
 ## Hoja de ruta
@@ -77,3 +85,6 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - [x] Galería de fotos con subida segura desde el panel
 - [x] Rediseño premium: portada con el arco que se abre al hacer scroll, tipografía Source Serif 4, carta en modo noche y pie con el nombre gigante
 - [x] Fotos propias del restaurante (generadas con IA y optimizadas: de 83 MB a 7,6 MB) y subida de foto en «Editar plato»
+- [x] Rendimiento: fotos en WebP (de 7,6 MB a 3,2 MB), fuentes WOFF2, compresión y caché del navegador con versionado de CSS/JS
+- [x] SEO: datos estructurados schema.org (Restaurant), Open Graph para compartir en WhatsApp y redes, favicon, manifest y robots.txt
+- [x] Producción: CSP, cabeceras de seguridad, rate limiting, página 404, copias automáticas, fail2ban y SSH endurecido

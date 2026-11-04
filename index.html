@@ -5,13 +5,106 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sabor Mediterráneo, cocina mediterránea con producto de la Vega de Granada. Consulta la carta, los horarios y reserva tu mesa online.">
     <meta name="theme-color" content="#F6F5F1">
-    <link rel="preload" as="image" href="img/portada.jpg">
     <title>Sabor Mediterráneo | Restaurante en Granada</title>
 
-    <link rel="preload" href="fonts/source-serif-4.woff" as="font" type="font/woff" crossorigin>
+    <!-- Iconos y app -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="img/icono-180.png">
+    <link rel="manifest" href="manifest.webmanifest">
 
-    <link rel="stylesheet" href="style.css">
-    <script src="javascript.js" defer></script>
+    <!-- Vista previa al compartir el enlace (WhatsApp, redes sociales…) -->
+    <meta property="og:type" content="restaurant">
+    <meta property="og:site_name" content="Sabor Mediterráneo">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:title" content="Sabor Mediterráneo · Cocina de la Vega, mesa de Granada">
+    <meta property="og:description" content="Arroces, guisos y pescado del día con producto de huertas a menos de 30 km. Reserva tu mesa online.">
+    <meta property="og:image" content="img/compartir.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Arroz servido en una cazuela de barro sobre la mesa del restaurante">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Datos estructurados (schema.org): Google entiende que es un restaurante
+         y puede mostrar horario, teléfono y "Reservar" directamente en los resultados -->
+    <script type="application/ld+json">
+{
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "Sabor Mediterráneo",
+      "description": "Cocina mediterránea de temporada con producto de la Vega de Granada y pescado de la lonja de Motril.",
+      "image": "img/compartir.jpg",
+      "logo": "favicon.svg",
+      "servesCuisine": [
+        "Mediterránea",
+        "Andaluza",
+        "Arroces"
+      ],
+      "priceRange": "€€",
+      "telephone": "+34 958 000 000",
+      "email": "reservas@sabormediterraneo.es",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Granada",
+        "addressRegion": "Andalucía",
+        "addressCountry": "ES"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 37.1745,
+        "longitude": -3.5985
+      },
+      "acceptsReservations": true,
+      "hasMenu": "#carta",
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Tuesday",
+            "Wednesday",
+            "Thursday"
+          ],
+          "opens": "13:00",
+          "closes": "16:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Tuesday",
+            "Wednesday",
+            "Thursday"
+          ],
+          "opens": "20:00",
+          "closes": "23:30"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "opens": "13:00",
+          "closes": "16:30"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Friday",
+            "Saturday"
+          ],
+          "opens": "20:00",
+          "closes": "23:59"
+        }
+      ]
+    }
+    </script>
+
+    <link rel="preload" as="image" href="img/portada.webp" fetchpriority="high">
+
+    <link rel="preload" href="fonts/source-serif-4.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="stylesheet" href="style.css?v=20261105">
+    <script src="javascript.js?v=20261105" defer></script>
 </head>
 <body>
 
@@ -75,7 +168,7 @@
                 </div>
 
                 <figure class="hero-arch" id="hero-arch">
-                    <img src="img/portada.jpg" width="1344" height="1800"
+                    <img src="img/portada.webp" width="1195" height="1600"
                          alt="Mesa servida con arroz, salmorejo, berenjenas con miel y vino tinto" fetchpriority="high">
                     <figcaption class="hero-veil" id="hero-veil" aria-hidden="true">
                         <span class="hero-veil-line">La mesa ya está puesta.</span>
@@ -100,7 +193,7 @@
 
             <div class="about-grid">
                 <figure class="about-arch">
-                    <img src="img/comedor.jpg" width="1450" height="1800"
+                    <img src="img/comedor.webp" width="1289" height="1600"
                          alt="Comedor encalado con arco nazarí y zócalo de azulejos" loading="lazy">
                 </figure>
 

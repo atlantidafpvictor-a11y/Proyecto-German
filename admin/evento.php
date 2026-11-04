@@ -146,7 +146,7 @@ cabecera($id ? 'Editar evento' : 'Nuevo evento', 'eventos');
                     <td class="actions">
                         <form method="post">
                             <?= campoCsrf() ?><input type="hidden" name="accion" value="quitar"><input type="hidden" name="cliente_id" value="<?= (int) $i['cliente_id'] ?>">
-                            <button class="btn btn-small btn-danger" onclick="return confirm('¿Quitar a <?= e($i['nombre']) ?> de la lista? Sus plazas quedarán libres.')">Quitar</button>
+                            <button class="btn btn-small btn-danger" data-confirm="¿Quitar a <?= e($i['nombre']) ?> de la lista? Sus plazas quedarán libres.">Quitar</button>
                         </form>
                     </td>
                 </tr>

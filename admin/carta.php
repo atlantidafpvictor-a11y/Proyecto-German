@@ -81,7 +81,7 @@ cabecera('Carta', 'carta');
                 <a class="btn btn-small" href="plato.php?id=<?= (int) $p['id'] ?>">Editar</a>
                 <button class="btn btn-small btn-quiet" name="accion" value="disponible"><?= $p['disponible'] ? 'Ocultar' : 'Mostrar' ?></button>
                 <button class="btn btn-small btn-quiet" name="accion" value="destacado"><?= $p['destacado'] ? 'Quitar recomendado' : 'Recomendar' ?></button>
-                <button class="btn btn-small btn-danger" name="accion" value="borrar" onclick="return confirm('¿Eliminar «<?= e($p['nombre']) ?>» de la carta? No se puede deshacer.')">Eliminar</button>
+                <button class="btn btn-small btn-danger" name="accion" value="borrar" data-confirm="¿Eliminar «<?= e($p['nombre']) ?>» de la carta? No se puede deshacer.">Eliminar</button>
             </form>
         </li>
         <?php endforeach; ?>

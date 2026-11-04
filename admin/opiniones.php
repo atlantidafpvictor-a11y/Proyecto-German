@@ -52,7 +52,7 @@ cabecera('Opiniones', 'opiniones');
                 <span class="pill pill-pendiente">Sin revisar</span>
                 <button class="btn btn-small" name="accion" value="aprobar">Publicar</button>
             <?php endif; ?>
-            <button class="btn btn-small btn-danger" name="accion" value="borrar" onclick="return confirm('¿Eliminar esta opinión?')">Eliminar</button>
+            <button class="btn btn-small btn-danger" name="accion" value="borrar" data-confirm="¿Eliminar esta opinión?">Eliminar</button>
         </form>
     </article>
 <?php endforeach; ?>

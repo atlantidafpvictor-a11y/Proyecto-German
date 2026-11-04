@@ -6,6 +6,7 @@
 --  una foto vuestra a un plato o habéis subido fotos a la galería,
 --  se conservan. No borra reservas, clientes ni usuarios.
 --  Se puede ejecutar varias veces sin problema.
+--  Después hay que ejecutar la 003 (las fotos pasaron a formato WebP).
 --
 --  XAMPP:   phpMyAdmin → base sabor_mediterraneo → Importar → este archivo
 --  Ubuntu:  sudo mysql sabor_mediterraneo < database/migraciones/002_fotos_propias.sql

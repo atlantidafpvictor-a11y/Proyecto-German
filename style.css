@@ -7,11 +7,11 @@
 /* ---------- 0. Tipografías incluidas en el proyecto (licencia OFL, carpeta fonts/) ----------
    Van dentro de la web para que se vean igual aunque no haya internet. */
 @font-face {
-    font-family: "Source Serif 4"; src: url("fonts/source-serif-4.woff") format("woff");
-    font-weight: 200 900; font-style: normal; font-display: swap;
+    font-family: "Source Serif 4"; src: url("fonts/source-serif-4.woff2") format("woff2");
+    font-weight: 400 700; font-style: normal; font-display: swap;
 }
 @font-face {
-    font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk.woff") format("woff");
+    font-family: "Hanken Grotesk"; src: url("fonts/hanken-grotesk.woff2") format("woff2");
     font-weight: 100 900; font-style: normal; font-display: swap;
 }
 

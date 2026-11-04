@@ -78,7 +78,7 @@ function imagenValida(string $imagen): bool
 /** Dirección para ver la foto desde el panel (las rutas locales están un nivel por encima de admin/). */
 function miniatura(?string $imagen, int $ancho = 480): string
 {
-    if (!$imagen) return '../img/portada.jpg';
+    if (!$imagen) return '../img/portada.webp';
     if (str_starts_with($imagen, 'https://images.unsplash.com/') && !str_contains($imagen, '?')) {
         return $imagen . "?auto=format&fit=crop&w=$ancho&q=70";
     }

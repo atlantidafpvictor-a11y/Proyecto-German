@@ -31,7 +31,7 @@ ejecutar(function () {
 
     // Convertimos tipos para que JavaScript reciba números y booleanos de verdad
     $platos = array_map(function (array $p): array {
-        $imagen = $p['imagen'] ?: 'img/portada.jpg';
+        $imagen = $p['imagen'] ?: 'img/portada.webp';
         if (str_starts_with($imagen, 'https://images.unsplash.com/') && !str_contains($imagen, '?')) {
             $imagen .= '?auto=format&fit=crop&w=900&q=80';
         }

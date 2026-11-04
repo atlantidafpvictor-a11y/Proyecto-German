@@ -60,7 +60,7 @@ function filaEvento(array $e, bool $pasado): void
             <?php if (!$pasado): ?>
                 <button class="btn btn-small btn-quiet" name="accion" value="publicado"><?= $e['publicado'] ? 'Ocultar de la web' : 'Publicar en la web' ?></button>
             <?php endif; ?>
-            <button class="btn btn-small btn-danger" name="accion" value="borrar" onclick="return confirm('¿Eliminar «<?= e($e['titulo']) ?>» y sus <?= (int) $e['inscripciones'] ?> inscripciones? No se puede deshacer.')">Eliminar</button>
+            <button class="btn btn-small btn-danger" name="accion" value="borrar" data-confirm="¿Eliminar «<?= e($e['titulo']) ?>» y sus <?= (int) $e['inscripciones'] ?> inscripciones? No se puede deshacer.">Eliminar</button>
         </form>
     </li>
     <?php

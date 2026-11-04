@@ -1,0 +1,5 @@
+# Los buscadores pueden indexar la web pública, pero no el panel ni la API
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /uploads/

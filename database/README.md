@@ -17,9 +17,10 @@ Base de datos `sabor_mediterraneo` (MySQL / MariaDB en XAMPP). Script completo e
 |---|---|
 | `001_galeria.sql` | Tabla `galeria` y 8 fotos de ejemplo |
 | `002_fotos_propias.sql` | Fotos propias del restaurante (carpeta `img/`) en la carta y la galería. Conserva las fotos que hayáis subido vosotros |
+| `003_fotos_webp.sql` | Cambia las rutas de las fotos de `img/` de `.jpg` a `.webp` (formato más ligero) |
 
 - **XAMPP:** phpMyAdmin → base `sabor_mediterraneo` → Importar → el archivo de la migración.
-- **Ubuntu:** `sudo mysql sabor_mediterraneo < database/migraciones/001_galeria.sql` (y lo mismo con `002_fotos_propias.sql`)
+- **Ubuntu:** `sudo mysql sabor_mediterraneo < database/migraciones/001_galeria.sql` (y lo mismo con `002_fotos_propias.sql` y `003_fotos_webp.sql`)
 
 Se ejecutan **en orden** (001, 002…) y cada una solo una vez, aunque repetirlas no rompe nada.
 

@@ -11,6 +11,7 @@ ejecutar(function () {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         responder(['ok' => false, 'error' => 'Usa POST para enviar un mensaje.'], 405);
     }
+    limitar('contactar', 5, 900); // 5 mensajes cada 15 minutos por IP
 
     $d = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($d)) {

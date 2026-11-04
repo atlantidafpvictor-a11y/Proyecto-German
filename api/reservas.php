@@ -20,6 +20,7 @@ ejecutar(function () {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         responder(['ok' => false, 'error' => 'Usa POST para crear una reserva.'], 405);
     }
+    limitar('reservar', 8, 900); // 8 reservas cada 15 minutos por IP
 
     $d = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($d)) {

@@ -217,7 +217,7 @@ cabecera('Reservas', 'reservas');
                         <?php else: ?>
                             <button class="btn btn-small" name="accion" value="completada">Han llegado</button>
                         <?php endif; ?>
-                        <button class="btn btn-small btn-quiet" name="accion" value="cancelada" onclick="return confirm('¿Cancelar la reserva <?= e($r['codigo']) ?>?')">Cancelar</button>
+                        <button class="btn btn-small btn-quiet" name="accion" value="cancelada" data-confirm="¿Cancelar la reserva <?= e($r['codigo']) ?>?">Cancelar</button>
                     </form>
                     <?php endif; ?>
                 </td>

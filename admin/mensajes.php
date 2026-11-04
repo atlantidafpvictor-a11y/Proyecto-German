@@ -42,7 +42,7 @@ cabecera('Mensajes', 'mensajes');
             <?= campoCsrf() ?><input type="hidden" name="id" value="<?= (int) $m['id'] ?>">
             <a class="btn btn-small" href="mailto:<?= e($m['email']) ?>?subject=<?= rawurlencode('Re: ' . $m['asunto']) ?>">Responder por email</a>
             <button class="btn btn-small btn-quiet" name="accion" value="leido"><?= $m['leido'] ? 'Marcar como no leído' : 'Marcar como leído' ?></button>
-            <button class="btn btn-small btn-danger" name="accion" value="borrar" onclick="return confirm('¿Eliminar este mensaje?')">Eliminar</button>
+            <button class="btn btn-small btn-danger" name="accion" value="borrar" data-confirm="¿Eliminar este mensaje?">Eliminar</button>
         </form>
     </article>
 <?php endforeach; ?>

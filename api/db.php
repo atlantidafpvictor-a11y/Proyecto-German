@@ -46,6 +46,50 @@ function responder(array $datos, int $codigo = 200): void
     exit;
 }
 
+/**
+ * Límite de peticiones por IP (rate limiting).
+ *
+ * Evita que un bot llene la base de datos de reservas falsas o pruebe
+ * miles de códigos de reserva: cada IP puede hacer como mucho $max
+ * peticiones de un tipo cada $ventana segundos. Si se pasa, responde
+ * 429 Too Many Requests con la cabecera Retry-After.
+ *
+ * Se guarda en un archivo pequeño por IP en la carpeta temporal del
+ * sistema (no hace falta tabla ni Redis). flock() evita que dos
+ * peticiones a la vez escriban el archivo al mismo tiempo.
+ * La IP se guarda como hash, nunca en claro (protección de datos).
+ */
+function limitar(string $accion, int $max, int $ventana): void
+{
+    $dir = sys_get_temp_dir() . '/sabor-limites';
+    if (!is_dir($dir)) @mkdir($dir, 0700, true);
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'cli';
+    $archivo = $dir . '/' . hash('sha256', $accion . '|' . $ip) . '.json';
+    $fh = @fopen($archivo, 'c+');
+    if (!$fh) return; // si no se puede escribir, no bloqueamos a nadie
+
+    flock($fh, LOCK_EX);
+    $ahora = time();
+    $marcas = json_decode(stream_get_contents($fh) ?: '[]', true) ?: [];
+    $marcas = array_values(array_filter($marcas, fn($t) => $t > $ahora - $ventana));
+
+    if (count($marcas) >= $max) {
+        flock($fh, LOCK_UN);
+        fclose($fh);
+        $espera = max(1, $marcas[0] + $ventana - $ahora);
+        header('Retry-After: ' . $espera);
+        responder(['ok' => false, 'error' => 'Has hecho demasiados intentos seguidos. Espera ' . ceil($espera / 60) . ' min o llámanos al 958 000 000.'], 429);
+    }
+
+    $marcas[] = $ahora;
+    ftruncate($fh, 0);
+    rewind($fh);
+    fwrite($fh, json_encode($marcas));
+    flock($fh, LOCK_UN);
+    fclose($fh);
+}
+
 /** Ejecuta la función de un endpoint y convierte cualquier fallo en un JSON de error. */
 function ejecutar(callable $endpoint): void
 {

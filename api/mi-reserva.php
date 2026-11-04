@@ -16,6 +16,7 @@ ejecutar(function () {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         responder(['ok' => false, 'error' => 'Usa POST para consultar una reserva.'], 405);
     }
+    limitar('consultar', 20, 900); // 20 consultas cada 15 minutos: impide probar códigos a lo loco
 
     $d = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($d)) {
