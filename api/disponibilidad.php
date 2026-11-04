@@ -16,7 +16,7 @@ ejecutar(function () {
     $personas = filter_var($_GET['personas'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 20]]);
 
     if (!$fecha || $personas === false) {
-        responder(['ok' => false, 'error' => 'Indica una fecha (AAAA-MM-DD) y un número de personas válido.'], 400);
+        responder(['ok' => false, 'error' => tr('Indica una fecha (AAAA-MM-DD) y un número de personas válido.', 'Send a date (YYYY-MM-DD) and a valid number of guests.')], 400);
     }
 
     $hoy = new DateTimeImmutable('today');

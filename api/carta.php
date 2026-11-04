@@ -1,5 +1,6 @@
 <?php
 /**
+ * GET api/carta.php[?lang=en]
  * GET api/carta.php
  * Devuelve las categorías activas, los platos disponibles (con sus alérgenos)
  * y la lista de alérgenos.
@@ -11,14 +12,14 @@ ejecutar(function () {
     $pdo = db();
 
     $categorias = $pdo->query(
-        'SELECT id, nombre FROM categorias WHERE activa = 1 ORDER BY orden, id'
+        'SELECT id, ' . col('nombre') . ' AS nombre, ' . col('descripcion') . ' AS descripcion FROM categorias WHERE activa = 1 ORDER BY orden, id'
     )->fetchAll();
 
-    $alergenos = $pdo->query('SELECT id, nombre FROM alergenos ORDER BY id')->fetchAll();
+    $alergenos = $pdo->query('SELECT id, ' . col('nombre') . ' AS nombre FROM alergenos ORDER BY id')->fetchAll();
 
     // GROUP_CONCAT junta los id de alérgenos de cada plato en un texto "1,3,7"
     $platos = $pdo->query(
-        'SELECT p.id, p.categoria_id, p.nombre, p.descripcion, p.precio, p.unidad, p.imagen,
+        'SELECT p.id, p.categoria_id, ' . col('p.nombre') . ' AS nombre, ' . col('p.descripcion') . ' AS descripcion, p.precio, p.unidad, p.imagen,
                 p.vegetariano, p.vegano, p.sin_gluten, p.destacado,
                 GROUP_CONCAT(pa.alergeno_id ORDER BY pa.alergeno_id) AS alergenos
          FROM platos p
@@ -52,7 +53,7 @@ ejecutar(function () {
     }, $platos);
 
     responder([
-        'categorias' => array_map(fn($c) => ['id' => (int) $c['id'], 'nombre' => $c['nombre']], $categorias),
+        'categorias' => array_map(fn($c) => ['id' => (int) $c['id'], 'nombre' => $c['nombre'], 'descripcion' => $c['descripcion']], $categorias),
         'alergenos'  => array_map(fn($a) => ['id' => (int) $a['id'], 'nombre' => $a['nombre']], $alergenos),
         'platos'     => $platos,
     ]);

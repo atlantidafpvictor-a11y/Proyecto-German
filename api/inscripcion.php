@@ -26,7 +26,7 @@ ejecutar(function () {
 
     $d = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($d)) {
-        responder(['ok' => false, 'error' => 'Los datos enviados no son válidos.'], 400);
+        responder(['ok' => false, 'error' => tr('Los datos enviados no son válidos.', 'The data sent is not valid.')], 400);
     }
     if (!empty($d['web'])) { // campo trampa anti-bots
         responder(['ok' => true, 'libres' => 0]);
@@ -40,11 +40,11 @@ ejecutar(function () {
     $email    = strtolower(trim(texto($d, 'email')));
 
     $errores = [];
-    if (!$eventoId)                                          $errores['evento'] = 'Elige un evento.';
+    if (!$eventoId)                                          $errores['evento'] = tr('Elige un evento.', 'Please choose an event.');
     if ($plazas === false)                                   $errores['e-plazas'] = 'Puedes reservar de 1 a ' . MAX_PLAZAS_POR_PERSONA . ' plazas.';
-    if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 100)  $errores['e-nombre'] = 'Escribe tu nombre y apellidos.';
-    if (!preg_match('/^\+?[0-9]{9,14}$/', $telefono))        $errores['e-telefono'] = 'Escribe un teléfono de 9 cifras.';
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 120) $errores['e-email'] = 'Revisa el email.';
+    if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 100)  $errores['e-nombre'] = tr('Escribe tu nombre y apellidos.', 'Please enter your full name.');
+    if (!preg_match('/^\+?[0-9]{9,14}$/', $telefono))        $errores['e-telefono'] = tr('Escribe un teléfono de 9 cifras.', 'Please enter a valid phone number.');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 120) $errores['e-email'] = tr('Revisa el email.', 'Please check your email address.');
 
     if ($errores) {
         responder(['ok' => false, 'error' => reset($errores), 'campos' => $errores], 422);
@@ -60,7 +60,7 @@ ejecutar(function () {
         $evento = $stmt->fetch();
         if (!$evento) {
             $pdo->rollBack();
-            responder(['ok' => false, 'error' => 'Este evento ya no está disponible.'], 404);
+            responder(['ok' => false, 'error' => tr('Este evento ya no está disponible.', 'This event is no longer available.')], 404);
         }
 
         $stmt = $pdo->prepare('SELECT COALESCE(SUM(plazas), 0) FROM inscripciones_evento WHERE evento_id = ?');
@@ -69,11 +69,11 @@ ejecutar(function () {
 
         if ($libres <= 0) {
             $pdo->rollBack();
-            responder(['ok' => false, 'error' => 'Lo sentimos, ya no quedan plazas.', 'libres' => 0], 409);
+            responder(['ok' => false, 'error' => tr('Lo sentimos, ya no quedan plazas.', 'Sorry, there are no places left.'), 'libres' => 0], 409);
         }
         if ($plazas > $libres) {
             $pdo->rollBack();
-            responder(['ok' => false, 'error' => $libres === 1 ? 'Solo queda 1 plaza.' : "Solo quedan $libres plazas.", 'campos' => ['e-plazas' => "Elige como mucho $libres."], 'libres' => $libres], 409);
+            responder(['ok' => false, 'error' => $libres === 1 ? tr('Solo queda 1 plaza.', 'Only 1 place left.') : tr("Solo quedan $libres plazas.", "Only $libres places left."), 'campos' => ['e-plazas' => tr("Elige como mucho $libres.", "Choose $libres at most.")], 'libres' => $libres], 409);
         }
 
         // 2. Crear el cliente si es nuevo (sin tocar los datos de uno que ya existe) y obtener su id
@@ -89,7 +89,9 @@ ejecutar(function () {
         $ya->execute([$eventoId, $clienteId]);
         if (($antes = $ya->fetchColumn()) !== false) {
             $pdo->rollBack();
-            responder(['ok' => false, 'error' => "Ya estás apuntado con $antes " . ((int) $antes === 1 ? 'plaza' : 'plazas') . '. Si quieres cambiarlo, llámanos al 958 000 000.'], 409);
+            responder(['ok' => false, 'error' => (int) $antes === 1
+                ? tr('Ya estás apuntado con 1 plaza. Si quieres cambiarlo, llámanos al 958 000 000.', 'You are already signed up with 1 place. To change it, call us on +34 958 000 000.')
+                : tr("Ya estás apuntado con $antes plazas. Si quieres cambiarlo, llámanos al 958 000 000.", "You are already signed up with $antes places. To change it, call us on +34 958 000 000.")], 409);
         }
 
         // 4. Guardar la inscripción

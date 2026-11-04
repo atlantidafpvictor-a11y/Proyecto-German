@@ -115,5 +115,49 @@ function pintarSelectorIdioma(contenedor) {
     });
 }
 
+/* ---------- Traducción por texto (como gettext) ----------
+   En la web principal el propio texto en español es la clave:
+   __("Reservar mesa") → "Book a table". Así el HTML se queda tal cual,
+   legible para quien lo mantiene, y si falta una traducción se ve el
+   texto en español (nunca una clave rara). El diccionario está en
+   i18n-en.js. */
+const EN = (typeof TRADUCCIONES_EN === "object" && TRADUCCIONES_EN) || {};
+const normalizar = (t) => t.replace(/\s+/g, " ").trim();
+
+/** Texto de la web en el idioma actual. __("Quedan {n} plazas", { n: 3 }) */
+function __(es, vars = {}) {
+    const texto = (IDIOMA === "en" && EN[es]) || es;
+    return texto.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));
+}
+
+/**
+ * Traduce el HTML ya escrito: cada texto y los atributos que lee la gente o
+ * un lector de pantalla (aria-label, placeholder, alt, title). Los espacios
+ * de alrededor se conservan para no pegar palabras.
+ */
+function traducirDocumento(raiz = document.body) {
+    document.documentElement.lang = IDIOMA;
+    if (IDIOMA === "es") return;
+    const recorrido = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT, {
+        acceptNode: (n) => (n.parentElement.closest("script, style") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    for (let n = recorrido.nextNode(); n; n = recorrido.nextNode()) {
+        const limpio = normalizar(n.nodeValue);
+        if (limpio && EN[limpio]) {
+            const [, antes, despues] = n.nodeValue.match(/^(\s*)[\s\S]*?(\s*)$/);
+            n.nodeValue = antes + EN[limpio] + despues;
+        }
+    }
+    raiz.querySelectorAll("[aria-label], [placeholder], [alt], [title]").forEach((el) => {
+        ["aria-label", "placeholder", "alt", "title"].forEach((a) => {
+            const v = el.getAttribute(a);
+            if (v && EN[normalizar(v)]) el.setAttribute(a, EN[normalizar(v)]);
+        });
+    });
+    if (EN[document.title]) document.title = EN[document.title];
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc && EN[desc.content]) desc.content = EN[desc.content];
+}
+
 /** Precio en euros con el formato de cada idioma: 8,50 € / €8.50 */
 const dinero = (n) => new Intl.NumberFormat(LOCALE, { style: "currency", currency: "EUR" }).format(Number(n));

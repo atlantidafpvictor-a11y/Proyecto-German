@@ -26,7 +26,7 @@ ejecutar(function () {
 
     $d = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($d)) {
-        responder(['ok' => false, 'error' => 'Los datos enviados no son válidos.'], 400);
+        responder(['ok' => false, 'error' => tr('Los datos enviados no son válidos.', 'The data sent is not valid.')], 400);
     }
 
     $codigo   = strtoupper(trim(texto($d, 'codigo')));
@@ -34,16 +34,16 @@ ejecutar(function () {
     $accion   = in_array($d['accion'] ?? '', ['cancelar', 'cambiar'], true) ? $d['accion'] : 'consultar';
 
     if (!preg_match('/^[A-Z0-9]{6}$/', $codigo)) {
-        responder(['ok' => false, 'error' => 'El código tiene 6 letras y números, por ejemplo K7Q2XB.', 'campo' => 'm-codigo'], 422);
+        responder(['ok' => false, 'error' => tr('El código tiene 6 letras y números, por ejemplo K7Q2XB.', 'The code has 6 letters and numbers, for example K7Q2XB.'), 'campo' => 'm-codigo'], 422);
     }
     if (strlen($telefono) < 9) {
-        responder(['ok' => false, 'error' => 'Escribe el teléfono con el que hiciste la reserva.', 'campo' => 'm-telefono'], 422);
+        responder(['ok' => false, 'error' => tr('Escribe el teléfono con el que hiciste la reserva.', 'Enter the phone number you booked with.'), 'campo' => 'm-telefono'], 422);
     }
 
     $pdo = db();
     $stmt = $pdo->prepare(
         "SELECT r.id, r.cliente_id, r.codigo, r.fecha, TIME_FORMAT(r.hora, '%H:%i') AS hora, r.personas, r.estado,
-                COALESCE(r.nombre, c.nombre) AS nombre, COALESCE(r.telefono, c.telefono) AS telefono, z.nombre AS zona
+                COALESCE(r.nombre, c.nombre) AS nombre, COALESCE(r.telefono, c.telefono) AS telefono, " . col('z.nombre') . " AS zona
          FROM reservas r
          JOIN clientes c ON c.id = r.cliente_id
          LEFT JOIN zonas z ON z.id = r.zona_id
@@ -56,7 +56,7 @@ ejecutar(function () {
     // así no se puede averiguar qué códigos existen.
     if (!$r || !mismoTelefono($telefono, soloDigitos($r['telefono']))) {
         usleep(400000); // frena a quien pruebe muchas combinaciones
-        responder(['ok' => false, 'error' => 'No encontramos ninguna reserva con ese código y teléfono. Revisa los dos datos.'], 404);
+        responder(['ok' => false, 'error' => tr('No encontramos ninguna reserva con ese código y teléfono. Revisa los dos datos.', 'We could not find a booking with that code and phone number. Please check both.')], 404);
     }
 
     [$puede, $motivo] = puedeCancelar($r);
@@ -73,7 +73,7 @@ ejecutar(function () {
 
     if ($accion === 'cambiar') {
         if (!$puede) {
-            responder(['ok' => false, 'error' => str_replace('cancelar', 'cambiar', $motivo), 'reserva' => publica($r, false, $motivo)], 409);
+            responder(['ok' => false, 'error' => (idioma() === 'es' ? str_replace('cancelar', 'cambiar', $motivo) : $motivo), 'reserva' => publica($r, false, $motivo)], 409);
         }
         $r = cambiar($pdo, $r, $d);
         [$puede, $motivo] = puedeCancelar($r);
@@ -92,13 +92,13 @@ function cambiar(PDO $pdo, array $r, array $d): array
                 ['options' => ['min_range' => 1, 'max_range' => (int) config('max_personas_online')]]);
 
     if ($personas === false) {
-        responder(['ok' => false, 'error' => 'Para más de ' . config('max_personas_online') . ' personas, llámanos.', 'campo' => 'c-personas'], 422);
+        responder(['ok' => false, 'error' => tr('Para más de ' . config('max_personas_online') . ' personas, llámanos.', 'For more than ' . config('max_personas_online') . ' guests, please call us.'), 'campo' => 'c-personas'], 422);
     }
     if ($p = problemaFechaHora($fecha, $hora)) {
         responder(['ok' => false, 'error' => $p[1], 'campo' => 'c-' . $p[0]], 422);
     }
     if ($fecha->format('Y-m-d') === $r['fecha'] && $hora === $r['hora'] && $personas === (int) $r['personas']) {
-        responder(['ok' => false, 'error' => 'Es la misma reserva que ya tienes: cambia el día, la hora o las personas.'], 422);
+        responder(['ok' => false, 'error' => tr('Es la misma reserva que ya tienes: cambia el día, la hora o las personas.', 'That is the booking you already have: change the day, the time or the number of guests.')], 422);
     }
 
     $resultado = conCerrojo('mesas', function (PDO $pdo) use ($r, $fecha, $hora, $personas): ?string {
@@ -106,7 +106,7 @@ function cambiar(PDO $pdo, array $r, array $d): array
         try {
             if ($otra = reservaSolapada($pdo, (int) $r['cliente_id'], $fecha, $hora, (int) $r['id'])) {
                 $pdo->rollBack();
-                return "Ya tienes otra reserva ese día a las $otra.";
+                return tr("Ya tienes otra reserva ese día a las $otra.", "You already have another booking that day at $otra.");
             }
             // Se suelta la mesa actual y se busca una nueva para el nuevo día y hora
             $pdo->prepare("UPDATE reservas SET fecha = ?, hora = ?, personas = ?, mesa_id = NULL, estado = 'pendiente' WHERE id = ?")
@@ -118,7 +118,7 @@ function cambiar(PDO $pdo, array $r, array $d): array
             return null;
         } catch (PDOException $e) {
             if ($pdo->inTransaction()) $pdo->rollBack(); // la reserva vuelve a como estaba, con su mesa
-            if ($e->getCode() === '45000') return 'No queda mesa a esa hora. Tu reserva sigue como estaba: prueba otra hora.';
+            if ($e->getCode() === '45000') return tr('No queda mesa a esa hora. Tu reserva sigue como estaba: prueba otra hora.', 'There are no tables left at that time. Your booking has not changed: please try another time.');
             throw $e;
         }
     });
@@ -143,15 +143,15 @@ function mismoTelefono(string $a, string $b): bool
 /** @return array{0: bool, 1: string} [¿se puede cancelar?, explicación si no] */
 function puedeCancelar(array $r): array
 {
-    if ($r['estado'] === 'cancelada')     return [false, 'Esta reserva ya está cancelada.'];
-    if ($r['estado'] === 'completada')    return [false, 'Esta reserva ya se ha celebrado.'];
-    if ($r['estado'] === 'no_presentado') return [false, 'Esta reserva ya ha pasado.'];
+    if ($r['estado'] === 'cancelada')     return [false, tr('Esta reserva ya está cancelada.', 'This booking has already been cancelled.')];
+    if ($r['estado'] === 'completada')    return [false, tr('Esta reserva ya se ha celebrado.', 'This booking has already taken place.')];
+    if ($r['estado'] === 'no_presentado') return [false, tr('Esta reserva ya ha pasado.', 'This booking is in the past.')];
 
     $horas = (int) (config('horas_min_cancelacion') ?? 2);
     $cuando = new DateTimeImmutable($r['fecha'] . ' ' . $r['hora']);
     $limite = (new DateTimeImmutable())->modify("+$horas hours");
     if ($cuando < $limite) {
-        return [false, "Solo se puede cancelar online hasta $horas horas antes. Llámanos al 958 000 000."];
+        return [false, tr("Solo se puede cancelar online hasta $horas horas antes. Llámanos al 958 000 000.", "Online changes and cancellations close $horas hours before. Please call us on +34 958 000 000.")];
     }
     return [true, ''];
 }

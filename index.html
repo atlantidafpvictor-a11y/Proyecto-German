@@ -103,8 +103,13 @@
 
     <link rel="preload" href="fonts/source-serif-4.woff2" as="font" type="font/woff2" crossorigin>
 
-    <link rel="stylesheet" href="style.css?v=20261106">
-    <script src="javascript.js?v=20261106" defer></script>
+    <link rel="alternate" hreflang="es" href="?lang=es">
+    <link rel="alternate" hreflang="en" href="?lang=en">
+    <link rel="stylesheet" href="style.css?v=20261107">
+    <!-- Idiomas: el diccionario inglés, después las funciones, después la web -->
+    <script src="i18n-en.js?v=20261107" defer></script>
+    <script src="i18n.js?v=20261107" defer></script>
+    <script src="javascript.js?v=20261107" defer></script>
 </head>
 <body>
 
@@ -133,6 +138,8 @@
             <a href="#visitanos">Visítanos</a>
             <a href="#reservas" class="nav-cta">Reservar mesa</a>
         </nav>
+
+        <div class="lang-switch" id="lang-switch" role="group" aria-label="Idioma · Language"></div>
     </header>
 
     <main id="contenido">

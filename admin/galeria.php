@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($accion === 'subir') {
         $titulo = trim((string) ($_POST['titulo'] ?? ''));
+        $tituloEn = mb_substr(trim((string) ($_POST['titulo_en'] ?? '')), 0, 120);
         $categoria = array_key_exists($_POST['categoria'] ?? '', CATEGORIAS) ? $_POST['categoria'] : 'platos';
         $url = trim((string) ($_POST['url'] ?? ''));
 
@@ -67,16 +68,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $orden = (int) $pdo->query('SELECT COALESCE(MAX(orden), 0) + 1 FROM galeria')->fetchColumn();
-        $pdo->prepare('INSERT INTO galeria (titulo, imagen, categoria, orden) VALUES (?, ?, ?, ?)')
-            ->execute([$titulo, $imagen, $categoria, $orden]);
+        $pdo->prepare('INSERT INTO galeria (titulo, titulo_en, imagen, categoria, orden) VALUES (?, ?, ?, ?, ?)')
+            ->execute([$titulo, $tituloEn ?: null, $imagen, $categoria, $orden]);
         flash('ok', "Foto «{$titulo}» añadida a la galería.");
     }
 
     elseif ($id && $accion === 'guardar') {
         $titulo = trim((string) ($_POST['titulo'] ?? ''));
+        $tituloEn = mb_substr(trim((string) ($_POST['titulo_en'] ?? '')), 0, 120);
         $categoria = $_POST['categoria'] ?? '';
         if (mb_strlen($titulo) >= 3 && mb_strlen($titulo) <= 120 && array_key_exists($categoria, CATEGORIAS)) {
-            $pdo->prepare('UPDATE galeria SET titulo = ?, categoria = ? WHERE id = ?')->execute([$titulo, $categoria, $id]);
+            $pdo->prepare('UPDATE galeria SET titulo = ?, titulo_en = ?, categoria = ? WHERE id = ?')->execute([$titulo, $tituloEn ?: null, $categoria, $id]);
             flash('ok', 'Foto actualizada.');
         } else {
             flash('error', 'El título debe tener entre 3 y 120 caracteres.');
@@ -138,6 +140,7 @@ cabecera('Galería', 'galeria');
         </label>
         <label><span>…o su dirección web <span class="muted">(opcional)</span></span><input type="url" name="url" placeholder="https://"></label>
         <label class="span-2">Título <input name="titulo" maxlength="120" placeholder="Por ejemplo: Terraza al atardecer" required></label>
+        <label class="span-2"><span>Título en inglés <span class="muted">(opcional)</span></span><input name="titulo_en" lang="en" maxlength="120" placeholder="For example: Terrace at sunset"></label>
         <label>Categoría
             <select name="categoria"><?php foreach (CATEGORIAS as $k => $v): ?><option value="<?= $k ?>"><?= $v ?></option><?php endforeach; ?></select>
         </label>
@@ -159,6 +162,7 @@ cabecera('Galería', 'galeria');
         <form method="post" class="gallery-edit">
             <?= campoCsrf() ?><input type="hidden" name="id" value="<?= (int) $f['id'] ?>">
             <input name="titulo" value="<?= e($f['titulo']) ?>" maxlength="120" aria-label="Título">
+            <input name="titulo_en" lang="en" value="<?= e((string) ($f['titulo_en'] ?? '')) ?>" maxlength="120" aria-label="Título en inglés" placeholder="In English (optional)">
             <select name="categoria" aria-label="Categoría">
                 <?php foreach (CATEGORIAS as $k => $v): ?><option value="<?= $k ?>" <?= $f['categoria'] === $k ? 'selected' : '' ?>><?= $v ?></option><?php endforeach; ?>
             </select>

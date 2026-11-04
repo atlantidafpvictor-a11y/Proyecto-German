@@ -24,7 +24,7 @@ ejecutar(function () {
 
     $d = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($d)) {
-        responder(['ok' => false, 'error' => 'Los datos enviados no son válidos.'], 400);
+        responder(['ok' => false, 'error' => tr('Los datos enviados no son válidos.', 'The data sent is not valid.')], 400);
     }
 
     // Campo trampa: los humanos no lo ven, los bots lo rellenan
@@ -44,11 +44,11 @@ ejecutar(function () {
     $comentarios = trim(texto($d, 'comentarios'));
 
     $errores = [];
-    if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 100) $errores['nombre'] = 'Escribe tu nombre y apellidos.';
-    if (!preg_match('/^\+?[0-9]{9,14}$/', $telefono))        $errores['telefono'] = 'Escribe un teléfono de 9 cifras.';
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 120) $errores['email'] = 'Revisa el email.';
-    if ($personas === false)                                 $errores['personas'] = 'Para más de ' . config('max_personas_online') . ' personas, llámanos.';
-    if (mb_strlen($comentarios) > 500)                       $errores['comentarios'] = 'Máximo 500 caracteres.';
+    if (mb_strlen($nombre) < 3 || mb_strlen($nombre) > 100) $errores['nombre'] = tr('Escribe tu nombre y apellidos.', 'Please enter your full name.');
+    if (!preg_match('/^\+?[0-9]{9,14}$/', $telefono))        $errores['telefono'] = tr('Escribe un teléfono de 9 cifras.', 'Please enter a valid phone number.');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 120) $errores['email'] = tr('Revisa el email.', 'Please check your email address.');
+    if ($personas === false)                                 $errores['personas'] = tr('Para más de ' . config('max_personas_online') . ' personas, llámanos.', 'For more than ' . config('max_personas_online') . ' guests, please call us.');
+    if (mb_strlen($comentarios) > 500)                       $errores['comentarios'] = tr('Máximo 500 caracteres.', '500 characters maximum.');
 
     if ($p = problemaFechaHora($fecha, $hora)) {
         $errores[$p[0]] = $p[1];
@@ -80,7 +80,7 @@ ejecutar(function () {
             // activa ese día a menos de 3 horas, se le avisa (comer y cenar sí se puede)
             if ($otra = reservaSolapada($pdo, $clienteId, $fecha, $hora)) {
                 $pdo->rollBack();
-                return ['ok' => false, 'error' => "Ya tienes una reserva ese día a las $otra. Si quieres cambiarla, usa «¿Ya tienes una reserva?» con tu código.", 'http' => 409];
+                return ['ok' => false, 'error' => tr("Ya tienes una reserva ese día a las $otra. Si quieres cambiarla, usa «¿Ya tienes una reserva?» con tu código.", "You already have a booking that day at $otra. To change it, use “Manage my booking” with your code."), 'http' => 409];
             }
 
             $codigo = generarCodigo($pdo);
@@ -105,8 +105,8 @@ ejecutar(function () {
             // SQLSTATE 45000 = error lanzado a propósito por nuestro trigger o procedimiento
             if ($e->getCode() === '45000') {
                 $mensaje = str_contains($e->getMessage(), 'mesas')
-                    ? 'Esa hora se acaba de completar. Elige otra, por favor.'
-                    : 'No se puede reservar ese día.';
+                    ? tr('Esa hora se acaba de completar. Elige otra, por favor.', 'That time has just filled up. Please choose another one.')
+                    : tr('No se puede reservar ese día.', 'Bookings are not available that day.');
                 return ['ok' => false, 'error' => $mensaje, 'http' => 409];
             }
             throw $e;

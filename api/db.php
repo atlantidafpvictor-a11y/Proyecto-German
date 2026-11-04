@@ -10,6 +10,30 @@ declare(strict_types=1);
 
 date_default_timezone_set('Europe/Madrid');
 
+/* ---------- Idioma (?lang=en) ---------- */
+
+/** Idioma pedido por la web: 'en' con ?lang=en; cualquier otra cosa, 'es'. */
+function idioma(): string
+{
+    return ($_GET['lang'] ?? '') === 'en' ? 'en' : 'es';
+}
+
+/**
+ * Columna en el idioma pedido. En inglés usa la columna _en y, si está vacía,
+ * la española: col('p.nombre') → COALESCE(NULLIF(p.nombre_en, ''), p.nombre)
+ * Solo se llama con nombres de columna escritos en el código, nunca con datos.
+ */
+function col(string $columna): string
+{
+    return idioma() === 'en' ? "COALESCE(NULLIF({$columna}_en, ''), $columna)" : $columna;
+}
+
+/** Mensaje para el cliente en su idioma. */
+function tr(string $es, string $en): string
+{
+    return idioma() === 'en' ? $en : $es;
+}
+
 function config(string $clave)
 {
     static $config = null;
@@ -70,7 +94,7 @@ function limitar(string $accion, int $max, int $ventana): void
     });
     if ($espera) {
         header('Retry-After: ' . $espera);
-        responder(['ok' => false, 'error' => 'Has hecho demasiados intentos seguidos. Espera ' . ceil($espera / 60) . ' min o llámanos al 958 000 000.'], 429);
+        responder(['ok' => false, 'error' => tr('Has hecho demasiados intentos seguidos. Espera ' . ceil($espera / 60) . ' min o llámanos al 958 000 000.', 'Too many attempts in a row. Please wait ' . ceil($espera / 60) . ' min or call us on +34 958 000 000.')], 429);
     }
 }
 
@@ -158,10 +182,10 @@ function ejecutar(callable $endpoint): void
         $endpoint();
     } catch (PDOException $e) {
         error_log('[API] ' . $e->getMessage());
-        responder(['ok' => false, 'error' => 'No hemos podido conectar con el sistema de reservas. Llámanos al 958 000 000.'], 500);
+        responder(['ok' => false, 'error' => tr('No hemos podido conectar con el sistema de reservas. Llámanos al 958 000 000.', 'We could not reach the booking system. Please call us on +34 958 000 000.')], 500);
     } catch (Throwable $e) {
         error_log('[API] ' . $e->getMessage());
-        responder(['ok' => false, 'error' => 'Ha ocurrido un error inesperado.'], 500);
+        responder(['ok' => false, 'error' => tr('Ha ocurrido un error inesperado.', 'Something went wrong. Please try again.')], 500);
     }
 }
 
@@ -183,16 +207,17 @@ function texto(array $datos, string $campo): string
  */
 function problemaFechaHora(?DateTimeImmutable $fecha, string $hora): ?array
 {
-    if (!$fecha) return ['fecha', 'Elige un día.'];
+    if (!$fecha) return ['fecha', tr('Elige un día.', 'Please choose a day.')];
     $hoy = new DateTimeImmutable('today');
     if ($fecha < $hoy || $fecha > $hoy->modify('+' . config('dias_max_reserva') . ' days')) {
-        return ['fecha', 'Solo aceptamos reservas desde hoy hasta dentro de ' . config('dias_max_reserva') . ' días.'];
+        $dias = (int) config('dias_max_reserva');
+        return ['fecha', tr("Solo aceptamos reservas desde hoy hasta dentro de $dias días.", "We take bookings from today up to $dias days ahead.")];
     }
     if (!in_array($hora, array_column(horasDelDia($fecha), 'hora'), true)) {
-        return ['hora', 'Esa hora no está disponible ese día.'];
+        return ['hora', tr('Esa hora no está disponible ese día.', 'That time is not available that day.')];
     }
     if ($fecha == $hoy && aMinutos($hora) <= (int) date('G') * 60 + (int) date('i') + 60) {
-        return ['hora', 'Para hoy, reserva con al menos una hora de antelación.'];
+        return ['hora', tr('Para hoy, reserva con al menos una hora de antelación.', 'For today, please book at least one hour in advance.')];
     }
     return null;
 }

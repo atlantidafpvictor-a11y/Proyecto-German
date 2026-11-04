@@ -9,6 +9,8 @@ Proyecto-German/
 ├── index.html              Web pública
 ├── style.css               Estilos de la web (responsive)
 ├── javascript.js           Carta, filtros, horario en vivo, reservas y contacto
+├── i18n.js, i18n-en.js     Idiomas: funciones de traducción y diccionario inglés
+├── carta.html/.css/.js     Carta para el móvil (se abre con el QR de cada mesa)
 ├── api/                    PHP que conecta la web con la base de datos (devuelve JSON)
 │   ├── config.php          Datos de conexión (usuario, contraseña, nombre de la BD)
 │   ├── db.php              Conexión PDO y funciones comunes
@@ -95,3 +97,4 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - [x] Cambiar reserva (día, hora, personas) y «Añadir al calendario» (.ics)
 - [x] Carta para el móvil con QR por mesa (`carta.html`, panel → Códigos QR)
 - [x] Monitorización: estado del servidor en el panel, avisos y `api/salud.php`
+- [x] Web en inglés: selector ES · EN (o idioma del navegador), textos en `i18n-en.js`, contenido traducido en la base de datos (`_en`) y editable desde el panel, mensajes de la API en el idioma del cliente

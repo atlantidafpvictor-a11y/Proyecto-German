@@ -43,7 +43,7 @@ set_exception_handler(function (Throwable $e) {
 /* ---------- Cabeceras de seguridad ----------
    El .htaccess de la raíz pone las de toda la web; estas son las del panel,
    más estrictas, y funcionan aunque Apache no tenga mod_headers. */
-const ADMIN_VERSION = '20261106';
+const ADMIN_VERSION = '20261107';
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');

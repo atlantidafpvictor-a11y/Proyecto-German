@@ -1,6 +1,6 @@
 <?php
 /**
- * GET api/galeria.php
+ * GET api/galeria.php[?lang=en]
  * Fotos visibles de la galería, en el orden elegido en el panel.
  * Para cada foto se dan dos tamaños: "mini" para el mosaico y "grande" para el visor.
  */
@@ -10,7 +10,7 @@ require __DIR__ . '/db.php';
 ejecutar(function () {
     try {
         $fotos = db()->query(
-            'SELECT id, titulo, imagen, categoria FROM galeria WHERE visible = 1 ORDER BY orden, id'
+            'SELECT id, ' . col('titulo') . ' AS titulo, imagen, categoria FROM galeria WHERE visible = 1 ORDER BY orden, id'
         )->fetchAll();
     } catch (PDOException $e) {
         // 42S02 = la tabla no existe: falta ejecutar la migración 001_galeria.sql

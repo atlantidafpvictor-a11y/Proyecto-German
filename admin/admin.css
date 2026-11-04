@@ -278,3 +278,8 @@ code { background: var(--cal-2); padding: 1px 6px; border-radius: 4px; font-size
     .health-list li { grid-template-columns: 14px 1fr; }
     .health-detail { grid-column: 2; }
 }
+
+/* Campos de traducción al inglés */
+.lang-fields { display: grid; grid-template-columns: 1fr 2fr; gap: 12px 16px; border: 1px dashed var(--linea); border-radius: 12px; padding: 12px 16px 16px; }
+.lang-fields legend { padding: 0 6px; font-weight: 600; }
+@media (max-width: 760px) { .lang-fields { grid-template-columns: 1fr; } }

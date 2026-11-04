@@ -9,7 +9,7 @@ $pdo = db();
 $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT) ?: null;
 
 $evento = [
-    'titulo' => '', 'descripcion' => '', 'fecha' => '', 'hora' => '20:30',
+    'titulo' => '', 'descripcion' => '', 'titulo_en' => '', 'descripcion_en' => '', 'fecha' => '', 'hora' => '20:30',
     'plazas' => 20, 'precio' => '', 'imagen' => '', 'publicado' => 1,
 ];
 $ocupadas = 0;
@@ -44,6 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $evento = [
         'titulo'      => trim((string) ($_POST['titulo'] ?? '')),
         'descripcion' => trim((string) ($_POST['descripcion'] ?? '')),
+        'titulo_en'      => trim((string) ($_POST['titulo_en'] ?? '')),
+        'descripcion_en' => trim((string) ($_POST['descripcion_en'] ?? '')),
         'fecha'       => (string) ($_POST['fecha'] ?? ''),
         'hora'        => (string) ($_POST['hora'] ?? ''),
         'plazas'      => (string) ($_POST['plazas'] ?? ''),
@@ -57,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (mb_strlen($evento['titulo']) < 3 || mb_strlen($evento['titulo']) > 100) $errores[] = 'El título debe tener entre 3 y 100 caracteres.';
     if (mb_strlen($evento['descripcion']) < 10) $errores[] = 'Escribe una descripción de al menos 10 caracteres.';
+    if (mb_strlen($evento['titulo_en']) > 100) $errores[] = 'El título en inglés no puede pasar de 100 caracteres.';
     if (!$fecha) $errores[] = 'Elige una fecha.';
     if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $evento['hora'])) $errores[] = 'Elige una hora.';
     if ($plazas === false) $errores[] = 'Las plazas deben ser un número entre 1 y 500.';
@@ -69,14 +72,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errores) {
         $valores = [
-            $evento['titulo'], $evento['descripcion'], $evento['fecha'] . ' ' . $evento['hora'] . ':00',
+            $evento['titulo'], $evento['descripcion'], $evento['titulo_en'] ?: null, $evento['descripcion_en'] ?: null,
+            $evento['fecha'] . ' ' . $evento['hora'] . ':00',
             $plazas, $evento['precio'], $evento['imagen'] ?: null, $evento['publicado'],
         ];
         if ($id) {
-            $pdo->prepare('UPDATE eventos SET titulo = ?, descripcion = ?, fecha = ?, plazas = ?, precio = ?, imagen = ?, publicado = ? WHERE id = ?')
+            $pdo->prepare('UPDATE eventos SET titulo = ?, descripcion = ?, titulo_en = ?, descripcion_en = ?, fecha = ?, plazas = ?, precio = ?, imagen = ?, publicado = ? WHERE id = ?')
                 ->execute([...$valores, $id]);
         } else {
-            $pdo->prepare('INSERT INTO eventos (titulo, descripcion, fecha, plazas, precio, imagen, publicado) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            $pdo->prepare('INSERT INTO eventos (titulo, descripcion, titulo_en, descripcion_en, fecha, plazas, precio, imagen, publicado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
                 ->execute($valores);
         }
         flash('ok', '«' . $evento['titulo'] . '» guardado.');
@@ -112,6 +116,11 @@ cabecera($id ? 'Editar evento' : 'Nuevo evento', 'eventos');
     <?= campoCsrf() ?>
     <label class="span-all">Título <input name="titulo" value="<?= e($evento['titulo']) ?>" maxlength="100" placeholder="Por ejemplo: Cata de aceites de Granada" required></label>
     <label class="span-all">Descripción <textarea name="descripcion" rows="3" required><?= e($evento['descripcion']) ?></textarea></label>
+    <fieldset class="span-all lang-fields">
+        <legend>En inglés <span class="muted">(opcional)</span></legend>
+        <label>Title <input name="titulo_en" lang="en" value="<?= e((string) ($evento['titulo_en'] ?? '')) ?>" maxlength="100"></label>
+        <label>Description <textarea name="descripcion_en" lang="en" rows="2"><?= e((string) ($evento['descripcion_en'] ?? '')) ?></textarea></label>
+    </fieldset>
     <label>Fecha <input type="date" name="fecha" value="<?= e($evento['fecha']) ?>" required></label>
     <label>Hora <input type="time" name="hora" value="<?= e($evento['hora']) ?>" step="900" required></label>
     <label>Plazas <input type="number" name="plazas" min="<?= max(1, $ocupadas) ?>" max="500" value="<?= e((string) $evento['plazas']) ?>" required></label>

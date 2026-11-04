@@ -15,7 +15,7 @@ ejecutar(function () {
 
     $d = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($d)) {
-        responder(['ok' => false, 'error' => 'Los datos enviados no son válidos.'], 400);
+        responder(['ok' => false, 'error' => tr('Los datos enviados no son válidos.', 'The data sent is not valid.')], 400);
     }
     if (!empty($d['web'])) { // campo trampa anti-bots
         responder(['ok' => true]);
@@ -27,10 +27,10 @@ ejecutar(function () {
     $mensaje = trim(texto($d, 'mensaje'));
 
     $errores = [];
-    if (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100)  $errores['c-nombre'] = 'Escribe tu nombre.';
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL))           $errores['c-email'] = 'Revisa el email.';
-    if (mb_strlen($asunto) < 3 || mb_strlen($asunto) > 120)   $errores['c-asunto'] = 'Escribe un asunto.';
-    if (mb_strlen($mensaje) < 10 || mb_strlen($mensaje) > 2000) $errores['c-mensaje'] = 'El mensaje debe tener entre 10 y 2000 caracteres.';
+    if (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100)  $errores['c-nombre'] = tr('Escribe tu nombre.', 'Please enter your name.');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL))           $errores['c-email'] = tr('Revisa el email.', 'Please check your email address.');
+    if (mb_strlen($asunto) < 3 || mb_strlen($asunto) > 120)   $errores['c-asunto'] = tr('Escribe un asunto.', 'Please enter a subject.');
+    if (mb_strlen($mensaje) < 10 || mb_strlen($mensaje) > 2000) $errores['c-mensaje'] = tr('El mensaje debe tener entre 10 y 2000 caracteres.', 'The message must be between 10 and 2000 characters.');
 
     if ($errores) {
         responder(['ok' => false, 'error' => reset($errores), 'campos' => $errores], 422);

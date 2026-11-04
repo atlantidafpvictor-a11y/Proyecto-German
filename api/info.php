@@ -1,6 +1,6 @@
 <?php
 /**
- * GET api/info.php
+ * GET api/info.php[?lang=en]
  * Horario semanal, servicios, opiniones aprobadas y próximos días cerrados.
  */
 declare(strict_types=1);
@@ -17,7 +17,7 @@ ejecutar(function () {
     )->fetchAll();
 
     $servicios = $pdo->query(
-        'SELECT nombre, descripcion, precio_desde FROM servicios WHERE activo = 1 ORDER BY orden, id'
+        'SELECT ' . col('nombre') . ' AS nombre, ' . col('descripcion') . ' AS descripcion, precio_desde FROM servicios WHERE activo = 1 ORDER BY orden, id'
     )->fetchAll();
 
     $opiniones = $pdo->query(

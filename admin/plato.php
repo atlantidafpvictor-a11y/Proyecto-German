@@ -12,7 +12,7 @@ $alergenos  = $pdo->query('SELECT id, nombre FROM alergenos ORDER BY id')->fetch
 
 $plato = [
     'categoria_id' => (int) ($_GET['categoria'] ?? $categorias[0]['id'] ?? 1),
-    'nombre' => '', 'descripcion' => '', 'precio' => '', 'unidad' => '', 'imagen' => '',
+    'nombre' => '', 'descripcion' => '', 'nombre_en' => '', 'descripcion_en' => '', 'precio' => '', 'unidad' => '', 'imagen' => '',
     'vegetariano' => 0, 'vegano' => 0, 'sin_gluten' => 0, 'destacado' => 0, 'disponible' => 1,
 ];
 $marcados = [];
@@ -40,6 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'categoria_id' => (int) ($_POST['categoria_id'] ?? 0),
         'nombre'       => trim((string) ($_POST['nombre'] ?? '')),
         'descripcion'  => trim((string) ($_POST['descripcion'] ?? '')),
+        'nombre_en'      => trim((string) ($_POST['nombre_en'] ?? '')),
+        'descripcion_en' => trim((string) ($_POST['descripcion_en'] ?? '')),
         'precio'       => str_replace(',', '.', trim((string) ($_POST['precio'] ?? ''))),
         'unidad'       => trim((string) ($_POST['unidad'] ?? '')),
         'imagen'       => trim((string) ($_POST['imagen'] ?? '')),
@@ -55,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (mb_strlen($plato['nombre']) < 3 || mb_strlen($plato['nombre']) > 100) $errores[] = 'El nombre debe tener entre 3 y 100 caracteres.';
     if (mb_strlen($plato['descripcion']) < 5 || mb_strlen($plato['descripcion']) > 255) $errores[] = 'La descripción debe tener entre 5 y 255 caracteres.';
+    if (mb_strlen($plato['nombre_en']) > 100 || mb_strlen($plato['descripcion_en']) > 255) $errores[] = 'La traducción al inglés es demasiado larga (100 caracteres el nombre, 255 la descripción).';
     if (!is_numeric($plato['precio']) || $plato['precio'] < 0 || $plato['precio'] > 9999) $errores[] = 'El precio no es válido.';
     if (!in_array($plato['categoria_id'], array_map('intval', array_column($categorias, 'id')), true)) $errores[] = 'Elige una categoría.';
     if ($plato['imagen'] !== '' && !imagenValida($plato['imagen'])) $errores[] = 'La foto debe ser una dirección https://… o una ruta del proyecto como img/platos/salmorejo.webp.';
@@ -73,20 +76,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errores) {
         $valores = [
-            $plato['categoria_id'], $plato['nombre'], $plato['descripcion'], $plato['precio'],
+            $plato['categoria_id'], $plato['nombre'], $plato['descripcion'],
+            $plato['nombre_en'] ?: null, $plato['descripcion_en'] ?: null, $plato['precio'],
             $plato['unidad'] ?: null, $plato['imagen'] ?: null,
             $plato['vegetariano'], $plato['vegano'], $plato['sin_gluten'], $plato['destacado'], $plato['disponible'],
         ];
         try {
             $pdo->beginTransaction();
             if ($id) {
-                $pdo->prepare('UPDATE platos SET categoria_id = ?, nombre = ?, descripcion = ?, precio = ?, unidad = ?, imagen = ?,
+                $pdo->prepare('UPDATE platos SET categoria_id = ?, nombre = ?, descripcion = ?, nombre_en = ?, descripcion_en = ?, precio = ?, unidad = ?, imagen = ?,
                                vegetariano = ?, vegano = ?, sin_gluten = ?, destacado = ?, disponible = ? WHERE id = ?')
                     ->execute([...$valores, $id]);
                 $pdo->prepare('DELETE FROM plato_alergeno WHERE plato_id = ?')->execute([$id]);
             } else {
-                $pdo->prepare('INSERT INTO platos (categoria_id, nombre, descripcion, precio, unidad, imagen,
-                               vegetariano, vegano, sin_gluten, destacado, disponible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                $pdo->prepare('INSERT INTO platos (categoria_id, nombre, descripcion, nombre_en, descripcion_en, precio, unidad, imagen,
+                               vegetariano, vegano, sin_gluten, destacado, disponible) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
                     ->execute($valores);
                 $id = (int) $pdo->lastInsertId();
             }
@@ -130,6 +134,11 @@ cabecera($id ? 'Editar plato' : 'Nuevo plato', 'carta');
         </select>
     </label>
     <label class="span-all">Descripción <textarea name="descripcion" rows="2" maxlength="255" required><?= e($plato['descripcion']) ?></textarea></label>
+    <fieldset class="span-all lang-fields">
+        <legend>En inglés <span class="muted">(opcional: si se deja vacío, la web en inglés muestra el texto en español)</span></legend>
+        <label>Name <input name="nombre_en" lang="en" value="<?= e((string) ($plato['nombre_en'] ?? '')) ?>" maxlength="100"></label>
+        <label>Description <textarea name="descripcion_en" lang="en" rows="2" maxlength="255"><?= e((string) ($plato['descripcion_en'] ?? '')) ?></textarea></label>
+    </fieldset>
     <label>Precio (€) <input name="precio" inputmode="decimal" value="<?= e((string) $plato['precio']) ?>" required></label>
     <label><span>Unidad <span class="muted">(opcional)</span></span><input name="unidad" value="<?= e($plato['unidad']) ?>" placeholder="p.p., copa, ración" maxlength="10"></label>
 

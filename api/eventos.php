@@ -1,6 +1,6 @@
 <?php
 /**
- * GET api/eventos.php
+ * GET api/eventos.php[?lang=en]
  * Próximos eventos publicados, con las plazas que quedan libres.
  */
 declare(strict_types=1);
@@ -8,7 +8,7 @@ require __DIR__ . '/db.php';
 
 ejecutar(function () {
     $eventos = db()->query(
-        "SELECT e.id, e.titulo, e.descripcion, e.fecha, e.plazas, e.precio, e.imagen,
+        "SELECT e.id, " . col('e.titulo') . " AS titulo, " . col('e.descripcion') . " AS descripcion, e.fecha, e.plazas, e.precio, e.imagen,
                 COALESCE(SUM(i.plazas), 0) AS ocupadas
          FROM eventos e
          LEFT JOIN inscripciones_evento i ON i.evento_id = e.id

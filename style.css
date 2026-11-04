@@ -795,3 +795,18 @@ h3, legend, .facts dt, .event-date .day, .event-price { font-weight: 600; }
 .change-slots .slots-group h4 { margin-bottom: 6px; }
 .change-slots .opt { min-height: 40px; }
 #manage-edit .manage-actions { margin-top: 8px; }
+
+/* ---------- Selector de idioma ES · EN ---------- */
+.nav { order: 2; }
+.lang-switch { order: 3; display: flex; gap: 2px; }
+.lang-switch button {
+    font: 600 .8rem var(--f-body); letter-spacing: .04em; color: var(--tinta-2);
+    background: none; border: 1px solid transparent; border-radius: 999px;
+    min-width: 40px; min-height: 36px; padding: 0 8px; cursor: pointer;
+}
+.lang-switch button:hover { color: var(--tinta); }
+.lang-switch button[aria-pressed="true"] { color: var(--tinta); border-color: var(--cal-2); background: var(--blanco); }
+@media (max-width: 860px) {
+    .lang-switch { order: 1; margin-left: auto; }
+    .menu-toggle { order: 2; }
+}

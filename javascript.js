@@ -117,11 +117,14 @@ const DATOS_DEMO = {
 /* ---------- Utilidades ---------- */
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
-const euro = (n) => Number(n).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
-const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const euro = dinero; // 8,50 € en español, €8.50 en inglés (i18n.js)
+const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map((d) => __(d));
 const diaSemana = (date) => ((date.getDay() + 6) % 7) + 1; // 1 = lunes ... 7 = domingo
 const isoLocal = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const aMinutos = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return (h === 0 ? 24 : h) * 60 + m; };
+/** "1 persona" / "3 personas" (y en inglés "1 guest" / "3 guests") */
+const personas = (n) => `${n} ${n === 1 ? __("persona") : __("personas")}`;
+const plazas = (n) => `${n} ${n === 1 ? __("plaza") : __("plazas")}`;
 const escapeHTML = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 /* ---------- Añadir al calendario (archivo .ics, el estándar de Google, Apple y Outlook) ---------- */
@@ -138,7 +141,7 @@ const ZONA_MADRID = [
  * { uid, titulo, fecha: "2026-11-20", hora: "21:00", minutos: 90, descripcion, archivo }
  */
 function descargarCalendario({ uid, titulo, fecha, hora, minutos, descripcion, archivo }) {
-    const esc = (t) => String(t).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+    const esc = (t) => String(t).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
     const [y, mes, dia] = fecha.split("-").map(Number);
     const [h, min] = hora.split(":").map(Number);
     // Fin = inicio + minutos, contado como hora de reloj (sin pasar por la zona del navegador)
@@ -174,9 +177,9 @@ function descargarCalendario({ uid, titulo, fecha, hora, minutos, descripcion, a
 function calendarioReserva(r) {
     descargarCalendario({
         uid: "reserva-" + r.codigo,
-        titulo: `Mesa en Sabor Mediterráneo (${r.personas} ${r.personas === 1 ? "persona" : "personas"})`,
+        titulo: __("Mesa en Sabor Mediterráneo ({n})", { n: personas(r.personas) }),
         fecha: r.fecha, hora: r.hora, minutos: 90,
-        descripcion: `Código de reserva: ${r.codigo}\nPara cambiarla o cancelarla: web del restaurante, «Gestionar mi reserva», o llama al 958 000 000.`,
+        descripcion: __("Código de reserva: {codigo}. Para cambiarla o cancelarla: web del restaurante, «Gestionar mi reserva», o llama al 958 000 000.", { codigo: r.codigo }),
         archivo: `reserva-${r.codigo}.ics`,
     });
 }
@@ -189,7 +192,8 @@ function calendarioReserva(r) {
  */
 async function pedir(url, respaldo, opciones) {
     try {
-        const res = await fetch(url, opciones);
+        // Todas las peticiones llevan el idioma: la API responde con platos, eventos y mensajes traducidos
+        const res = await fetch(url + (url.includes("?") ? "&" : "?") + "lang=" + IDIOMA, opciones);
         const tipo = res.headers.get("Content-Type") || "";
         if (!tipo.includes("application/json")) throw new Error("Sin API");
         return { datos: await res.json(), demo: false };
@@ -209,13 +213,13 @@ function iniciarCabecera() {
     const cerrar = () => {
         nav.classList.remove("open");
         toggle.setAttribute("aria-expanded", "false");
-        toggle.setAttribute("aria-label", "Abrir menú");
+        toggle.setAttribute("aria-label", __("Abrir menú"));
     };
 
     toggle.addEventListener("click", () => {
         const abierto = nav.classList.toggle("open");
         toggle.setAttribute("aria-expanded", String(abierto));
-        toggle.setAttribute("aria-label", abierto ? "Cerrar menú" : "Abrir menú");
+        toggle.setAttribute("aria-label", abierto ? __("Cerrar menú") : __("Abrir menú"));
     });
     $$("a", nav).forEach((a) => a.addEventListener("click", cerrar));
     document.addEventListener("keydown", (e) => e.key === "Escape" && cerrar());
@@ -324,9 +328,9 @@ function pintarHorario(horarios) {
             const h = horarios.find((x) => x.dia_semana === dia && x.turno === turno);
             return h && h.apertura
                 ? `<td>${h.apertura}–${h.cierre}</td>`
-                : `<td class="closed">Cerrado</td>`;
+                : `<td class="closed">${__("Cerrado")}</td>`;
         };
-        return `<tr class="${dia === hoy ? "today" : ""}"><td>${nombre}${dia === hoy ? " (hoy)" : ""}</td>${celda("comida")}${celda("cena")}</tr>`;
+        return `<tr class="${dia === hoy ? "today" : ""}"><td>${nombre}${dia === hoy ? ` (${__("hoy")})` : ""}</td>${celda("comida")}${celda("cena")}</tr>`;
     }).join("");
 
     // Estado en tiempo real
@@ -340,17 +344,17 @@ function pintarHorario(horarios) {
     const texto = $(".open-status-text", estado);
     if (abierto) {
         estado.classList.add("is-open");
-        texto.textContent = `Abierto ahora · cocina hasta las ${abierto.cierre}`;
+        texto.textContent = __("Abierto ahora · cocina hasta las {h}", { h: abierto.cierre });
     } else if (proximo) {
         estado.classList.add("is-closed");
-        texto.textContent = `Cerrado ahora · abrimos hoy a las ${proximo.apertura}`;
+        texto.textContent = __("Cerrado ahora · abrimos hoy a las {h}", { h: proximo.apertura });
     } else {
         estado.classList.add("is-closed");
         // Busca el siguiente día con servicio
         for (let i = 1; i <= 7; i++) {
             const d = ((hoy - 1 + i) % 7) + 1;
             const t = turnosDelDia(horarios, d)[0];
-            if (t) { texto.textContent = `Cerrado ahora · abrimos el ${DIAS[d - 1].toLowerCase()} a las ${t.apertura}`; break; }
+            if (t) { texto.textContent = __("Cerrado ahora · abrimos el {dia} a las {h}", { dia: IDIOMA === "en" ? DIAS[d - 1] : DIAS[d - 1].toLowerCase(), h: t.apertura }); break; }
         }
     }
 }
@@ -398,24 +402,24 @@ function iniciarCarta({ categorias, platos, alergenos }) {
         );
 
         if (!visibles.length) {
-            lista.innerHTML = `<li class="dish-empty">No hay platos en esta sección con esos filtros.
-                <button type="button" id="clear-filters">Quitar filtros</button></li>`;
+            lista.innerHTML = `<li class="dish-empty">${__("No hay platos en esta sección con esos filtros.")}
+                <button type="button" id="clear-filters">${__("Quitar filtros")}</button></li>`;
             $("#clear-filters").onclick = () => { fVeg.checked = fSg.checked = false; pintar(); };
             return;
         }
 
         lista.innerHTML = visibles.map((p) => {
             const tags = [];
-            if (p.destacado) tags.push(`<span class="tag tag-star">Recomendado</span>`);
-            if (p.vegetariano) tags.push(`<span class="tag tag-diet">Vegetariano</span>`);
-            if (p.sin_gluten) tags.push(`<span class="tag tag-diet">Sin gluten</span>`);
+            if (p.destacado) tags.push(`<span class="tag tag-star">${__("Recomendado")}</span>`);
+            if (p.vegetariano) tags.push(`<span class="tag tag-diet">${__("Vegetariano")}</span>`);
+            if (p.sin_gluten) tags.push(`<span class="tag tag-diet">${__("Sin gluten")}</span>`);
             p.alergenos.forEach((id) => tags.push(`<span class="tag">${escapeHTML(nombreAlergeno[id])}</span>`));
             return `
             <li class="dish" data-id="${p.id}" tabindex="0">
                 <div class="dish-top">
                     <h3 class="dish-name">${escapeHTML(p.nombre)}</h3>
                     <span class="dish-leader" aria-hidden="true"></span>
-                    <span class="dish-price">${euro(p.precio)}${p.unidad ? ` <small>${escapeHTML(p.unidad)}</small>` : ""}</span>
+                    <span class="dish-price">${euro(p.precio)}${p.unidad ? ` <small>${escapeHTML(__(p.unidad))}</small>` : ""}</span>
                 </div>
                 <p class="dish-desc">${escapeHTML(p.descripcion)}</p>
                 ${tags.length ? `<div class="dish-meta">${tags.join("")}</div>` : ""}
@@ -463,16 +467,16 @@ function pintarServicios(servicios) {
         <article class="service">
             <h3>${escapeHTML(s.nombre)}</h3>
             <p>${escapeHTML(s.descripcion)}</p>
-            ${s.precio_desde ? `<p class="from">Desde ${euro(s.precio_desde)}</p>` : ""}
+            ${s.precio_desde ? `<p class="from">${__("Desde {precio}", { precio: euro(s.precio_desde) })}</p>` : ""}
         </article>`).join("");
 }
 
 function pintarOpiniones(opiniones) {
     $("#reviews-track").innerHTML = opiniones.map((o) => `
         <figure class="review">
-            <p class="stars" aria-label="${o.puntuacion} de 5 estrellas">${"★".repeat(o.puntuacion)}${"☆".repeat(5 - o.puntuacion)}</p>
+            <p class="stars" aria-label="${__("{n} de 5 estrellas", { n: o.puntuacion })}">${"★".repeat(o.puntuacion)}${"☆".repeat(5 - o.puntuacion)}</p>
             <blockquote>${escapeHTML(o.comentario)}</blockquote>
-            <figcaption><strong>${escapeHTML(o.nombre)}</strong> · ${new Date(o.fecha).toLocaleDateString("es-ES", { month: "long", year: "numeric" })}</figcaption>
+            <figcaption><strong>${escapeHTML(o.nombre)}</strong> · ${new Date(o.fecha).toLocaleDateString(LOCALE, { month: "long", year: "numeric" })}</figcaption>
         </figure>`).join("");
 }
 
@@ -486,7 +490,7 @@ function pintarEventos(eventos) {
     const lista = $("#events-list");
     if (!lista) return;
     if (!eventos.length) {
-        lista.innerHTML = `<li class="events-empty">Ahora mismo no hay eventos programados. Pronto anunciaremos nuevas catas y jornadas.</li>`;
+        lista.innerHTML = `<li class="events-empty">${__("Ahora mismo no hay eventos programados. Pronto anunciaremos nuevas catas y jornadas.")}</li>`;
         return;
     }
     lista.innerHTML = eventos.map((ev) => {
@@ -494,27 +498,27 @@ function pintarEventos(eventos) {
         const ocupadas = ev.plazas - ev.libres;
         const lleno = ev.libres <= 0;
         const pocas = !lleno && ev.libres <= 5;
-        const texto = lleno ? "Completo"
-            : pocas ? (ev.libres === 1 ? "¡Última plaza!" : `¡Últimas ${ev.libres} plazas!`)
-            : `Quedan ${ev.libres} de ${ev.plazas} plazas`;
+        const texto = lleno ? __("Completo")
+            : pocas ? (ev.libres === 1 ? __("¡Última plaza!") : __("¡Últimas {n} plazas!", { n: ev.libres }))
+            : __("Quedan {n} de {total} plazas", { n: ev.libres, total: ev.plazas });
         return `
         <li class="event ${lleno ? "is-full" : ""} ${pocas ? "is-few" : ""}">
             <p class="event-date">
                 <span class="day">${d.getDate()}</span>
-                <span class="month">${d.toLocaleDateString("es-ES", { month: "long" })}</span>
-                <span class="when">${d.toLocaleDateString("es-ES", { weekday: "long" })} · ${escapeHTML(ev.hora)}</span>
+                <span class="month">${d.toLocaleDateString(LOCALE, { month: "long" })}</span>
+                <span class="when">${d.toLocaleDateString(LOCALE, { weekday: "long" })} · ${escapeHTML(ev.hora)}</span>
             </p>
             <div class="event-body">
                 <h3>${escapeHTML(ev.titulo)}</h3>
                 <p>${escapeHTML(ev.descripcion)}</p>
                 <div class="seats">
-                    <div class="seats-bar" role="progressbar" aria-label="Plazas ocupadas" aria-valuemin="0" aria-valuemax="${ev.plazas}" aria-valuenow="${ocupadas}"><span style="width:${Math.round(ocupadas / ev.plazas * 100)}%"></span></div>
+                    <div class="seats-bar" role="progressbar" aria-label="${__("Plazas ocupadas")}" aria-valuemin="0" aria-valuemax="${ev.plazas}" aria-valuenow="${ocupadas}"><span style="width:${Math.round(ocupadas / ev.plazas * 100)}%"></span></div>
                     <p class="seats-text">${texto}</p>
                 </div>
             </div>
             <div class="event-side">
-                <p class="event-price">${euro(ev.precio)}<small>por persona</small></p>
-                <button type="button" class="btn btn-primary" data-evento="${ev.id}" ${lleno ? "disabled" : ""}>${lleno ? "Completo" : "Apuntarme"}</button>
+                <p class="event-price">${euro(ev.precio)}<small>${__("por persona")}</small></p>
+                <button type="button" class="btn btn-primary" data-evento="${ev.id}" ${lleno ? "disabled" : ""}>${lleno ? __("Completo") : __("Apuntarme")}</button>
             </div>
         </li>`;
     }).join("");
@@ -539,16 +543,16 @@ function iniciarEventos() {
     const limpiar = () => { campos.forEach((id) => marcar(id, "")); errorGeneral.textContent = ""; };
     const actualizarTotal = () => {
         const n = Number(selectPlazas.value);
-        total.textContent = `Total: ${euro(n * evento.precio)} (${n} ${n === 1 ? "plaza" : "plazas"} × ${euro(evento.precio)})`;
+        total.textContent = __("Total: {total} ({n} × {precio})", { total: euro(n * evento.precio), n: plazas(n), precio: euro(evento.precio) });
     };
 
     function abrir(ev) {
         evento = ev;
-        const d = new Date(ev.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+        const d = new Date(ev.fecha + "T12:00:00").toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
         $("#event-dialog-title").textContent = ev.titulo;
-        $("#event-dialog-meta").textContent = `${d.charAt(0).toUpperCase() + d.slice(1)} a las ${ev.hora} · ${euro(ev.precio)} por persona`;
+        $("#event-dialog-meta").textContent = __("{dia} a las {hora} · {precio} por persona", { dia: d.charAt(0).toUpperCase() + d.slice(1), hora: ev.hora, precio: euro(ev.precio) });
         const max = Math.min(6, ev.libres);
-        selectPlazas.innerHTML = Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? "plazas" : "plaza"}</option>`).join("");
+        selectPlazas.innerHTML = Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${plazas(i + 1)}</option>`).join("");
         selectPlazas.value = String(Math.min(2, max));
         actualizarTotal();
         limpiar();
@@ -580,23 +584,23 @@ function iniciarEventos() {
             web: $("#e-web").value,
         };
         let ok = true;
-        if (datos.nombre.length < 3) { marcar("e-nombre", "Escribe tu nombre y apellidos."); ok = false; }
-        if (!/^\+?[0-9]{9,14}$/.test(datos.telefono)) { marcar("e-telefono", "Escribe un teléfono de 9 cifras."); ok = false; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) { marcar("e-email", "Revisa el email: falta algo como nombre@correo.com."); ok = false; }
-        if (!$("#e-privacidad").checked) { marcar("e-privacidad", "Necesitamos tu permiso para guardar la inscripción."); ok = false; }
+        if (datos.nombre.length < 3) { marcar("e-nombre", __("Escribe tu nombre y apellidos.")); ok = false; }
+        if (!/^\+?[0-9]{9,14}$/.test(datos.telefono)) { marcar("e-telefono", __("Escribe un teléfono de 9 cifras.")); ok = false; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) { marcar("e-email", __("Revisa el email: falta algo como nombre@correo.com.")); ok = false; }
+        if (!$("#e-privacidad").checked) { marcar("e-privacidad", __("Necesitamos tu permiso para guardar la inscripción.")); ok = false; }
         if (!ok) { dialogo.querySelector(".invalid input")?.focus(); return; }
 
         boton.disabled = true;
-        boton.textContent = "Apuntando…";
+        boton.textContent = __("Apuntando…");
         const { datos: r, demo } = await pedir(API.inscripcion, () => ({
             ok: true, evento: evento.titulo, fecha: evento.fecha, hora: evento.hora, plazas: datos.plazas, libres: evento.libres - datos.plazas,
         }), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
         boton.disabled = false;
-        boton.textContent = "Confirmar inscripción";
+        boton.textContent = __("Confirmar inscripción");
 
         if (!r.ok) {
             Object.entries(r.campos || {}).forEach(([id, msg]) => marcar(id, msg));
-            if (!r.campos) errorGeneral.textContent = r.error || "No se ha podido completar la inscripción.";
+            if (!r.campos) errorGeneral.textContent = r.error || __("No se ha podido completar la inscripción.");
             // Si han cambiado las plazas, actualizamos la lista
             if (typeof r.libres === "number") {
                 evento.libres = r.libres;
@@ -608,16 +612,16 @@ function iniciarEventos() {
 
         evento.libres = r.libres;
         pintarEventos(eventosCargados);
-        const f = new Date(r.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+        const f = new Date(r.fecha + "T12:00:00").toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
         $("#event-done-text").textContent =
-            `${datos.nombre.split(" ")[0]}, tienes ${r.plazas} ${r.plazas === 1 ? "plaza" : "plazas"} para «${r.evento}» el ${f} a las ${r.hora}.` +
-            (demo ? " Modo demostración: la inscripción no se ha guardado." : " Si no puedes venir, llámanos para liberar tu sitio.");
+            __("{nombre}, tienes {n} para «{evento}» el {fecha} a las {hora}.", { nombre: datos.nombre.split(" ")[0], n: plazas(r.plazas), evento: r.evento, fecha: f, hora: r.hora }) + " " +
+            (demo ? __("Modo demostración: la inscripción no se ha guardado.") : __("Si no puedes venir, llámanos para liberar tu sitio."));
         const inscrito = { id: evento.id, titulo: r.evento, fecha: r.fecha, hora: r.hora, plazas: r.plazas };
         $("#event-ics").onclick = () => descargarCalendario({
             uid: `evento-${inscrito.id}-${datos.email}`,
             titulo: `${inscrito.titulo} · Sabor Mediterráneo`,
             fecha: inscrito.fecha, hora: inscrito.hora, minutos: 120,
-            descripcion: `${inscrito.plazas} ${inscrito.plazas === 1 ? "plaza" : "plazas"} a nombre de ${datos.nombre}. El pago se hace en el restaurante.`,
+            descripcion: __("{n} a nombre de {nombre}. El pago se hace en el restaurante.", { n: plazas(inscrito.plazas), nombre: datos.nombre }),
             archivo: `evento-${inscrito.id}.ics`,
         });
         form.reset();
@@ -630,7 +634,7 @@ function iniciarEventos() {
     function abrirSinBorrar() {
         const max = Math.min(6, evento.libres);
         const actual = Math.min(Number(selectPlazas.value), max);
-        selectPlazas.innerHTML = Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? "plazas" : "plaza"}</option>`).join("");
+        selectPlazas.innerHTML = Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${plazas(i + 1)}</option>`).join("");
         selectPlazas.value = String(actual || 1);
         actualizarTotal();
     }
@@ -654,7 +658,7 @@ function iniciarGaleria(fotos) {
     const visor = $("#lightbox");
     if (!grid) return;
 
-    const NOMBRES = { local: "El local", platos: "Platos", eventos: "Eventos" };
+    const NOMBRES = { local: __("El local"), platos: __("Platos"), eventos: __("Eventos") };
     let filtro = "todo";
     let visibles = fotos;
     let actual = 0;
@@ -662,18 +666,18 @@ function iniciarGaleria(fotos) {
     // Solo se ofrecen los filtros de las categorías que tienen fotos
     const categorias = Object.keys(NOMBRES).filter((c) => fotos.some((f) => f.categoria === c));
     filtros.innerHTML = categorias.length > 1
-        ? [["todo", "Todo"], ...categorias.map((c) => [c, NOMBRES[c]])]
+        ? [["todo", __("Todo")], ...categorias.map((c) => [c, NOMBRES[c]])]
             .map(([id, txt]) => `<button type="button" class="tab" data-filtro="${id}" aria-pressed="${id === "todo"}">${txt}</button>`).join("")
         : "";
 
     function pintar() {
         visibles = filtro === "todo" ? fotos : fotos.filter((f) => f.categoria === filtro);
         if (!visibles.length) {
-            grid.innerHTML = `<li class="gallery-empty">Pronto subiremos fotos.</li>`;
+            grid.innerHTML = `<li class="gallery-empty">${__("Pronto subiremos fotos.")}</li>`;
             return;
         }
         grid.innerHTML = visibles.map((f, i) => `
-            <li><button type="button" class="foto" data-i="${i}" aria-label="Ampliar: ${escapeHTML(f.titulo)}">
+            <li><button type="button" class="foto" data-i="${i}" aria-label="${__("Ampliar")}: ${escapeHTML(f.titulo)}">
                 <img src="${escapeHTML(f.mini)}" alt="${escapeHTML(f.titulo)}" loading="lazy">
                 <span class="foto-title" aria-hidden="true">${escapeHTML(f.titulo)}</span>
             </button></li>`).join("");
@@ -749,7 +753,7 @@ function iniciarReservas(horarios, diasCerrados = []) {
 
     /* --- Paso 1: personas --- */
     party.innerHTML = Array.from({ length: 8 }, (_, i) => i + 1).map((n) =>
-        `<button type="button" class="opt" role="radio" data-n="${n}" aria-checked="${n === 2}" aria-label="${n} ${n === 1 ? "persona" : "personas"}">${n}</button>`
+        `<button type="button" class="opt" role="radio" data-n="${n}" aria-checked="${n === 2}" aria-label="${personas(n)}">${n}</button>`
     ).join("");
     party.addEventListener("click", (e) => {
         const b = e.target.closest(".opt"); if (!b) return;
@@ -771,9 +775,9 @@ function iniciarReservas(horarios, diasCerrados = []) {
     }
     strip.innerHTML = dias.map((d, i) => `
         <button type="button" class="opt" role="radio" data-fecha="${isoLocal(d)}" aria-checked="false">
-            <span class="wd">${i === 0 && d.getTime() === hoy.getTime() ? "hoy" : d.toLocaleDateString("es-ES", { weekday: "short" })}</span>
+            <span class="wd">${i === 0 && d.getTime() === hoy.getTime() ? __("hoy") : d.toLocaleDateString(LOCALE, { weekday: "short" })}</span>
             <span class="d">${d.getDate()}</span>
-            <span class="m">${d.toLocaleDateString("es-ES", { month: "short" })}</span>
+            <span class="m">${d.toLocaleDateString(LOCALE, { month: "short" })}</span>
         </button>`).join("");
 
     strip.addEventListener("click", (e) => {
@@ -815,35 +819,35 @@ function iniciarReservas(horarios, diasCerrados = []) {
         estado.hora = null;
         actualizarResumen();
         if (!estado.fecha) {
-            slots.innerHTML = `<p class="slots-msg">Elige un día para ver las horas libres.</p>`;
+            slots.innerHTML = `<p class="slots-msg">${__("Elige un día para ver las horas libres.")}</p>`;
             return;
         }
         const d = new Date(estado.fecha + "T12:00:00");
         if (!turnosDelDia(horarios, diaSemana(d)).length || cerrados.has(estado.fecha)) {
-            slots.innerHTML = `<p class="slots-msg">Ese día estamos cerrados. Prueba con otra fecha.</p>`;
+            slots.innerHTML = `<p class="slots-msg">${__("Ese día estamos cerrados. Prueba con otra fecha.")}</p>`;
             return;
         }
-        slots.innerHTML = `<p class="slots-msg">Buscando mesa…</p>`;
+        slots.innerHTML = `<p class="slots-msg">${__("Buscando mesa…")}</p>`;
         const url = `${API.disponibilidad}?fecha=${estado.fecha}&personas=${estado.personas}`;
         const peticion = (cargarHoras.ultima = Symbol());
         const { datos } = await pedir(url, () => horasDemo(estado.fecha, estado.personas));
         if (peticion !== cargarHoras.ultima) return; // llegó una respuesta antigua: se ignora
 
         if (!datos.slots || datos.cerrado) {
-            slots.innerHTML = `<p class="slots-msg">${datos.cerrado ? "Ese día estamos cerrados. Prueba con otra fecha." : escapeHTML(datos.error || "No hemos podido consultar las mesas libres.")}</p>`;
+            slots.innerHTML = `<p class="slots-msg">${datos.cerrado ? __("Ese día estamos cerrados. Prueba con otra fecha.") : escapeHTML(datos.error || __("No hemos podido consultar las mesas libres."))}</p>`;
             return;
         }
 
-        const grupos = { comida: "Comida", cena: "Cena" };
+        const grupos = { comida: __("Comida"), cena: __("Cena") };
         const html = Object.entries(grupos).map(([turno, titulo]) => {
             const lista = datos.slots.filter((s) => s.turno === turno);
             if (!lista.length) return "";
             return `<div class="slots-group"><h4>${titulo}</h4><div class="slots-row" role="radiogroup" aria-label="${titulo}">
-                ${lista.map((s) => `<button type="button" class="opt" role="radio" aria-checked="false" data-hora="${s.hora}" ${s.libre ? "" : "disabled aria-label=\"" + s.hora + ", completo\""}>${s.hora}</button>`).join("")}
+                ${lista.map((s) => `<button type="button" class="opt" role="radio" aria-checked="false" data-hora="${s.hora}" ${s.libre ? "" : "disabled aria-label=\"" + s.hora + ", " + __("completo") + "\""}>${s.hora}</button>`).join("")}
             </div></div>`;
         }).join("");
         const hayLibres = datos.slots.some((s) => s.libre);
-        slots.innerHTML = hayLibres ? html : `<p class="slots-msg">No quedan mesas para ${estado.personas} ese día. Prueba otro día o llámanos.</p>`;
+        slots.innerHTML = hayLibres ? html : `<p class="slots-msg">${__("No quedan mesas para {n} ese día. Prueba otro día o llámanos.", { n: estado.personas })}</p>`;
     }
 
     slots.addEventListener("click", (e) => {
@@ -860,8 +864,8 @@ function iniciarReservas(horarios, diasCerrados = []) {
 
     function actualizarResumen() {
         if (!estado.fecha || !estado.hora) { resumen.innerHTML = ""; return; }
-        const f = new Date(estado.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
-        resumen.innerHTML = `Mesa para <strong>${estado.personas} ${estado.personas === 1 ? "persona" : "personas"}</strong> el <strong>${f}</strong> a las <strong>${estado.hora}</strong>.`;
+        const f = new Date(estado.fecha + "T12:00:00").toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
+        resumen.innerHTML = __("Mesa para <strong>{n}</strong> el <strong>{fecha}</strong> a las <strong>{hora}</strong>.", { n: personas(estado.personas), fecha: f, hora: estado.hora });
     }
 
     /* --- Validación --- */
@@ -878,16 +882,16 @@ function iniciarReservas(horarios, diasCerrados = []) {
         const tel = $("#telefono").value.replace(/\s/g, "");
         const email = $("#email").value.trim();
 
-        error("nombre", nombre.length >= 3 ? "" : "Escribe tu nombre y apellidos.");
-        error("telefono", /^\+?[0-9]{9,14}$/.test(tel) ? "" : "Escribe un teléfono de 9 cifras.");
-        error("email", /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "" : "Revisa el email: falta algo como nombre@correo.com.");
-        error("privacidad", $("#privacidad").checked ? "" : "Necesitamos tu permiso para guardar la reserva.");
+        error("nombre", nombre.length >= 3 ? "" : __("Escribe tu nombre y apellidos."));
+        error("telefono", /^\+?[0-9]{9,14}$/.test(tel) ? "" : __("Escribe un teléfono de 9 cifras."));
+        error("email", /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "" : __("Revisa el email: falta algo como nombre@correo.com."));
+        error("privacidad", $("#privacidad").checked ? "" : __("Necesitamos tu permiso para guardar la reserva."));
         if (nombre.length < 3 || !/^\+?[0-9]{9,14}$/.test(tel) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !$("#privacidad").checked) ok = false;
 
         if (!estado.fecha || !estado.hora) {
             ok = false;
             slots.scrollIntoView({ behavior: "smooth", block: "center" });
-            if (!$(".slots-error", slots)) slots.insertAdjacentHTML("beforeend", `<p class="field-error slots-error">Elige día y hora para continuar.</p>`);
+            if (!$(".slots-error", slots)) slots.insertAdjacentHTML("beforeend", `<p class="field-error slots-error">${__("Elige día y hora para continuar.")}</p>`);
         }
         return ok;
     }
@@ -912,7 +916,7 @@ function iniciarReservas(horarios, diasCerrados = []) {
         };
 
         enviar.disabled = true;
-        enviar.textContent = "Confirmando…";
+        enviar.textContent = __("Confirmando…");
 
         const codigoDemo = () => ({ ok: true, codigo: Math.random().toString(36).slice(2, 8).toUpperCase() });
         const { datos, demo } = await pedir(API.reservas, codigoDemo, {
@@ -922,21 +926,21 @@ function iniciarReservas(horarios, diasCerrados = []) {
         });
 
         enviar.disabled = false;
-        enviar.textContent = "Confirmar reserva";
+        enviar.textContent = __("Confirmar reserva");
 
         if (!datos.ok) {
             // Errores de validación del servidor: se marcan en su campo
             Object.entries(datos.campos || {}).forEach(([campo, msg]) => error(campo, msg));
-            if (datos.campos?.hora || /completar/.test(datos.error || "")) cargarHoras();
-            resumen.innerHTML = `<span style="color:var(--error)">${escapeHTML(datos.error || "No se ha podido guardar la reserva. Inténtalo de nuevo o llámanos.")}</span>`;
+            if (datos.campos?.hora || /completar|filled up/.test(datos.error || "")) cargarHoras();
+            resumen.innerHTML = `<span style="color:var(--error)">${escapeHTML(datos.error || __("No se ha podido guardar la reserva. Inténtalo de nuevo o llámanos."))}</span>`;
             return;
         }
 
-        const f = new Date(reserva.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
+        const f = new Date(reserva.fecha + "T12:00:00").toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
         $("#booking-done-text").textContent =
-            `${reserva.nombre.split(" ")[0]}, te esperamos el ${f} a las ${reserva.hora}. ` +
-            (demo ? "Modo demostración: la reserva aún no se ha guardado en la base de datos."
-                  : "Guarda este código: te lo pediremos si necesitas cambiar o cancelar la reserva.");
+            __("{nombre}, te esperamos el {fecha} a las {hora}.", { nombre: reserva.nombre.split(" ")[0], fecha: f, hora: reserva.hora }) + " " +
+            (demo ? __("Modo demostración: la reserva aún no se ha guardado en la base de datos.")
+                  : __("Guarda este código: te lo pediremos si necesitas cambiar o cancelar la reserva."));
         $("#booking-code").textContent = datos.codigo;
         ultimaReserva = { codigo: datos.codigo, telefono: reserva.telefono };
         $("#booking-ics").onclick = () => calendarioReserva({ codigo: datos.codigo, fecha: reserva.fecha, hora: reserva.hora, personas: reserva.personas });
@@ -977,11 +981,11 @@ function iniciarMiReserva() {
     const botonCalendario = $("#manage-ics");
     const vistaCambiar = $("#manage-edit");
     const ESTADOS = {
-        pendiente: "Pendiente de mesa",
-        confirmada: "Confirmada",
-        cancelada: "Cancelada",
-        completada: "Completada",
-        no_presentado: "No presentada",
+        pendiente: __("Pendiente de mesa"),
+        confirmada: __("Confirmada"),
+        cancelada: __("Cancelada"),
+        completada: __("Completada"),
+        no_presentado: __("No presentada"),
     };
     let actual = null;  // { codigo, telefono } de la reserva que se está viendo
     let reserva = null; // la última reserva mostrada
@@ -1012,19 +1016,19 @@ function iniciarMiReserva() {
 
     function mostrarReserva(r, aviso = "") {
         reserva = r;
-        const fecha = new Date(r.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
-        $("#manage-result-title").textContent = r.estado === "cancelada" ? "Reserva cancelada" : `Hola, ${r.nombre}`;
+        const fecha = new Date(r.fecha + "T12:00:00").toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
+        $("#manage-result-title").textContent = r.estado === "cancelada" ? __("Reserva cancelada") : __("Hola, {nombre}", { nombre: r.nombre });
         const estado = $("#manage-status");
         estado.textContent = ESTADOS[r.estado] || r.estado;
         estado.className = "manage-status is-" + r.estado;
         $("#manage-details").innerHTML = `
-            <dt>Código</dt><dd>${escapeHTML(r.codigo)}</dd>
-            <dt>Día</dt><dd>${escapeHTML(fecha.charAt(0).toUpperCase() + fecha.slice(1))}</dd>
-            <dt>Hora</dt><dd>${escapeHTML(r.hora)}</dd>
-            <dt>Personas</dt><dd>${r.personas}</dd>
-            ${r.zona ? `<dt>Zona</dt><dd>${escapeHTML(r.zona)}</dd>` : ""}`;
+            <dt>${__("Código")}</dt><dd>${escapeHTML(r.codigo)}</dd>
+            <dt>${__("Día")}</dt><dd>${escapeHTML(fecha.charAt(0).toUpperCase() + fecha.slice(1))}</dd>
+            <dt>${__("Hora")}</dt><dd>${escapeHTML(r.hora)}</dd>
+            <dt>${__("Personas")}</dt><dd>${r.personas}</dd>
+            ${r.zona ? `<dt>${__("Zona")}</dt><dd>${escapeHTML(r.zona)}</dd>` : ""}`;
         $("#manage-note").textContent = aviso || (r.estado === "cancelada"
-            ? "La mesa ha quedado libre. Si cambias de idea, puedes hacer una reserva nueva."
+            ? __("La mesa ha quedado libre. Si cambias de idea, puedes hacer una reserva nueva.")
             : r.motivo);
         botonCancelar.hidden = !r.puede_cancelar;
         botonCambiar.hidden = !r.puede_cambiar;
@@ -1040,7 +1044,7 @@ function iniciarMiReserva() {
     async function enviar(accion, extra = {}) {
         const { datos, demo } = await pedir(API.miReserva, () => ({
             ok: false,
-            error: "Para consultar reservas hace falta el servidor (XAMPP o Ubuntu). En modo demostración no se guardan.",
+            error: __("Para consultar reservas hace falta el servidor (XAMPP o Ubuntu). En modo demostración no se guardan."),
         }), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1054,21 +1058,21 @@ function iniciarMiReserva() {
         const codigo = $("#m-codigo").value.trim().toUpperCase();
         const telefono = $("#m-telefono").value.trim();
         let ok = true;
-        if (!/^[A-Z0-9]{6}$/.test(codigo)) { marcar("m-codigo", "El código tiene 6 letras y números."); ok = false; }
-        if (telefono.replace(/\D/g, "").length < 9) { marcar("m-telefono", "Escribe el teléfono de la reserva."); ok = false; }
+        if (!/^[A-Z0-9]{6}$/.test(codigo)) { marcar("m-codigo", __("El código tiene 6 letras y números.")); ok = false; }
+        if (telefono.replace(/\D/g, "").length < 9) { marcar("m-telefono", __("Escribe el teléfono de la reserva.")); ok = false; }
         if (!ok) return;
 
         actual = { codigo, telefono };
         errorGeneral.textContent = "";
         buscar.disabled = true;
-        buscar.textContent = "Buscando…";
+        buscar.textContent = __("Buscando…");
         const { datos } = await enviar("consultar");
         buscar.disabled = false;
-        buscar.textContent = "Buscar reserva";
+        buscar.textContent = __("Buscar reserva");
 
         if (!datos.ok) {
             if (datos.campo) marcar(datos.campo, datos.error);
-            else errorGeneral.textContent = datos.error || "No se ha podido consultar la reserva.";
+            else errorGeneral.textContent = datos.error || __("No se ha podido consultar la reserva.");
             return;
         }
         mostrarReserva(datos.reserva);
@@ -1092,15 +1096,15 @@ function iniciarMiReserva() {
     $("#manage-cancel-yes").addEventListener("click", async (e) => {
         const b = e.currentTarget;
         b.disabled = true;
-        b.textContent = "Cancelando…";
+        b.textContent = __("Cancelando…");
         const { datos } = await enviar("cancelar");
         b.disabled = false;
-        b.textContent = "Sí, cancelar reserva";
+        b.textContent = __("Sí, cancelar reserva");
         if (datos.reserva) mostrarReserva(datos.reserva);
         if (!datos.ok && !datos.reserva) {
             confirmar.hidden = true;
             acciones.hidden = false;
-            $("#manage-note").textContent = datos.error || "No se ha podido cancelar. Llámanos al 958 000 000.";
+            $("#manage-note").textContent = datos.error || __("No se ha podido cancelar. Llámanos al 958 000 000.");
         }
     });
 
@@ -1113,7 +1117,7 @@ function iniciarMiReserva() {
     const cGuardar = $("#c-save");
     const cError = $("#c-error");
     const cambio = { hora: null };
-    cPersonas.innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? "personas" : "persona"}</option>`).join("");
+    cPersonas.innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}">${personas(i + 1)}</option>`).join("");
 
     const marcarCambio = (campo, msg) => {
         const p = $(`#manage-edit .field-error[data-for="${campo}"]`);
@@ -1125,21 +1129,21 @@ function iniciarMiReserva() {
         cGuardar.disabled = true;
         cError.textContent = "";
         ["c-personas", "c-fecha", "c-hora"].forEach((c) => marcarCambio(c, ""));
-        if (!cFecha.value) { cSlots.innerHTML = `<p class="slots-msg">Elige un día.</p>`; return; }
-        cSlots.innerHTML = `<p class="slots-msg">Buscando mesa…</p>`;
+        if (!cFecha.value) { cSlots.innerHTML = `<p class="slots-msg">${__("Elige un día.")}</p>`; return; }
+        cSlots.innerHTML = `<p class="slots-msg">${__("Buscando mesa…")}</p>`;
         const url = `${API.disponibilidad}?fecha=${cFecha.value}&personas=${cPersonas.value}&excluir=${encodeURIComponent(reserva.codigo)}`;
         const peticion = (horasParaCambio.ultima = Symbol());
-        const { datos } = await pedir(url, () => ({ ok: false, error: "Para cambiar reservas hace falta el servidor." }));
+        const { datos } = await pedir(url, () => ({ ok: false, error: __("Para cambiar reservas hace falta el servidor.") }));
         if (peticion !== horasParaCambio.ultima) return;
-        if (datos.cerrado) { cSlots.innerHTML = `<p class="slots-msg">Ese día estamos cerrados.</p>`; return; }
-        if (!datos.slots) { cSlots.innerHTML = `<p class="slots-msg">${escapeHTML(datos.error || "No hemos podido consultar las mesas libres.")}</p>`; return; }
-        if (!datos.slots.some((x) => x.libre)) { cSlots.innerHTML = `<p class="slots-msg">No quedan mesas ese día para ese grupo.</p>`; return; }
-        const grupos = { comida: "Comida", cena: "Cena" };
+        if (datos.cerrado) { cSlots.innerHTML = `<p class="slots-msg">${__("Ese día estamos cerrados.")}</p>`; return; }
+        if (!datos.slots) { cSlots.innerHTML = `<p class="slots-msg">${escapeHTML(datos.error || __("No hemos podido consultar las mesas libres."))}</p>`; return; }
+        if (!datos.slots.some((x) => x.libre)) { cSlots.innerHTML = `<p class="slots-msg">${__("No quedan mesas ese día para ese grupo.")}</p>`; return; }
+        const grupos = { comida: __("Comida"), cena: __("Cena") };
         cSlots.innerHTML = Object.entries(grupos).map(([turno, titulo]) => {
             const lista = datos.slots.filter((x) => x.turno === turno);
             if (!lista.length) return "";
             return `<div class="slots-group"><h4>${titulo}</h4><div class="slots-row" role="radiogroup" aria-label="${titulo}">${lista.map((x) =>
-                `<button type="button" class="opt" role="radio" aria-checked="false" data-hora="${escapeHTML(x.hora)}" ${x.libre ? "" : `disabled aria-label="${escapeHTML(x.hora)}, completo"`}>${escapeHTML(x.hora)}</button>`).join("")}</div></div>`;
+                `<button type="button" class="opt" role="radio" aria-checked="false" data-hora="${escapeHTML(x.hora)}" ${x.libre ? "" : `disabled aria-label="${escapeHTML(x.hora)}, ${__("completo")}"`}>${escapeHTML(x.hora)}</button>`).join("")}</div></div>`;
         }).join("");
         // Si sigue siendo el mismo día, se marca la hora que ya tenía
         const suya = cFecha.value === reserva.fecha && $(`.opt[data-hora="${reserva.hora}"]:not([disabled])`, cSlots);
@@ -1175,19 +1179,19 @@ function iniciarMiReserva() {
     $("#c-back").addEventListener("click", () => mostrarReserva(reserva));
 
     cGuardar.addEventListener("click", async () => {
-        if (!cambio.hora) { marcarCambio("c-hora", "Elige una hora."); return; }
+        if (!cambio.hora) { marcarCambio("c-hora", __("Elige una hora.")); return; }
         cGuardar.disabled = true;
-        cGuardar.textContent = "Guardando…";
+        cGuardar.textContent = __("Guardando…");
         const { datos } = await enviar("cambiar", { fecha: cFecha.value, hora: cambio.hora, personas: Number(cPersonas.value) });
-        cGuardar.textContent = "Guardar cambios";
+        cGuardar.textContent = __("Guardar cambios");
         if (!datos.ok) {
             cGuardar.disabled = false;
             if (datos.campo) marcarCambio(datos.campo, datos.error);
-            else cError.textContent = datos.error || "No se ha podido cambiar la reserva.";
-            if (/mesa/.test(datos.error || "")) horasParaCambio();
+            else cError.textContent = datos.error || __("No se ha podido cambiar la reserva.");
+            if (/mesa|table/.test(datos.error || "")) horasParaCambio();
             return;
         }
-        mostrarReserva(datos.reserva, `Reserva cambiada. Tu código sigue siendo ${datos.reserva.codigo}.`);
+        mostrarReserva(datos.reserva, __("Reserva cambiada. Tu código sigue siendo {codigo}.", { codigo: datos.reserva.codigo }));
     });
 
     $("#manage-back").addEventListener("click", () => { mostrarBuscar(); form.reset(); $("#m-codigo").focus(); });
@@ -1213,10 +1217,10 @@ function iniciarContacto() {
     const boton = $("button[type=submit]", form);
 
     const reglas = {
-        "c-nombre": (v) => v.length >= 2 || "Escribe tu nombre.",
-        "c-email": (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || "Revisa el email: falta algo como nombre@correo.com.",
-        "c-asunto": (v) => v.length >= 3 || "Escribe un asunto.",
-        "c-mensaje": (v) => v.length >= 10 || "Cuéntanos un poco más (mínimo 10 caracteres).",
+        "c-nombre": (v) => v.length >= 2 || __("Escribe tu nombre."),
+        "c-email": (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || __("Revisa el email: falta algo como nombre@correo.com."),
+        "c-asunto": (v) => v.length >= 3 || __("Escribe un asunto."),
+        "c-mensaje": (v) => v.length >= 10 || __("Cuéntanos un poco más (mínimo 10 caracteres)."),
     };
     const marcar = (id, msg) => {
         const campo = document.getElementById(id).closest(".field");
@@ -1236,7 +1240,7 @@ function iniciarContacto() {
         if (!ok) { $(".invalid input, .invalid textarea", form)?.focus(); return; }
 
         boton.disabled = true;
-        boton.textContent = "Enviando…";
+        boton.textContent = __("Enviando…");
         const cuerpo = {
             nombre: $("#c-nombre").value.trim(),
             email: $("#c-email").value.trim(),
@@ -1248,18 +1252,18 @@ function iniciarContacto() {
             method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cuerpo),
         });
         boton.disabled = false;
-        boton.textContent = "Enviar mensaje";
+        boton.textContent = __("Enviar mensaje");
 
         if (!datos.ok) {
             Object.entries(datos.campos || {}).forEach(([id, msg]) => marcar(id, msg));
-            estado.textContent = datos.error || "No se ha podido enviar. Prueba a llamarnos.";
+            estado.textContent = datos.error || __("No se ha podido enviar. Prueba a llamarnos.");
             estado.className = "contact-status is-error";
             return;
         }
         form.reset();
         estado.textContent = demo
-            ? "Mensaje enviado (modo demostración: no se ha guardado)."
-            : "Mensaje enviado. Te responderemos en menos de 24 horas.";
+            ? __("Mensaje enviado (modo demostración: no se ha guardado).")
+            : __("Mensaje enviado. Te responderemos en menos de 24 horas.");
         estado.className = "contact-status is-ok";
     });
 }
@@ -1268,6 +1272,8 @@ function iniciarContacto() {
    ARRANQUE
    ========================================================= */
 document.addEventListener("DOMContentLoaded", async () => {
+    traducirDocumento();                       // textos del HTML (i18n.js)
+    pintarSelectorIdioma($("#lang-switch"));
     iniciarCabecera();
     iniciarHero();
 
