@@ -22,7 +22,9 @@ Proyecto-German/
 │   ├── eventos.php         GET  · próximos eventos con plazas libres
 │   ├── inscripcion.php     POST · apuntarse a un evento (control de plazas con FOR UPDATE)
 │   ├── galeria.php         GET  · fotos visibles de la galería
-│   └── contacto.php        POST · guarda un mensaje del formulario
+│   ├── contacto.php        POST · guarda un mensaje del formulario
+│   ├── presupuesto.php     POST · solicitud de presupuesto para una celebración
+│   └── salud.php           GET  · comprobación de salud (200/503) para la monitorización
 ├── admin/                  Panel de administración
 │   ├── login.php / logout.php / instalar.php
 │   ├── index.php           Resumen del día y gráfico de ocupación
@@ -31,6 +33,8 @@ Proyecto-German/
 │   ├── eventos.php, evento.php  Crear y publicar eventos, ver y quitar inscritos
 │   ├── galeria.php         Subir, ordenar, ocultar y borrar fotos
 │   ├── opiniones.php       Publicar o retirar reseñas
+│   ├── presupuestos.php    Solicitudes de presupuesto de celebraciones
+│   ├── qr.php, estado.php  Códigos QR de las mesas y estado del servidor
 │   ├── mensajes.php        Bandeja del formulario de contacto
 │   └── usuarios.php        Equipo (roles Administración y Sala)
 ├── 404.html                Página de error propia
@@ -97,4 +101,5 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - [x] Cambiar reserva (día, hora, personas) y «Añadir al calendario» (.ics)
 - [x] Carta para el móvil con QR por mesa (`carta.html`, panel → Códigos QR)
 - [x] Monitorización: estado del servidor en el panel, avisos y `api/salud.php`
+- [x] Ficha de cada plato con maridaje recomendado, celebraciones con formulario de presupuesto, zonas visuales en la reserva, contadores y apariciones al hacer scroll, barra «Reservar» en el móvil
 - [x] Web en inglés: selector ES · EN (o idioma del navegador), textos en `i18n-en.js`, contenido traducido en la base de datos (`_en`) y editable desde el panel, mensajes de la API en el idioma del cliente
