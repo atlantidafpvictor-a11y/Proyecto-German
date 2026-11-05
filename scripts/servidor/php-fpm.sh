@@ -37,7 +37,11 @@ cambios=$(diff <(grep -Ev '^\s*(;|$)' /etc/php/$PHPV/apache2/php.ini) <(grep -Ev
 for m in pdo_mysql mbstring redis; do
     php-fpm$PHPV -m 2>/dev/null | grep -qi "^$m$" && ok "Extensión $m disponible" || echo "   Falta la extensión $m en PHP-FPM"
 done
+# Más procesos de PHP que los 5 que trae Ubuntu (ver php-fpm-sabor.conf)
+install -m 644 "$RAIZ/scripts/servidor/php-fpm-sabor.conf" "/etc/php/$PHPV/fpm/pool.d/zz-sabor.conf"
+php-fpm$PHPV -t >/dev/null 2>&1 || { echo "   php-fpm-sabor.conf no es válido"; rm -f "/etc/php/$PHPV/fpm/pool.d/zz-sabor.conf"; }
 systemctl enable --now "php$PHPV-fpm" >/dev/null
+systemctl restart "php$PHPV-fpm"
 ok "PHP-FPM en marcha"
 
 paso "2/5 Cambiar Apache de prefork a event"
