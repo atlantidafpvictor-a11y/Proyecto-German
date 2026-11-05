@@ -70,6 +70,87 @@ function responder(array $datos, int $codigo = 200): void
     exit;
 }
 
+/* =========================================================
+   REDIS (opcional)
+   Base de datos en memoria. La usamos para tres cosas:
+     1. Caché de la carta y del horario (lo que más se pide y casi no cambia).
+     2. Límite de peticiones y bloqueo del login (contadores atómicos que
+        caducan solos).
+     3. Sesiones del panel (admin/inc/bootstrap.php).
+   Todo tiene plan B: si Redis no está instalado, no está activado o no
+   responde, se usa lo de siempre (MariaDB y archivos temporales).
+   ========================================================= */
+
+/** Conexión a Redis, o null si no se puede usar. Se intenta una sola vez por petición. */
+function redis(): ?Redis
+{
+    static $conexion = false;
+    if ($conexion !== false) return $conexion;
+    $conexion = null;
+
+    $cfg = config('redis');
+    if (empty($cfg['activo']) || !class_exists('Redis')) return null;
+    try {
+        $r = new Redis();
+        if (!$r->connect($cfg['host'], (int) $cfg['puerto'], 0.3)) return null; // 0,3 s como mucho
+        if (($cfg['password'] ?? '') !== '' && !$r->auth($cfg['password'])) return null;
+        $r->setOption(Redis::OPT_PREFIX, $cfg['prefijo'] ?? 'sabor:');
+        $conexion = $r;
+    } catch (Throwable $e) {
+        error_log('[REDIS] ' . $e->getMessage()); // queda anotado, pero la web sigue
+    }
+    return $conexion;
+}
+
+/**
+ * Caché de una respuesta: si está en Redis se devuelve sin tocar MariaDB;
+ * si no, se genera con $generar y se guarda $segundos. La cabecera X-Cache
+ * dice si ha venido de la caché (HIT) o de la base de datos (MISS).
+ */
+function enCache(string $clave, callable $generar): array
+{
+    $r = redis();
+    if ($r) {
+        try {
+            $guardado = $r->get('cache:' . $clave);
+            if (is_string($guardado) && is_array($datos = json_decode($guardado, true))) {
+                header('X-Cache: HIT');
+                return $datos;
+            }
+        } catch (Throwable $e) {
+            error_log('[REDIS] ' . $e->getMessage());
+        }
+    }
+    $datos = $generar();
+    if ($r) {
+        try {
+            $r->setex('cache:' . $clave, (int) (config('redis')['cache_segundos'] ?? 600), json_encode($datos, JSON_UNESCAPED_UNICODE));
+        } catch (Throwable $e) {
+            error_log('[REDIS] ' . $e->getMessage());
+        }
+    }
+    header('X-Cache: ' . ($r ? 'MISS' : 'OFF'));
+    return $datos;
+}
+
+/** Borra toda la caché (se llama cuando el panel cambia algo). */
+function vaciarCache(): void
+{
+    $r = redis();
+    if (!$r) return;
+    try {
+        $prefijo = config('redis')['prefijo'] ?? 'sabor:';
+        $r->setOption(Redis::OPT_SCAN, Redis::SCAN_RETRY);
+        $it = null;
+        // SCAN recorre las claves poco a poco, sin bloquear Redis (KEYS lo bloquearía)
+        while ($claves = $r->scan($it, $prefijo . 'cache:*', 100)) {
+            foreach ($claves as $c) $r->unlink(substr($c, strlen($prefijo)));
+        }
+    } catch (Throwable $e) {
+        error_log('[REDIS] ' . $e->getMessage());
+    }
+}
+
 /**
  * Límite de peticiones por IP (rate limiting).
  *
@@ -85,7 +166,7 @@ function responder(array $datos, int $codigo = 200): void
  */
 function limitar(string $accion, int $max, int $ventana): void
 {
-    $espera = contador(claveIp($accion), $ventana, function (array $marcas) use ($max, $ventana): array {
+    $espera = redis() ? limitarRedis(claveIp($accion), $max, $ventana) : contador(claveIp($accion), $ventana, function (array $marcas) use ($max, $ventana): array {
         if (count($marcas) >= $max) {
             return [$marcas, max(1, $marcas[0] + $ventana - time())];
         }
@@ -129,19 +210,77 @@ function contador(string $clave, int $ventana, callable $fn): mixed
     return $resultado;
 }
 
+/**
+ * Ventana deslizante en Redis: cada petición es un elemento de un "sorted set"
+ * cuya puntuación es su hora. En UNA operación atómica (MULTI) se borran los
+ * de fuera de la ventana, se añade el nuevo y se cuentan. Si se pasa del
+ * máximo, se quita el que se acaba de añadir y se bloquea.
+ * Devuelve los segundos de espera (0 = puede pasar).
+ */
+function limitarRedis(string $clave, int $max, int $ventana): int
+{
+    $r = redis();
+    $k = 'lim:' . hash('sha256', $clave);
+    $ahora = microtime(true);
+    $yo = sprintf('%.6f-%s', $ahora, bin2hex(random_bytes(4)));
+    try {
+        [, , $total] = $r->multi()
+            ->zRemRangeByScore($k, '-inf', (string) ($ahora - $ventana))
+            ->zAdd($k, $ahora, $yo)
+            ->zCard($k)
+            ->expire($k, $ventana)
+            ->exec();
+        if ($total <= $max) return 0;
+        $r->zRem($k, $yo);
+        $primero = $r->zRange($k, 0, 0, true);
+        return max(1, (int) ceil(reset($primero) + $ventana - $ahora));
+    } catch (Throwable $e) {
+        error_log('[REDIS] ' . $e->getMessage());
+        return 0; // si Redis falla a mitad, no bloqueamos a nadie
+    }
+}
+
 /** Segundos que faltan para poder volver a intentarlo (0 = no está bloqueado). */
 function segundosBloqueado(string $clave, int $max, int $ventana): int
 {
+    if ($r = redis()) {
+        try {
+            $k = 'lim:' . hash('sha256', $clave);
+            $ahora = microtime(true);
+            $r->zRemRangeByScore($k, '-inf', (string) ($ahora - $ventana));
+            if ($r->zCard($k) < $max) return 0;
+            $primero = $r->zRange($k, 0, 0, true);
+            return max(1, (int) ceil(reset($primero) + $ventana - $ahora));
+        } catch (Throwable $e) {
+            error_log('[REDIS] ' . $e->getMessage());
+        }
+    }
     return contador($clave, $ventana, fn(array $m): array => [$m, count($m) >= $max ? max(1, $m[0] + $ventana - time()) : 0]);
 }
 
 function anotarFallo(string $clave, int $ventana): void
 {
+    if ($r = redis()) {
+        try {
+            $k = 'lim:' . hash('sha256', $clave);
+            $r->multi()->zAdd($k, microtime(true), uniqid('', true))->expire($k, $ventana)->exec();
+            return;
+        } catch (Throwable $e) {
+            error_log('[REDIS] ' . $e->getMessage());
+        }
+    }
     contador($clave, $ventana, fn(array $m): array => [[...$m, time()], null]);
 }
 
 function olvidarFallos(string $clave): void
 {
+    if ($r = redis()) {
+        try {
+            $r->del('lim:' . hash('sha256', $clave));
+        } catch (Throwable $e) {
+            error_log('[REDIS] ' . $e->getMessage());
+        }
+    }
     contador($clave, 1, fn(): array => [[], null]);
 }
 

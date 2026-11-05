@@ -37,6 +37,18 @@ $config = [
 
     // Informe que deja cada 5 minutos scripts/monitor.sh (solo en el servidor Ubuntu)
     'estado_servidor' => '/var/lib/sabor-mediterraneo/estado.json',
+
+    // Redis (opcional): caché de la carta, límite de peticiones y sesiones del panel.
+    // Desactivado por defecto: se activa en config.local.php del servidor, con su contraseña.
+    // Si Redis no está o no responde, la web sigue funcionando igual (sin caché).
+    'redis' => [
+        'activo'   => false,
+        'host'     => '127.0.0.1',
+        'puerto'   => 6379,
+        'password' => '',
+        'prefijo'  => 'sabor:',   // todas las claves empiezan así, por si Redis se comparte
+        'cache_segundos' => 600,  // la caché de la carta caduca sola a los 10 min (y se borra al editar)
+    ],
 ];
 
 $local = __DIR__ . '/config.local.php';

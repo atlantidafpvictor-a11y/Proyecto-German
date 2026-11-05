@@ -43,6 +43,11 @@ for s in apache2:Apache mariadb:MariaDB fail2ban:fail2ban cron:cron; do
     if systemctl is-active --quiet "$unidad"; then anotar "svc-$unidad" "$nombre" ok "En marcha"
     else anotar "svc-$unidad" "$nombre" error "Parado ($(systemctl is-active "$unidad" 2>/dev/null))"; fi
 done
+# Redis es opcional: solo se vigila si está instalado
+if systemctl list-unit-files redis-server.service >/dev/null 2>&1 && systemctl list-unit-files redis-server.service | grep -q redis-server; then
+    if systemctl is-active --quiet redis-server; then anotar svc-redis "Redis" ok "En marcha"
+    else anotar svc-redis "Redis" error "Parado: la web sigue, pero sin caché"; fi
+fi
 # En Ubuntu 24.04 SSH arranca "bajo demanda": basta con que escuche ssh.socket
 if systemctl is-active --quiet ssh.service || systemctl is-active --quiet ssh.socket; then
     anotar svc-ssh "SSH" ok "Escuchando en el puerto 22"

@@ -557,6 +557,43 @@ $cfg['Servers'][$i]['auth_type'] = 'cookie';
 
 4. En phpMyAdmin, columna izquierda → **Servidor actual** → «Servidor del instituto (túnel SSH)», usuario `gestor`.
 
+### 11i. Redis: caché, límite de peticiones y sesiones (opcional)
+
+Redis es una base de datos en memoria. La web la usa, si está activada, para:
+
+1. **Caché de la carta y del horario** (`api/carta.php`, `api/info.php`): la segunda petición no toca MariaDB. La cabecera `X-Cache` dice `HIT` (de la caché), `MISS` (de la base de datos) u `OFF` (sin Redis). Cualquier cambio en el panel vacía la caché al momento.
+2. **Límite de peticiones y bloqueo del login**: ventana deslizante en un *sorted set*, en una operación atómica (`MULTI`), que caduca sola.
+3. **Sesiones del panel**.
+
+Si Redis se para, la web sigue funcionando igual (sin caché, con los contadores en archivos temporales).
+
+```bash
+sudo apt install -y redis-server php-redis
+sudo systemctl restart apache2
+CLAVE=$(openssl rand -hex 24); echo "CONTRASEÑA DE REDIS: $CLAVE"
+sudo sed -i "s/^# *requirepass .*/requirepass $CLAVE/" /etc/redis/redis.conf
+sudo systemctl restart redis-server
+sudo ss -tlnp | grep 6379          # solo 127.0.0.1 y ::1
+redis-cli ping                     # sin contraseña: NOAUTH
+REDISCLI_AUTH=$CLAVE redis-cli ping   # con contraseña: PONG
+```
+
+Activarla en `api/config.local.php` (dentro del `return [ … ];`):
+
+```php
+'redis' => ['activo' => true, 'host' => '127.0.0.1', 'puerto' => 6379,
+            'password' => 'LA_CONTRASEÑA', 'prefijo' => 'sabor:', 'cache_segundos' => 600],
+```
+
+Comprobar (la primera `MISS`, la segunda `HIT`):
+
+```bash
+curl -skI https://localhost/api/carta.php | grep -i x-cache
+curl -skI https://localhost/api/carta.php | grep -i x-cache
+```
+
+Medir antes y después: `ab -n 500 -c 10 -k https://localhost/api/carta.php` (paquete `apache2-utils`).
+
 ## Si algo falla
 
 | Síntoma | Causa probable | Qué mirar |

@@ -8,6 +8,22 @@ declare(strict_types=1);
 require __DIR__ . '/../../api/db.php';
 
 /* ---------- Sesión ---------- */
+// Con Redis activo, las sesiones del panel se guardan en Redis en vez de en
+// archivos: así funcionarían igual con varios servidores web detrás de uno.
+$cfgRedis = config('redis');
+if (!empty($cfgRedis['activo']) && extension_loaded('redis') && redis()) {
+    ini_set('session.save_handler', 'redis');
+    ini_set('session.save_path', sprintf(
+        'tcp://%s:%d?auth=%s&prefix=%s',
+        $cfgRedis['host'], (int) $cfgRedis['puerto'], rawurlencode((string) $cfgRedis['password']), ($cfgRedis['prefijo'] ?? 'sabor:') . 'sesion:'
+    ));
+    ini_set('session.gc_maxlifetime', '3600'); // Redis borra sola la sesión pasada 1 hora
+}
+// Cualquier cambio hecho desde el panel (un plato, un horario, una opinión…)
+// vacía la caché de la web al terminar, para que se vea al momento.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    register_shutdown_function('vaciarCache');
+}
 ini_set('session.use_strict_mode', '1'); // rechaza identificadores de sesión inventados (session fixation)
 session_name('sm_admin');
 session_set_cookie_params([

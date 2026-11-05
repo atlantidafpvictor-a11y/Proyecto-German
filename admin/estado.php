@@ -49,6 +49,26 @@ $enDirecto = [
     ['Límite de subida', 'ok', 'Hasta ' . ini_get('upload_max_filesize') . ' por archivo'],
 ];
 
+// Redis: ¿está activo y responde? ¿Cuánto acierta la caché?
+if (!empty(config('redis')['activo'])) {
+    $r = redis();
+    if (!$r) {
+        $enDirecto[] = ['Redis', 'error', 'Activado en la configuración, pero no responde: la web funciona sin caché'];
+    } else {
+        try {
+            $info = $r->info();
+            $aciertos = (int) ($info['keyspace_hits'] ?? 0);
+            $fallos = (int) ($info['keyspace_misses'] ?? 0);
+            $pct = $aciertos + $fallos ? round($aciertos * 100 / ($aciertos + $fallos)) : 0;
+            $enDirecto[] = ['Redis', 'ok', 'Redis ' . ($info['redis_version'] ?? '') . ' · ' . ($info['used_memory_human'] ?? '?') . ' en memoria · ' . $r->dbSize() . ' claves · la caché acierta el ' . $pct . ' %'];
+        } catch (Throwable $e) {
+            $enDirecto[] = ['Redis', 'aviso', 'Conectado, pero no se pudo leer su estado'];
+        }
+    }
+} else {
+    $enDirecto[] = ['Redis', 'ok', 'No activado: la web funciona sin caché (opcional)'];
+}
+
 $informe = estadoServidor();
 $ESTADO = ['ok' => 'Bien', 'aviso' => 'Aviso', 'error' => 'Problema'];
 
