@@ -125,6 +125,8 @@ TCPKeepAlive no
 Compression no
 LogLevel VERBOSE
 # El reenvío de puertos se deja activado: lo usa el túnel de phpMyAdmin
+# Aviso legal antes de pedir la contraseña
+Banner /etc/issue.net
 EOF
 if sshd -t; then
     systemctl reload ssh
