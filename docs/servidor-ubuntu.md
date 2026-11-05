@@ -595,6 +595,26 @@ curl -skI https://localhost/api/carta.php | grep -i x-cache
 
 Medir antes y después: `ab -n 500 -c 10 -k https://localhost/api/carta.php` (paquete `apache2-utils`).
 
+### 11j. Auditoría de seguridad con Lynis
+
+Lynis es la herramienta de auditoría que usan los administradores de sistemas: revisa cientos de puntos y da una **nota de endurecimiento** de 0 a 100.
+
+```bash
+sudo apt install -y lynis
+sudo lynis audit system --quick > /tmp/lynis-antes.txt 2>&1
+sudo grep hardening_index /var/log/lynis-report.dat
+```
+
+Nota inicial: **62**. Las recomendaciones que tienen sentido para este servidor están en `scripts/servidor/endurecer.sh` (comentado paso a paso) y se aplican con:
+
+```bash
+sudo bash scripts/servidor/endurecer.sh
+```
+
+Qué hace: actualiza paquetes vulnerables, endurece el núcleo (sysctl), bloquea protocolos de red sin uso, endurece SSH, pone un aviso legal, protege Redis, activa `mod_evasive` en Apache, instala `rkhunter`, `auditd`, `sysstat` y `acct`, y restringe permisos de cron, SSH y GRUB.
+
+Qué **no** se aplica y por qué: `umask 027` (Apache dejaría de leer los archivos de `git pull`), bloquear USB (copias en pendrive), `AllowTcpForwarding no` (túnel de phpMyAdmin), contraseña de GRUB (riesgo de no poder arrancar), particiones separadas (solo al instalar) y ModSecurity (falsos positivos con los formularios sin un ajuste fino).
+
 ## Si algo falla
 
 | Síntoma | Causa probable | Qué mirar |
