@@ -613,7 +613,21 @@ sudo bash scripts/servidor/endurecer.sh
 
 Qué hace: actualiza paquetes vulnerables, endurece el núcleo (sysctl), bloquea protocolos de red sin uso, endurece SSH, pone un aviso legal, protege Redis, activa `mod_evasive` en Apache, instala `rkhunter`, `auditd`, `sysstat` y `acct`, y restringe permisos de cron, SSH y GRUB.
 
+Resultado en nuestro servidor: **62 → 80** sobre 100, sin perder ningún servicio (web, SSH, túnel de phpMyAdmin, copias).
+
 Qué **no** se aplica y por qué: `umask 027` (Apache dejaría de leer los archivos de `git pull`), bloquear USB (copias en pendrive), `AllowTcpForwarding no` (túnel de phpMyAdmin), contraseña de GRUB (riesgo de no poder arrancar), particiones separadas (solo al instalar) y ModSecurity (falsos positivos con los formularios sin un ajuste fino).
+
+### 11k. PHP-FPM, MPM event y HTTP/2
+
+Ubuntu instala Apache con `mod_php` y el modo *prefork*: cada proceso de Apache lleva PHP dentro, aunque solo sirva una foto. Los hostings profesionales usan **PHP-FPM**: Apache (en modo *event*) atiende muchas conexiones con pocos hilos y solo pasa a PHP lo que es `.php`. De paso se activa **HTTP/2**.
+
+```bash
+ab -n 2000 -c 50 -k https://127.0.0.1/api/carta.php | grep -E "Requests per|Time per request|Failed|Non-2xx"
+sudo bash scripts/servidor/php-fpm.sh
+ab -n 2000 -c 50 -k https://127.0.0.1/api/carta.php | grep -E "Requests per|Time per request|Failed|Non-2xx"
+```
+
+El script comprueba la configuración y que la web responde; si algo falla, vuelve solo a como estaba. Con PHP-FPM el límite de subida del panel se lee de `admin/.user.ini` (con `mod_php` se usa `admin/.htaccess`).
 
 ## Si algo falla
 

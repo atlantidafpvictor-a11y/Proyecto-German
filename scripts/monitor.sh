@@ -48,6 +48,12 @@ if systemctl list-unit-files redis-server.service >/dev/null 2>&1 && systemctl l
     if systemctl is-active --quiet redis-server; then anotar svc-redis "Redis" ok "En marcha"
     else anotar svc-redis "Redis" error "Parado: la web sigue, pero sin caché"; fi
 fi
+# PHP-FPM, si Apache lo usa (scripts/servidor/php-fpm.sh)
+fpm=$(systemctl list-unit-files 'php*-fpm.service' --no-legend 2>/dev/null | awk '{print $1}' | head -1)
+if [[ -n "$fpm" ]] && systemctl is-enabled --quiet "$fpm"; then
+    if systemctl is-active --quiet "$fpm"; then anotar svc-php-fpm "PHP-FPM" ok "En marcha"
+    else anotar svc-php-fpm "PHP-FPM" error "Parado: la web no puede ejecutar PHP"; fi
+fi
 # En Ubuntu 24.04 SSH arranca "bajo demanda": basta con que escuche ssh.socket
 if systemctl is-active --quiet ssh.service || systemctl is-active --quiet ssh.socket; then
     anotar svc-ssh "SSH" ok "Escuchando en el puerto 22"
