@@ -56,6 +56,13 @@ cat > /etc/apache2/conf-available/sabor-http2.conf <<'CONF'
 Protocols h2 http/1.1
 CONF
 a2enconf -q sabor-http2 >/dev/null
+# Apache (desde el arreglo del CVE-2024-24795) no se fía del Content-Length que manda
+# PHP-FPM y responde "a trozos". Nuestra API lo calcula con strlen(), así que es fiable.
+cat > /etc/apache2/conf-available/sabor-php-fpm.conf <<'CONF'
+# Confiar en el Content-Length de PHP-FPM: lo calcula nuestra propia API (api/db.php)
+SetEnv ap_trust_cgilike_cl 1
+CONF
+a2enconf -q sabor-php-fpm >/dev/null
 ok "HTTP/2 activado (solo por HTTPS, como hacen los navegadores)"
 
 paso "4/5 Comprobar y reiniciar Apache"
