@@ -59,7 +59,7 @@ set_exception_handler(function (Throwable $e) {
 /* ---------- Cabeceras de seguridad ----------
    El .htaccess de la raíz pone las de toda la web; estas son las del panel,
    más estrictas, y funcionan aunque Apache no tenga mod_headers. */
-const ADMIN_VERSION = '20261109';
+const ADMIN_VERSION = '20261110';
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
@@ -198,10 +198,18 @@ function cabecera(string $titulo, string $activa): void
         } catch (PDOException) { // la tabla llega con la migración 006
         }
     }
-    $enlace = function (string $href, string $id, string $texto, int $badge = 0) use ($activa): string {
-        $b = $badge ? ' <span class="badge">' . $badge . '</span>' : '';
-        return '<a href="' . $href . '"' . ($activa === $id ? ' aria-current="page"' : '') . '>' . $texto . $b . '</a>';
+    $servidor = null;
+    if ($u && $u['rol'] === 'admin') {
+        $informe = estadoServidor();
+        if ($informe) $servidor = $informe['viejo'] ? 'error' : $informe['estado'];
+    }
+    $enlace = function (string $href, string $id, string $texto, int $badge = 0, ?string $punto = null) use ($activa): string {
+        $extra = $badge ? '<span class="badge">' . $badge . '</span>' : '';
+        if ($punto && $punto !== 'ok') $extra = '<span class="nav-dot nav-dot-' . e($punto) . '" aria-label="Hay avisos"></span>';
+        return '<a href="' . $href . '"' . ($activa === $id ? ' aria-current="page"' : '') . '>'
+            . icono($id) . '<span class="nav-text">' . $texto . '</span>' . $extra . '</a>';
     };
+    $iniciales = $u ? mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), array_slice(explode(' ', trim($u['nombre'])), 0, 2)))) : '';
     ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -209,6 +217,7 @@ function cabecera(string $titulo, string $activa): void
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#172C66">
     <title><?= e($titulo) ?> · Panel Sabor Mediterráneo</title>
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="admin.css?v=<?= ADMIN_VERSION ?>">
@@ -216,39 +225,83 @@ function cabecera(string $titulo, string $activa): void
 </head>
 <body class="<?= $u ? 'with-nav' : 'no-nav' ?>">
 <?php if ($u): ?>
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <a class="brand" href="index.php">
             <svg viewBox="0 0 40 48" aria-hidden="true"><path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/></svg>
-            <span>Sabor<br>Mediterráneo</span>
+            <span>Sabor<br>Mediterráneo<small>Panel del restaurante</small></span>
         </a>
         <nav aria-label="Panel">
+            <p class="nav-group">Servicio</p>
             <?= $enlace('index.php', 'inicio', 'Hoy') ?>
             <?= $enlace('reservas.php', 'reservas', 'Reservas', $pendientes) ?>
             <?= $enlace('pizarra.php', 'pizarra', 'Pizarra del día') ?>
             <?php if ($u['rol'] === 'admin'): ?>
+                <p class="nav-group">La web</p>
                 <?= $enlace('carta.php', 'carta', 'Carta') ?>
-                <?= $enlace('qr.php', 'qr', 'Códigos QR') ?>
-                <?= $enlace('eventos.php', 'eventos', 'Eventos') ?>
                 <?= $enlace('galeria.php', 'galeria', 'Galería') ?>
+                <?= $enlace('eventos.php', 'eventos', 'Eventos') ?>
                 <?= $enlace('opiniones.php', 'opiniones', 'Opiniones') ?>
+                <?= $enlace('qr.php', 'qr', 'Códigos QR') ?>
+                <p class="nav-group">Clientes</p>
                 <?= $enlace('presupuestos.php', 'presupuestos', 'Presupuestos', $nuevas) ?>
                 <?= $enlace('mensajes.php', 'mensajes', 'Mensajes', $sinLeer) ?>
+                <p class="nav-group">Sistema</p>
                 <?= $enlace('usuarios.php', 'usuarios', 'Equipo') ?>
-                <?= $enlace('estado.php', 'estado', 'Estado del servidor') ?>
+                <?= $enlace('estado.php', 'estado', 'Estado del servidor', 0, $servidor) ?>
             <?php endif; ?>
         </nav>
         <div class="me">
-            <p><strong><?= e($u['nombre']) ?></strong><br><span><?= $u['rol'] === 'admin' ? 'Administración' : 'Sala' ?></span></p>
-            <a href="../index.html" target="_blank" rel="noopener">Ver la web</a>
-            <form method="post" action="logout.php"><?= campoCsrf() ?><button type="submit" class="link">Cerrar sesión</button></form>
+            <span class="avatar" aria-hidden="true"><?= e($iniciales) ?></span>
+            <p><strong><?= e($u['nombre']) ?></strong><span><?= $u['rol'] === 'admin' ? 'Administración' : 'Sala' ?></span></p>
+            <form method="post" action="logout.php"><?= campoCsrf() ?><button type="submit" class="icon-btn" aria-label="Cerrar sesión" title="Cerrar sesión"><?= icono('salir') ?></button></form>
         </div>
     </aside>
+    <div class="scrim" id="scrim" hidden></div>
 <?php endif; ?>
     <main class="main">
+        <?php if ($u): ?>
+        <div class="topbar">
+            <button type="button" class="icon-btn nav-toggle" id="nav-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Abrir menú"><?= icono('menu') ?></button>
+            <p class="topbar-date"><?= e(ucfirst(fechaLarga('today'))) ?> · <span id="reloj"><?= date('H:i') ?></span></p>
+            <div class="topbar-actions">
+                <a class="btn btn-small" href="reservas.php?nueva=1"><?= icono('mas') ?><span>Reserva</span></a>
+                <a class="btn btn-small btn-quiet" href="../index.html" target="_blank" rel="noopener"><?= icono('web') ?><span>Ver la web</span></a>
+            </div>
+        </div>
+        <?php endif; ?>
         <?php if (!empty($_SESSION['flash'])): $f = $_SESSION['flash']; unset($_SESSION['flash']); ?>
             <p class="flash flash-<?= e($f['tipo']) ?>" role="status"><?= e($f['texto']) ?></p>
         <?php endif; ?>
 <?php
+}
+
+/** Iconos del panel: trazos SVG sencillos, sin librerías externas. */
+function icono(string $nombre): string
+{
+    $trazos = [
+        'inicio'       => '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+        'reservas'     => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+        'pizarra'      => '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21l1.5-4M16 21l-1.5-4M7 9h6M7 12h9"/>',
+        'carta'        => '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3M9 7h6M9 10h4"/>',
+        'galeria'      => '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+        'eventos'      => '<path d="M3 7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a2 2 0 0 0 0 4v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a2 2 0 0 0 0-4z"/><path d="M15 6v2M15 11v2M15 16v2"/>',
+        'opiniones'    => '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+        'qr'           => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM21 14v.01M14 21h.01M17 21h4v-4"/>',
+        'presupuestos' => '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+        'mensajes'     => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+        'usuarios'     => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+        'estado'       => '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+        'web'          => '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+        'salir'        => '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3"/>',
+        'menu'         => '<path d="M4 7h16M4 12h16M4 17h10"/>',
+        'mas'          => '<path d="M12 5v14M5 12h14"/>',
+        'personas'     => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+        'telefono'     => '<path d="M6.6 3h3l1.5 4.2-2 1.3a12 12 0 0 0 6.4 6.4l1.3-2 4.2 1.5v3a2 2 0 0 1-2.2 2A17.6 17.6 0 0 1 4.6 5.2 2 2 0 0 1 6.6 3z"/>',
+        'flecha'       => '<path d="M5 12h14M13 6l6 6-6 6"/>',
+        'aviso'        => '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17v.01"/>',
+    ];
+    return '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+        . ($trazos[$nombre] ?? '') . '</svg>';
 }
 
 function pie(): void

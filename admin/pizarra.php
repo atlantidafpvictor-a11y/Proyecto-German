@@ -41,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($fila && $accion === 'agotado') {
         $pdo->prepare('UPDATE pizarra SET agotado = NOT agotado WHERE id = ?')->execute([$fila]);
         flash('ok', 'Cambiado. En la web se ve al momento.');
-        redirigir('pizarra.php');
+        // Desde el inicio del panel se vuelve al inicio (solo se aceptan estas dos páginas)
+        redirigir(($_POST['volver'] ?? '') === 'index.php' ? 'index.php' : 'pizarra.php');
     }
     if ($fila && $accion === 'destacar') {
         // Solo uno destacado: se hace en una transacción para no dejar dos ni ninguno a medias
@@ -138,8 +139,8 @@ cabecera('Pizarra del día', 'pizarra');
     <?php if ($id): ?><input type="hidden" name="id" value="<?= (int) $id ?>"><?php endif; ?>
     <h2 class="span-all day-title"><?= $id ? 'Editar' : 'Añadir a la pizarra' ?></h2>
     <label class="span-2">Plato <input name="nombre" value="<?= e((string) $plato['nombre']) ?>" maxlength="100" placeholder="Por ejemplo: Gallo pedro a la plancha" required></label>
-    <label>Origen <span class="muted">(opcional)</span><input name="origen" value="<?= e((string) $plato['origen']) ?>" maxlength="60" placeholder="Lonja de Motril"></label>
-    <label>Precio <span class="muted">(vacío = según mercado)</span><input name="precio" value="<?= e((string) $plato['precio']) ?>" inputmode="decimal" placeholder="18,50"></label>
+    <label><span>Origen <span class="muted">(opcional)</span></span><input name="origen" value="<?= e((string) $plato['origen']) ?>" maxlength="60" placeholder="Lonja de Motril"></label>
+    <label><span>Precio <span class="muted">(vacío = según mercado)</span></span><input name="precio" value="<?= e((string) $plato['precio']) ?>" inputmode="decimal" placeholder="18,50"></label>
     <fieldset class="span-all lang-fields">
         <legend>En inglés <span class="muted">(opcional)</span></legend>
         <label>Plato <input name="nombre_en" value="<?= e((string) $plato['nombre_en']) ?>" maxlength="100" placeholder="Grilled John Dory"></label>

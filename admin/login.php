@@ -70,23 +70,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 cabecera('Entrar', '');
 ?>
-<div class="auth">
-    <svg class="auth-mark" viewBox="0 0 40 48" aria-hidden="true"><path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/></svg>
-    <h1>Panel del restaurante</h1>
-    <p class="muted">Acceso solo para el equipo de Sabor Mediterráneo.</p>
+<div class="auth-split">
+    <figure class="auth-photo">
+        <div class="auth-band" aria-hidden="true"></div>
+        <img src="../img/comedor.webp" alt="" width="1289" height="1600">
+        <figcaption>
+            <p>La cocina de la Vega, organizada.</p>
+            <p>Reservas, carta, pizarra y eventos de Sabor Mediterráneo en un solo sitio.</p>
+        </figcaption>
+    </figure>
+    <div class="auth-side">
+        <div class="auth">
+            <svg class="auth-mark" viewBox="0 0 40 48" aria-hidden="true"><path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/><path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/></svg>
+            <p class="eyebrow">Panel del restaurante</p>
+            <h1>Hola de nuevo</h1>
+            <p class="muted">Acceso solo para el equipo de Sabor Mediterráneo.</p>
 
-    <?php if ($error): ?><p class="flash flash-error" role="alert"><?= e($error) ?></p><?php endif; ?>
+            <?php if ($error): ?><p class="flash flash-error" role="alert"><?= e($error) ?></p><?php endif; ?>
 
-    <form method="post" class="form">
-        <?= campoCsrf() ?>
-        <label>Email
-            <input type="email" name="email" value="<?= e($email) ?>" autocomplete="username" required autofocus>
-        </label>
-        <label>Contraseña
-            <input type="password" name="password" autocomplete="current-password" required>
-        </label>
-        <button class="btn btn-primary" type="submit">Entrar</button>
-    </form>
-    <a class="muted small" href="../index.html">Volver a la web</a>
+            <form method="post" class="form">
+                <?= campoCsrf() ?>
+                <label>Email
+                    <input type="email" name="email" value="<?= e($email) ?>" autocomplete="username" required autofocus>
+                </label>
+                <label>Contraseña
+                    <input type="password" name="password" autocomplete="current-password" required>
+                </label>
+                <button class="btn btn-primary" type="submit">Entrar</button>
+            </form>
+            <a class="muted small" href="../index.html">← Volver a la web</a>
+        </div>
+    </div>
 </div>
 <?php pie();
