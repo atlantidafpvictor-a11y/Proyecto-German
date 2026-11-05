@@ -66,7 +66,11 @@ function responder(array $datos, int $codigo = 200): void
     http_response_code($codigo);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store');
-    echo json_encode($datos, JSON_UNESCAPED_UNICODE);
+    $json = json_encode($datos, JSON_UNESCAPED_UNICODE);
+    // Con PHP-FPM, Apache no sabe cuánto mide la respuesta si no se lo decimos:
+    // sin Content-Length los clientes HTTP/1.0 no pueden reutilizar la conexión
+    header('Content-Length: ' . strlen($json));
+    echo $json;
     exit;
 }
 
