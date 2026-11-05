@@ -254,6 +254,24 @@ CREATE TABLE galeria (
     INDEX idx_galeria_orden (visible, orden)
 ) ENGINE = InnoDB;
 
+-- Pizarra del día: lo que ha llegado esa mañana. Se edita en el panel
+-- y sale en la portada; lo agotado aparece tachado.
+CREATE TABLE pizarra (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre        VARCHAR(100) NOT NULL,
+    nombre_en     VARCHAR(100) NULL COMMENT 'Traducción al inglés (si falta se usa el español)',
+    origen        VARCHAR(60)  NULL COMMENT 'De dónde viene: Lonja de Motril, Vega de Granada...',
+    origen_en     VARCHAR(60)  NULL,
+    precio        DECIMAL(6, 2) NULL COMMENT 'Vacío = según mercado',
+    agotado       BOOLEAN NOT NULL DEFAULT FALSE,
+    destacado     BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Sale en "Hoy en la cocina" de la portada',
+    visible       BOOLEAN NOT NULL DEFAULT TRUE,
+    orden         SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT chk_pizarra_precio CHECK (precio IS NULL OR precio > 0),
+    INDEX idx_pizarra_orden (visible, orden)
+) ENGINE = InnoDB;
+
 -- =========================================================
 -- 5. USUARIOS DEL PANEL DE ADMINISTRACIÓN
 --    La contraseña NUNCA se guarda en claro: se guarda el
@@ -536,6 +554,12 @@ INSERT INTO galeria (titulo, imagen, categoria, orden) VALUES
 ('Remojón granadino', 'img/platos/remojon.webp', 'platos', 10),
 ('Celebraciones en el reservado', 'img/galeria/celebracion.webp', 'eventos', 11),
 ('Postres caseros', 'img/galeria/postres.webp', 'platos', 12);
+
+INSERT INTO pizarra (nombre, nombre_en, origen, origen_en, precio, destacado, orden) VALUES
+('Gallo pedro a la plancha', 'Grilled John Dory', 'Lonja de Motril', 'Motril fish market', 19.50, 1, 1),
+('Habitas tiernas con jamón', 'Baby broad beans with ham', 'Vega de Granada', 'Vega de Granada', 9.00, 0, 2),
+('Tomate de colgar aliñado', 'Dressed hanging tomatoes', 'Huerta de la Vega', 'Vega market gardens', 6.50, 0, 3),
+('Choto al ajillo', 'Kid goat with garlic', 'Sierra de Huétor', 'Sierra de Huétor', 18.00, 0, 4);
 
 -- =========================================================
 -- 9. CONSULTAS DE PRUEBA (para la memoria del proyecto)

@@ -59,7 +59,7 @@ set_exception_handler(function (Throwable $e) {
 /* ---------- Cabeceras de seguridad ----------
    El .htaccess de la raíz pone las de toda la web; estas son las del panel,
    más estrictas, y funcionan aunque Apache no tenga mod_headers. */
-const ADMIN_VERSION = '20261107';
+const ADMIN_VERSION = '20261109';
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
@@ -224,6 +224,7 @@ function cabecera(string $titulo, string $activa): void
         <nav aria-label="Panel">
             <?= $enlace('index.php', 'inicio', 'Hoy') ?>
             <?= $enlace('reservas.php', 'reservas', 'Reservas', $pendientes) ?>
+            <?= $enlace('pizarra.php', 'pizarra', 'Pizarra del día') ?>
             <?php if ($u['rol'] === 'admin'): ?>
                 <?= $enlace('carta.php', 'carta', 'Carta') ?>
                 <?= $enlace('qr.php', 'qr', 'Códigos QR') ?>

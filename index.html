@@ -105,131 +105,149 @@
 
     <link rel="alternate" hreflang="es" href="?lang=es">
     <link rel="alternate" hreflang="en" href="?lang=en">
-    <link rel="stylesheet" href="style.css?v=20261108">
+    <link rel="stylesheet" href="style.css?v=20261109">
     <!-- Idiomas: el diccionario inglés, después las funciones, después la web -->
-    <script src="i18n-en.js?v=20261108" defer></script>
-    <script src="i18n.js?v=20261108" defer></script>
-    <script src="javascript.js?v=20261108" defer></script>
+    <script src="i18n-en.js?v=20261109" defer></script>
+    <script src="i18n.js?v=20261109" defer></script>
+    <script src="javascript.js?v=20261109" defer></script>
 </head>
 <body>
 
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
+    <!-- ============ CINTA DE ESTADO: abierto/cerrado y contacto ============ -->
+    <div class="topbar">
+        <div class="wrap topbar-inner">
+            <p class="open-status" id="open-status" aria-live="polite">
+                <span class="dot"></span><span class="open-status-text">Consultando horario…</span>
+            </p>
+            <p class="topbar-links">
+                <a href="tel:+34958000000">958 000 000</a>
+                <a href="mailto:reservas@sabormediterraneo.es" class="topbar-mail">reservas@sabormediterraneo.es</a>
+            </p>
+        </div>
+    </div>
+
     <!-- ============ CABECERA ============ -->
     <header class="header" id="header">
-        <a href="#inicio" class="logo" aria-label="Sabor Mediterráneo, ir al inicio">
-            <svg class="logo-mark" viewBox="0 0 40 48" aria-hidden="true">
-                <path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/>
-                <path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/>
-            </svg>
-            <span class="logo-text">Sabor<br>Mediterráneo</span>
-        </a>
+        <div class="wrap header-inner">
+            <a href="#inicio" class="logo" aria-label="Sabor Mediterráneo, ir al inicio">
+                <svg class="logo-mark" viewBox="0 0 40 48" aria-hidden="true">
+                    <path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/>
+                    <path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/>
+                </svg>
+                <span class="logo-text">Sabor<br>Mediterráneo</span>
+            </a>
 
-        <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav">
-            <span></span><span></span>
-        </button>
+            <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav">
+                <span></span><span></span>
+            </button>
 
-        <nav class="nav" id="nav" aria-label="Principal">
-            <a href="#nosotros">Nosotros</a>
-            <a href="#carta">Carta</a>
-            <a href="#servicios">Celebraciones</a>
-            <a href="#eventos">Eventos</a>
-            <a href="#galeria">Galería</a>
-            <a href="#visitanos">Visítanos</a>
-            <a href="#reservas" class="nav-cta">Reservar mesa</a>
-        </nav>
+            <nav class="nav" id="nav" aria-label="Principal">
+                <a href="#carta">Carta</a>
+                <a href="#pizarra" id="nav-hoy" hidden>Hoy</a>
+                <a href="#nosotros">La casa</a>
+                <a href="#eventos">Agenda</a>
+                <a href="#servicios">Celebraciones</a>
+                <a href="#visitanos">Visítanos</a>
+                <a href="#reservas" class="nav-cta">Reservar mesa</a>
+            </nav>
 
-        <div class="lang-switch" id="lang-switch" role="group" aria-label="Idioma · Language"></div>
+            <div class="lang-switch" id="lang-switch" role="group" aria-label="Idioma · Language"></div>
+        </div>
     </header>
 
     <main id="contenido">
 
-        <!-- ============ HERO ============
-             Al hacer scroll, el arco se abre hasta ocupar toda la pantalla:
-             como cruzar la puerta del restaurante. (javascript.js → iniciarHero) -->
-        <section class="hero" id="inicio">
-            <div class="hero-stage" id="hero-stage">
-                <div class="hero-text">
-                    <h1 class="hero-title">
-                        <span class="line">Cocina de la Vega,</span>
-                        <span class="line">mesa de Granada.</span>
-                    </h1>
+        <!-- ============ PORTADA ============ -->
+        <section class="hero wrap" id="inicio">
+            <div class="hero-text">
+                <p class="eyebrow">Cocina de temporada · Centro de Granada</p>
+                <h1 class="hero-title">
+                    <span class="line">Cocina de la Vega,</span>
+                    <span class="line">mesa de Granada.</span>
+                </h1>
+                <p class="hero-lead">
+                    Arroces, guisos y pescado del día con producto de huertas
+                    a menos de 30 km. Sin prisas, como se ha comido siempre aquí.
+                </p>
+                <div class="hero-actions">
+                    <a href="#reservas" class="btn btn-primary">Reservar mesa</a>
+                    <a href="#carta" class="btn btn-ghost">Ver la carta</a>
                 </div>
+            </div>
 
-                <div class="hero-side hero-side-left">
-                    <p class="hero-lead">
-                        Arroces, guisos y pescado del día con producto de huertas
-                        a menos de 30 km. Sin prisas, como se ha comido siempre aquí.
-                    </p>
-                    <div class="hero-actions">
-                        <a href="#reservas" class="btn btn-primary">Reservar mesa</a>
-                        <a href="#carta" class="btn btn-ghost">Ver la carta</a>
-                    </div>
-                </div>
-
-                <div class="hero-side hero-side-right">
-                    <p class="open-status" id="open-status" aria-live="polite">
-                        <span class="dot"></span><span class="open-status-text">Consultando horario…</span>
-                    </p>
-                    <p class="hero-place">Centro de Granada<br>Cocina mediterránea de temporada</p>
-                </div>
-
-                <figure class="hero-arch" id="hero-arch">
+            <div class="hero-media">
+                <figure class="hero-arch">
                     <img src="img/portada.webp" width="1195" height="1600"
                          alt="Mesa servida con arroz, salmorejo, berenjenas con miel y vino tinto" fetchpriority="high">
-                    <figcaption class="hero-veil" id="hero-veil" aria-hidden="true">
-                        <span class="hero-veil-line">La mesa ya está puesta.</span>
-                    </figcaption>
                 </figure>
-
-                <a class="hero-cue" href="#nosotros" id="hero-cue">
-                    <span>Entrar</span>
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <!-- "Hoy en la cocina": el plato destacado de la pizarra (panel → Pizarra del día) -->
+                <a class="hero-ticket" id="hero-ticket" href="#pizarra" hidden>
+                    <span class="eyebrow">Hoy en la cocina</span>
+                    <span class="hero-ticket-name" id="hero-ticket-name"></span>
+                    <span class="hero-ticket-meta" id="hero-ticket-meta"></span>
                 </a>
             </div>
         </section>
 
-        <div class="tile-band" aria-hidden="true"></div>
+        <!-- ============ BUSCADOR DE MESA: horas libres sin bajar hasta la reserva ============ -->
+        <section class="finder wrap" aria-labelledby="finder-title">
+            <h2 class="sr-only" id="finder-title">Buscar mesa</h2>
+            <form class="finder-form" id="finder-form" novalidate>
+                <label class="finder-field"><span>Personas</span><select id="q-personas"></select></label>
+                <label class="finder-field finder-field-wide"><span>Día</span><select id="q-dia"></select></label>
+                <label class="finder-field"><span>Turno</span>
+                    <select id="q-turno">
+                        <option value="comida">Comida</option>
+                        <option value="cena">Cena</option>
+                    </select>
+                </label>
+                <label class="finder-field"><span>Zona</span>
+                    <select id="q-zona">
+                        <option value="1">Salón</option>
+                        <option value="2">Terraza</option>
+                        <option value="3">Reservado</option>
+                    </select>
+                </label>
+                <button type="submit" class="btn btn-primary" id="finder-submit">Ver horas libres</button>
+            </form>
+            <div class="finder-result" id="finder-result" aria-live="polite"></div>
+        </section>
 
-        <!-- ============ NOSOTROS ============ -->
-        <section class="about section" id="nosotros">
-            <p class="about-statement">
-                Compramos cada mañana en la Vega y en la lonja de Motril.
-                Lo que no está bueno ese día, no entra en la carta.
-            </p>
+        <!-- ============ DATOS DE LA CASA ============ -->
+        <section class="wrap" aria-label="La casa en cifras">
+            <dl class="facts">
+                <div><dt>30 km</dt><dd>distancia máxima a nuestras huertas</dd></div>
+                <div><dt>Motril</dt><dd>pescado de lonja, cada mañana</dd></div>
+                <div><dt>14</dt><dd>alérgenos señalados en cada plato</dd></div>
+                <div><dt>60</dt><dd>comensales entre salón, terraza y reservado</dd></div>
+            </dl>
+        </section>
 
-            <div class="about-grid">
-                <figure class="about-arch">
-                    <img src="img/comedor.webp" width="1289" height="1600"
-                         alt="Comedor encalado con arco nazarí y zócalo de azulejos" loading="lazy">
-                </figure>
-
-                <div class="about-text">
-                    <h2>Una casa de comidas con la puerta abierta</h2>
-                    <p>
-                        Sabor Mediterráneo nace con una idea sencilla: cocinar lo que
-                        da la tierra en cada estación y servirlo en un comedor donde
-                        apetezca quedarse a la sobremesa.
-                    </p>
-                    <p>
-                        Paredes encaladas, azulejo de cobalto y un arco que recuerda
-                        a la Alhambra. Aquí se viene a comer bien y a hablar sin mirar el reloj.
-                    </p>
-
-                    <dl class="facts">
-                        <div><dt>30 km</dt><dd>radio máximo de nuestros proveedores de huerta</dd></div>
-                        <div><dt>14</dt><dd>alérgenos señalados en cada plato</dd></div>
-                        <div><dt>60</dt><dd>comensales entre salón, terraza y reservado</dd></div>
-                    </dl>
+        <!-- ============ PIZARRA DEL DÍA (panel → Pizarra del día) ============
+             Si está vacía, la sección no se muestra. -->
+        <section class="section wrap" id="pizarra" aria-labelledby="board-title" hidden>
+            <div class="board">
+                <svg class="board-star" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 2l6.4 15.6L46 24l-15.6 6.4L24 46l-6.4-15.6L2 24l15.6-6.4z" fill="currentColor"/></svg>
+                <div class="board-head">
+                    <p class="eyebrow eyebrow-num">Pizarra del día</p>
+                    <h2 id="board-title">Lo que ha llegado esta mañana</h2>
+                    <p class="board-lead">La cocina la escribe cada mañana con lo que trae la lonja y la huerta. Cuando algo se acaba, se tacha.</p>
+                    <p class="board-stamp" id="board-stamp"></p>
                 </div>
+                <ul class="board-list" id="board-list"></ul>
             </div>
         </section>
 
         <!-- ============ CARTA ============ -->
-        <section class="menu section" id="carta">
-            <header class="menu-head">
-                <h2>La carta</h2>
-                <p>Cambia con la temporada. Pregúntanos por los platos fuera de carta.</p>
+        <section class="menu section wrap" id="carta" aria-labelledby="menu-title">
+            <header class="sec-head">
+                <div>
+                    <p class="eyebrow eyebrow-num">La carta</p>
+                    <h2 id="menu-title">Corta, de temporada y sin trampas.</h2>
+                </div>
+                <p class="sec-lead">Cambia con la temporada. Pulsa un plato para ver sus alérgenos y el vino que le va.</p>
             </header>
 
             <div class="menu-controls">
@@ -242,13 +260,24 @@
             </div>
 
             <div class="menu-body">
-                <ul class="dish-list" id="dish-list" aria-live="polite"></ul>
+                <div class="menu-paper">
+                    <ul class="dish-list" id="dish-list" aria-live="polite"></ul>
+                </div>
 
-                <aside class="menu-preview" aria-hidden="true">
-                    <figure class="preview-arch">
-                        <img id="preview-img" src="" alt="">
-                    </figure>
-                    <p class="preview-caption" id="preview-caption"></p>
+                <!-- Plato destacado: cambia al pasar por encima de cada plato -->
+                <aside class="menu-feature" aria-label="Plato destacado">
+                    <figure class="feature-photo"><img id="preview-img" alt="" width="896" height="1200"></figure>
+                    <div class="feature-body">
+                        <p class="eyebrow" id="feature-tag">Recomendado</p>
+                        <p class="feature-name" id="preview-caption"></p>
+                        <p class="feature-desc" id="feature-desc"></p>
+                        <p class="feature-pairing" id="feature-pairing" hidden>
+                            <svg viewBox="0 0 14 18" aria-hidden="true"><path d="M2 1h10c0 5-1.5 8-5 8S2 6 2 1zM7 9v7M3.5 17h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                            <span><strong>Marida con</strong> <span id="feature-pairing-text"></span></span>
+                        </p>
+                        <button type="button" class="btn btn-ghost btn-block" id="feature-open" aria-haspopup="dialog">Ver el plato</button>
+                        <a class="text-link" href="carta.html">Abrir la carta completa</a>
+                    </div>
                 </aside>
             </div>
 
@@ -259,23 +288,100 @@
             </details>
         </section>
 
-        <!-- ============ SERVICIOS ============ -->
-        <section class="services section" id="servicios" aria-labelledby="services-title">
-            <header class="services-head">
-                <h2 id="services-title">Celebraciones y más</h2>
-                <p>Del menú del día a la cena de empresa: lo organizamos contigo, con menús cerrados y nuestro reservado para 20 personas.</p>
+        <!-- ============ DE DÓNDE SALE ============ -->
+        <section class="producers section wrap" id="productores" aria-labelledby="producers-title">
+            <header class="sec-head">
+                <div>
+                    <p class="eyebrow eyebrow-num">De dónde sale</p>
+                    <h2 id="producers-title">Del productor a la mesa, sin rodeos.</h2>
+                </div>
+                <p class="sec-lead">Compramos cada mañana en la Vega y en la lonja de Motril. Lo que no está bueno ese día, no entra en la carta.</p>
+            </header>
+            <div class="producers-grid">
+                <article class="producer">
+                    <figure class="producer-photo"><img src="img/galeria/aceite.webp" width="1500" height="1500" loading="lazy" alt="Pan con tomate y aceite de oliva virgen extra"></figure>
+                    <p class="eyebrow">Montefrío</p>
+                    <h3>El aceite</h3>
+                    <p>Virgen extra de la Sierra de Montefrío: en la mesa, en el salmorejo y en todo lo que sale de la cocina.</p>
+                </article>
+                <article class="producer">
+                    <figure class="producer-photo"><img src="img/platos/lubina.webp" width="896" height="1200" loading="lazy" alt="Lubina a la sal con verduras asadas"></figure>
+                    <p class="eyebrow">Motril</p>
+                    <h3>El pescado</h3>
+                    <p>Lo compramos cada mañana en la lonja de Motril. Lo que entra ese día es lo que sale en la pizarra.</p>
+                </article>
+                <article class="producer">
+                    <figure class="producer-photo"><img src="img/platos/arroz-verduras.webp" width="896" height="1200" loading="lazy" alt="Arroz de verduras de la huerta"></figure>
+                    <p class="eyebrow">Vega de Granada</p>
+                    <h3>La huerta</h3>
+                    <p>Tomate, habas, alcachofa y hortalizas de huertas a menos de 30 km del comedor.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- ============ LA CASA + GALERÍA ============ -->
+        <div class="band">
+            <section class="about section wrap" id="nosotros" aria-labelledby="about-title">
+                <div class="about-text">
+                    <p class="eyebrow eyebrow-num">La casa</p>
+                    <h2 id="about-title">Un comedor encalado y una terraza con la Alhambra enfrente.</h2>
+                    <p>
+                        Sabor Mediterráneo nace con una idea sencilla: cocinar lo que
+                        da la tierra en cada estación y servirlo en un comedor donde
+                        apetezca quedarse a la sobremesa.
+                    </p>
+                    <p>
+                        Paredes encaladas, azulejo de cobalto y un arco que recuerda
+                        a la Alhambra. Sesenta comensales entre salón, terraza y reservado:
+                        al reservar podéis elegir zona.
+                    </p>
+                </div>
+                <div class="about-photos">
+                    <figure class="about-arch"><img src="img/comedor.webp" width="1289" height="1600" loading="lazy" alt="Comedor encalado con arco nazarí y zócalo de azulejos"></figure>
+                    <figure class="about-tall"><img src="img/galeria/terraza.webp" width="1500" height="1120" loading="lazy" alt="Terraza con vistas a la Alhambra"></figure>
+                </div>
+            </section>
+
+            <section class="gallery wrap" id="galeria" aria-labelledby="gallery-title">
+                <header class="gallery-head">
+                    <h2 id="gallery-title" class="h-sm">Galería</h2>
+                    <div class="gallery-filters" id="gallery-filters" role="group" aria-label="Filtrar fotos"></div>
+                </header>
+                <ul class="gallery-grid" id="gallery-grid"></ul>
+            </section>
+        </div>
+
+        <!-- ============ AGENDA ============ -->
+        <section class="events section wrap" id="eventos" aria-labelledby="events-title">
+            <header class="sec-head">
+                <div>
+                    <p class="eyebrow eyebrow-num">Agenda</p>
+                    <h2 id="events-title">Noches con algo especial.</h2>
+                </div>
+                <p class="sec-lead">Catas, jornadas y menús especiales con plazas limitadas. Apúntate desde aquí y te guardamos el sitio.</p>
+            </header>
+            <ol class="events-list" id="events-list" aria-live="polite"></ol>
+        </section>
+
+        <!-- ============ CELEBRACIONES ============ -->
+        <section class="services section wrap" id="servicios" aria-labelledby="services-title">
+            <header class="sec-head">
+                <div>
+                    <p class="eyebrow eyebrow-num">Celebraciones</p>
+                    <h2 id="services-title">Celebraciones y más</h2>
+                </div>
+                <p class="sec-lead">Del menú del día a la cena de empresa: lo organizamos contigo, con menús cerrados y nuestro reservado para 20 personas.</p>
             </header>
             <div class="services-grid" id="services-grid"></div>
 
             <div class="celebra" id="presupuesto">
-                <figure class="celebra-arch">
+                <figure class="celebra-photo">
                     <img src="img/galeria/celebracion.webp" width="1500" height="1120" loading="lazy"
                          alt="Mesa larga preparada para una celebración en el reservado">
                 </figure>
                 <div class="celebra-body">
                     <h3 class="celebra-title">Pide presupuesto para tu celebración</h3>
                     <p class="celebra-lead">Cuéntanos qué celebras y cuántos seréis. Te llamamos o te escribimos con una propuesta de menú y precio, sin compromiso.</p>
-
                     <form class="quote-form" id="quote-form" novalidate>
                         <fieldset class="quote-types">
                             <legend>¿Qué celebráis?</legend>
@@ -344,40 +450,19 @@
             </div>
         </section>
 
-        <!-- ============ EVENTOS ============ -->
-        <section class="events section" id="eventos" aria-labelledby="events-title">
-            <header class="events-head">
-                <h2 id="events-title">Próximos eventos</h2>
-                <p>Catas, jornadas y menús especiales con plazas limitadas. Apúntate desde aquí y te guardamos el sitio.</p>
-            </header>
-            <ol class="events-list" id="events-list" aria-live="polite"></ol>
-        </section>
-
-        <!-- ============ GALERÍA ============ -->
-        <section class="gallery section" id="galeria" aria-labelledby="gallery-title">
-            <header class="gallery-head">
-                <h2 id="gallery-title">Galería</h2>
-                <div class="gallery-filters" id="gallery-filters" role="group" aria-label="Filtrar fotos"></div>
-            </header>
-            <ul class="gallery-grid" id="gallery-grid"></ul>
-        </section>
-
         <!-- ============ OPINIONES ============ -->
         <section class="reviews section" aria-labelledby="reviews-title">
-            <h2 id="reviews-title">Lo que cuentan quienes ya han venido</h2>
-            <div class="reviews-track" id="reviews-track"></div>
+            <div class="wrap">
+                <h2 id="reviews-title">Lo que cuentan quienes ya han venido</h2>
+                <div class="reviews-track" id="reviews-track"></div>
+            </div>
         </section>
 
         <!-- ============ VISÍTANOS ============ -->
-        <section class="visit section" id="visitanos">
+        <section class="visit section wrap" id="visitanos" aria-labelledby="visit-title">
             <div class="visit-info">
-                <h2>Horario y ubicación</h2>
-
-                <table class="schedule" id="schedule">
-                    <caption class="sr-only">Horario semanal</caption>
-                    <thead><tr><th scope="col">Día</th><th scope="col">Comida</th><th scope="col">Cena</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+                <p class="eyebrow eyebrow-num">Visítanos</p>
+                <h2 id="visit-title">En pleno centro de Granada.</h2>
 
                 <div class="contact-lines">
                     <p><strong>Dirección</strong> Centro de Granada <span class="pill-provisional">Dirección provisional</span></p>
@@ -385,11 +470,11 @@
                     <p><strong>Email</strong> <a href="mailto:reservas@sabormediterraneo.es">reservas@sabormediterraneo.es</a></p>
                 </div>
 
-                <div class="visit-actions">
-                    <a class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.1745%2C-3.5985" target="_blank" rel="noopener">Cómo llegar</a>
-                    <a class="btn btn-ghost" href="tel:+34958000000">Llamar</a>
-                    <a class="btn btn-ghost" href="mailto:reservas@sabormediterraneo.es">Escribir un email</a>
-                </div>
+                <table class="schedule" id="schedule">
+                    <caption class="sr-only">Horario semanal</caption>
+                    <thead><tr><th scope="col">Día</th><th scope="col">Comida</th><th scope="col">Cena</th></tr></thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
             <div class="visit-map">
@@ -397,13 +482,19 @@
                     title="Mapa de la ubicación del restaurante en Granada"
                     src="https://www.openstreetmap.org/export/embed.html?bbox=-3.6075%2C37.1695%2C-3.5895%2C37.1795&amp;layer=mapnik&amp;marker=37.1745%2C-3.5985"
                     loading="lazy"></iframe>
+                <div class="visit-actions">
+                    <a class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.1745%2C-3.5985" target="_blank" rel="noopener">Cómo llegar</a>
+                    <a class="btn btn-light" href="https://www.google.com/maps/search/aparcamiento/@37.1745,-3.5985,16z" target="_blank" rel="noopener">Aparcamiento cercano</a>
+                    <a class="btn btn-light" href="tel:+34958000000">Llamar</a>
+                </div>
             </div>
         </section>
 
         <!-- ============ CONTACTO ============ -->
-        <section class="contact section" id="contacto">
+        <section class="contact section wrap" id="contacto" aria-labelledby="contact-title">
             <div class="contact-text">
-                <h2>Escríbenos</h2>
+                <p class="eyebrow eyebrow-num">Escríbenos</p>
+                <h2 id="contact-title">¿Alguna duda? Pregúntanos.</h2>
                 <p>
                     Para presupuestos de celebraciones, encargos para llevar o
                     cualquier duda. Respondemos en menos de 24 horas.
@@ -550,7 +641,7 @@
         <!-- ============ VISOR DE FOTOS ============ -->
         <dialog class="lightbox" id="lightbox" aria-label="Foto ampliada">
             <figure class="lb-figure">
-                <img id="lb-img" src="" alt="">
+                <img id="lb-img" alt="">
                 <figcaption><span id="lb-title"></span> <span class="lb-count" id="lb-count"></span></figcaption>
             </figure>
             <button type="button" class="lb-btn lb-prev" id="lb-prev" aria-label="Foto anterior">
@@ -725,10 +816,15 @@
 
     <!-- Accesos rápidos: barra "Reservar" en el móvil y botón para volver arriba -->
     <div class="quick-bar" id="quick-bar">
-        <a class="btn btn-primary" href="#reservas">Reservar mesa</a>
         <a class="quick-icon" href="tel:+34958000000" aria-label="Llamar al restaurante">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3h3l1.5 4.2-2 1.3a12 12 0 0 0 6.4 6.4l1.3-2 4.2 1.5v3a2 2 0 0 1-2.2 2A17.6 17.6 0 0 1 4.6 5.2 2 2 0 0 1 6.6 3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <span>Llamar</span>
         </a>
+        <a class="quick-icon" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.1745%2C-3.5985" target="_blank" rel="noopener" aria-label="Cómo llegar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <span>Cómo llegar</span>
+        </a>
+        <a class="btn btn-light" href="#reservas">Reservar mesa</a>
     </div>
     <a class="to-top" id="to-top" href="#inicio" aria-label="Volver arriba">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -736,28 +832,43 @@
 
     <!-- ============ PIE ============ -->
     <footer class="footer">
-        <div class="tile-band tile-band-thin" aria-hidden="true"></div>
-        <div class="footer-inner">
-            <a href="#inicio" class="logo logo-footer">
-                <svg class="logo-mark" viewBox="0 0 40 48" aria-hidden="true">
-                    <path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/>
-                    <path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/>
-                </svg>
-                <span class="logo-text">Sabor<br>Mediterráneo</span>
-            </a>
-            <nav class="footer-nav" aria-label="Pie de página">
+        <div class="tile-band" aria-hidden="true"></div>
+        <div class="wrap footer-inner">
+            <div class="footer-brand">
+                <a href="#inicio" class="logo logo-footer">
+                    <svg class="logo-mark" viewBox="0 0 40 48" aria-hidden="true">
+                        <path d="M2 47V20C2 10 10 2 20 2s18 8 18 18v27" fill="none" stroke="currentColor" stroke-width="3"/>
+                        <path d="M20 14l3.5 6.5L30 24l-6.5 3.5L20 34l-3.5-6.5L10 24l6.5-3.5z" fill="currentColor"/>
+                    </svg>
+                    <span class="logo-text">Sabor<br>Mediterráneo</span>
+                </a>
+                <p>Cocina de temporada en el centro de Granada.</p>
+                <p><a href="tel:+34958000000">958 000 000</a><br><a href="mailto:reservas@sabormediterraneo.es">reservas@sabormediterraneo.es</a></p>
+            </div>
+            <nav class="footer-col" aria-label="Restaurante">
+                <p class="footer-title">Restaurante</p>
                 <a href="#carta">Carta</a>
-                <a href="#servicios">Celebraciones</a>
-                <a href="#presupuesto">Presupuestos</a>
-                <a href="#eventos">Eventos</a>
+                <a href="carta.html">Carta completa</a>
+                <a href="#nosotros">La casa</a>
                 <a href="#galeria">Galería</a>
-                <a href="#reservas">Reservas</a>
+            </nav>
+            <nav class="footer-col" aria-label="Reservas">
+                <p class="footer-title">Reservas</p>
+                <a href="#reservas">Reservar mesa</a>
+                <a href="#reservas" data-gestionar>Gestionar mi reserva</a>
+                <a href="#eventos">Agenda</a>
+                <a href="#presupuesto">Presupuestos</a>
+            </nav>
+            <nav class="footer-col" aria-label="Más">
+                <p class="footer-title">Más</p>
+                <a href="#visitanos">Horario y ubicación</a>
                 <a href="#contacto">Contacto</a>
                 <a href="admin/login.php">Acceso del personal</a>
             </nav>
-            <p class="footer-copy">© <span id="year"></span> Sabor Mediterráneo. Proyecto intermodular 2º SMR. Restaurante ficticio: imágenes de ejemplo creadas con IA.</p>
         </div>
-        <p class="footer-wordmark" aria-hidden="true">Sabor Mediterráneo</p>
+        <div class="wrap footer-bottom">
+            <p>© <span id="year"></span> Sabor Mediterráneo. Proyecto intermodular 2º SMR. Restaurante ficticio: imágenes de ejemplo creadas con IA.</p>
+        </div>
     </footer>
 
 </body>

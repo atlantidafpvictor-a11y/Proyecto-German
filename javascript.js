@@ -21,6 +21,7 @@ const API = {
     inscripcion: "api/inscripcion.php",
     galeria: "api/galeria.php",
     presupuesto: "api/presupuesto.php",
+    pizarra: "api/pizarra.php",
 };
 
 /** ¿Quiere la persona menos movimiento? (ajuste del sistema operativo) */
@@ -111,6 +112,13 @@ const DATOS_DEMO = {
         ["Celebraciones en el reservado", "img/galeria/celebracion.webp", "eventos"],
         ["Postres caseros", "img/galeria/postres.webp", "platos"],
     ].map(([titulo, foto, categoria], i) => ({ id: i + 1, titulo, categoria, mini: foto, grande: foto })),
+    // Pizarra del día (panel → Pizarra del día). El destacado sale en "Hoy en la cocina".
+    pizarra: [
+        { id: 1, nombre: "Gallo pedro a la plancha", origen: "Lonja de Motril", precio: 19.5, agotado: false, destacado: true },
+        { id: 2, nombre: "Habitas tiernas con jamón", origen: "Vega de Granada", precio: 9, agotado: false, destacado: false },
+        { id: 3, nombre: "Tomate de colgar aliñado", origen: "Huerta de la Vega", precio: 6.5, agotado: false, destacado: false },
+        { id: 4, nombre: "Choto al ajillo", origen: "Sierra de Huétor", precio: 18, agotado: true, destacado: false },
+    ],
     opiniones: [
         { nombre: "Lucía M.", puntuacion: 5, comentario: "El arroz negro es de los mejores que he probado en Granada. Y nos atendieron sin ninguna prisa.", fecha: "2026-09-14" },
         { nombre: "Javier R.", puntuacion: 5, comentario: "Fuimos doce para un cumpleaños y lo organizaron todo. El pionono del final, imprescindible.", fecha: "2026-08-30" },
@@ -242,78 +250,51 @@ function iniciarCabecera() {
     enlaces.forEach((a) => { const s = $(a.getAttribute("href")); if (s) observer.observe(s); });
 
     $("#year").textContent = new Date().getFullYear();
+    // "Gestionar mi reserva" del pie abre el mismo diálogo que el botón de la sección de reservas
+    $$("[data-gestionar]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); $("#manage-open")?.click(); }));
 }
 
 /* =========================================================
-   1b. HERO: EL ARCO QUE SE ABRE
+   1b. PIZARRA DEL DÍA y "Hoy en la cocina" de la portada
    ---------------------------------------------------------
-   La sección mide 2,3 pantallas y su escenario se queda fijo.
-   Según lo que se ha bajado (de 0 a 1) se calcula el tamaño
-   de la "ventana" del arco y se le pasa al CSS como variables.
+   La escribe la cocina desde el panel. Si está vacía, la
+   sección y su enlace del menú no se muestran.
    ========================================================= */
-function iniciarHero() {
-    const hero = $("#inicio");
-    const stage = $("#hero-stage");
-    if (!hero || !stage || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+function pintarPizarra({ pizarra = [], actualizado = null }) {
+    const seccion = $("#pizarra");
+    if (!seccion) return;
+    const hay = Array.isArray(pizarra) && pizarra.length > 0;
+    seccion.hidden = !hay;
+    $("#nav-hoy").hidden = !hay;
+    const precio = (p) => (p.precio != null ? euro(p.precio) : __("Según mercado"));
 
-    hero.classList.add("is-anim");
-    const texto = $(".hero-text", stage);
-    const lados = $$(".hero-side", stage);
-    const ladoIzq = $(".hero-side-left", stage);
-    const img = $("#hero-arch img");
-    const velo = $("#hero-veil");
-    const pista = $("#hero-cue");
-    let ancho0 = 0, alto0 = 0, ancho = 0, alto = 0, recorrido = 1, pendiente = false, movil = false;
+    $("#board-list").innerHTML = (pizarra || []).map((p) => `
+        <li class="board-item${p.agotado ? " is-out" : ""}">
+            <span class="board-name">${escapeHTML(p.nombre)}${p.agotado ? ` <span class="sr-only">(${__("agotado")})</span>` : ""}</span>
+            <span class="board-origin">${p.agotado ? __("Agotado por hoy") : escapeHTML(p.origen || "")}</span>
+            <span class="board-price">${p.agotado ? "" : escapeHTML(precio(p))}</span>
+        </li>`).join("");
 
-    // Suave al principio y al final
-    const suavizar = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-    const entre = (a, b, t) => a + (b - a) * t;
-    const limitar = (v) => Math.min(1, Math.max(0, v));
-
-    function medir() {
-        ancho = stage.clientWidth;
-        alto = stage.clientHeight;
-        movil = ancho < 861;
-        // El arco empieza justo debajo del texto (en móvil, debajo de los botones)
-        const ref = movil ? ladoIzq : texto;
-        const finTexto = ref.offsetTop + ref.offsetHeight;
-        alto0 = Math.max(220, alto - finTexto - (movil ? 18 : 28));
-        ancho0 = movil ? Math.min(ancho - 32, alto0 * 0.95) : Math.min(ancho * 0.38, alto0 * 0.8);
-        stage.style.setProperty("--aw0", `${ancho0}px`);
-        recorrido = Math.max(1, hero.offsetHeight - alto);
-        pintar();
+    const sello = $("#board-stamp");
+    sello.textContent = "";
+    if (actualizado) {
+        const d = new Date(actualizado);
+        if (!Number.isNaN(d.getTime())) {
+            const hora = d.toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
+            sello.textContent = isoLocal(d) === isoLocal(new Date())
+                ? __("Actualizada hoy a las {h}", { h: hora })
+                : __("Actualizada el {fecha}", { fecha: d.toLocaleDateString(LOCALE, { day: "numeric", month: "long" }) });
+        }
     }
 
-    function pintar() {
-        pendiente = false;
-        const p = limitar(-hero.getBoundingClientRect().top / recorrido);
-        const e = suavizar(p);
-        const w = entre(ancho0, ancho, e);
-        const h = entre(alto0, alto, e);
-        stage.style.setProperty("--aw", `${w}px`);
-        stage.style.setProperty("--ah", `${h}px`);
-        stage.style.setProperty("--ar", `${(w / 2) * (1 - e)}px`);
-        img.style.transform = `scale(${1.14 - 0.14 * e})`;
-
-        const fuera = limitar(p * 3);           // el texto se va en el primer tercio
-        texto.style.opacity = String(1 - fuera);
-        texto.style.transform = `translateY(${-70 * fuera}px)`;
-        lados.forEach((l) => {
-            l.style.opacity = String(1 - fuera);
-            // En móvil todo está apilado y sube junto; en escritorio los laterales bajan
-            l.style.transform = `translateY(${(movil ? -70 : 30) * fuera}px)`;
-            l.style.visibility = fuera > 0.98 ? "hidden" : "";
-        });
-        pista.style.opacity = String(limitar(1 - p * 5));
-        pista.style.visibility = p > 0.2 ? "hidden" : "";
-        velo.style.opacity = String(limitar((p - 0.68) / 0.26));
+    // La tarjeta de la portada: el destacado, y si se ha agotado, no se enseña
+    const ticket = $("#hero-ticket");
+    const top = hay && pizarra.find((p) => p.destacado && !p.agotado);
+    ticket.hidden = !top;
+    if (top) {
+        $("#hero-ticket-name").textContent = top.nombre;
+        $("#hero-ticket-meta").textContent = [top.origen, precio(top)].filter(Boolean).join(" · ");
     }
-
-    const alBajar = () => { if (!pendiente) { pendiente = true; requestAnimationFrame(pintar); } };
-    addEventListener("scroll", alBajar, { passive: true });
-    addEventListener("resize", medir);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(medir);
-    medir();
 }
 
 /* =========================================================
@@ -374,6 +355,7 @@ function iniciarCarta({ categorias, platos, alergenos }) {
     const fSg = $("#f-sg");
     const previewImg = $("#preview-img");
     const previewCap = $("#preview-caption");
+    let enVitrina = null; // plato que se ve en la tarjeta de al lado
     const nombreAlergeno = Object.fromEntries(alergenos.map((a) => [a.id, a.nombre]));
 
     let categoriaActiva = categorias[0].id;
@@ -386,6 +368,7 @@ function iniciarCarta({ categorias, platos, alergenos }) {
 
     function mostrarPreview(plato) {
         if (!plato || previewImg.dataset.id === String(plato.id)) return;
+        enVitrina = plato;
         previewImg.dataset.id = plato.id;
         previewImg.classList.add("swapping");
         const nueva = new Image();
@@ -396,6 +379,11 @@ function iniciarCarta({ categorias, platos, alergenos }) {
         };
         nueva.src = plato.imagen;
         previewCap.textContent = plato.nombre;
+        $("#feature-desc").textContent = plato.descripcion;
+        $("#feature-tag").textContent = plato.destacado ? __("Recomendado") : nombreCategoria[plato.categoria_id] || "";
+        const vino = platos.find((x) => x.id === plato.maridaje_id);
+        $("#feature-pairing").hidden = !vino;
+        if (vino) $("#feature-pairing-text").textContent = vino.nombre;
         $$(".dish", lista).forEach((li) => li.classList.toggle("is-preview", li.dataset.id === String(plato.id)));
     }
 
@@ -494,6 +482,7 @@ function iniciarCarta({ categorias, platos, alergenos }) {
         if (plato) abrirPlato(plato);
     });
     $("#dd-close").addEventListener("click", () => ficha.close());
+    $("#feature-open").addEventListener("click", () => enVitrina && abrirPlato(enVitrina));
     ficha.addEventListener("click", (e) => {
         if (e.target !== ficha) return;
         const r = ficha.getBoundingClientRect();
@@ -567,12 +556,13 @@ function pintarEventos(eventos) {
         const texto = lleno ? __("Completo")
             : pocas ? (ev.libres === 1 ? __("¡Última plaza!") : __("¡Últimas {n} plazas!", { n: ev.libres }))
             : __("Quedan {n} de {total} plazas", { n: ev.libres, total: ev.plazas });
+        const mes = d.toLocaleDateString(LOCALE, { month: "short" }).replace(".", "");
         return `
         <li class="event ${lleno ? "is-full" : ""} ${pocas ? "is-few" : ""}">
-            <p class="event-date">
+            <p class="event-stub">
                 <span class="day">${d.getDate()}</span>
-                <span class="month">${d.toLocaleDateString(LOCALE, { month: "long" })}</span>
-                <span class="when">${d.toLocaleDateString(LOCALE, { weekday: "long" })} · ${escapeHTML(ev.hora)}</span>
+                <span class="month">${escapeHTML(mes)}</span>
+                <span class="when">${d.toLocaleDateString(LOCALE, { weekday: "short" }).replace(".", "")} · ${escapeHTML(ev.hora)}</span>
             </p>
             <div class="event-body">
                 <h3>${escapeHTML(ev.titulo)}</h3>
@@ -581,10 +571,10 @@ function pintarEventos(eventos) {
                     <div class="seats-bar" role="progressbar" aria-label="${__("Plazas ocupadas")}" aria-valuemin="0" aria-valuemax="${ev.plazas}" aria-valuenow="${ocupadas}"><span style="width:${Math.round(ocupadas / ev.plazas * 100)}%"></span></div>
                     <p class="seats-text">${texto}</p>
                 </div>
-            </div>
-            <div class="event-side">
-                <p class="event-price">${euro(ev.precio)}<small>${__("por persona")}</small></p>
-                <button type="button" class="btn btn-primary" data-evento="${ev.id}" ${lleno ? "disabled" : ""}>${lleno ? __("Completo") : __("Apuntarme")}</button>
+                <div class="event-foot">
+                    <p class="event-price">${euro(ev.precio)} <small>${__("por persona")}</small></p>
+                    <button type="button" class="btn btn-primary btn-small" data-evento="${ev.id}" ${lleno ? "disabled" : ""}>${lleno ? __("Completo") : __("Apuntarme")}</button>
+                </div>
             </div>
         </li>`;
     }).join("");
@@ -1038,6 +1028,65 @@ function iniciarReservas(horarios, diasCerrados = []) {
         form.hidden = false;
     });
 
+    /* --- Deja el formulario relleno con lo elegido en el buscador de la portada --- */
+    async function preseleccionar({ n, fecha, hora, zona }) {
+        if (!hecho.hidden) { form.reset(); hecho.hidden = true; form.hidden = false; }
+        estado.personas = n;
+        marcar(party, $(`[data-n="${n}"]`, party));
+        estado.fecha = fecha;
+        const dia = $(`[data-fecha="${fecha}"]`, strip);
+        marcar(strip, dia);
+        otraFecha.value = dia ? "" : fecha;
+        const z = $(`input[name='zona'][value='${zona}']`);
+        if (z) z.checked = true;
+        await cargarHoras();
+        $(`.opt[data-hora="${hora}"]:not([disabled])`, slots)?.click();
+        $("#reservas").scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth" });
+        setTimeout(() => $("#nombre").focus({ preventScroll: true }), sinMovimiento() ? 0 : 700);
+    }
+
+    /* --- Buscador de la portada: las mismas horas libres, sin bajar hasta el formulario --- */
+    const buscador = $("#finder-form");
+    if (buscador) {
+        const qPersonas = $("#q-personas"), qDia = $("#q-dia"), qTurno = $("#q-turno"), qZona = $("#q-zona");
+        const resultado = $("#finder-result");
+        const capital = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+        qPersonas.innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}"${i === 1 ? " selected" : ""}>${personas(i + 1)}</option>`).join("");
+        qDia.innerHTML = dias.map((d) => {
+            const texto = capital(d.toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" }));
+            return `<option value="${isoLocal(d)}">${d.getTime() === hoy.getTime() ? `${__("Hoy")} · ` : ""}${texto}</option>`;
+        }).join("");
+        // Por la tarde lo normal es buscar cena
+        qTurno.value = new Date().getHours() >= 16 ? "cena" : "comida";
+
+        const aviso = (txt) => { resultado.innerHTML = `<p class="finder-msg">${txt}</p>`; };
+        buscador.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const fecha = qDia.value, n = Number(qPersonas.value), turno = qTurno.value;
+            if (!fecha) { aviso(__("No hay días con mesa en las próximas semanas. Llámanos y lo miramos.")); return; }
+            aviso(__("Buscando mesa…"));
+            const { datos } = await pedir(`${API.disponibilidad}?fecha=${fecha}&personas=${n}`, () => horasDemo(fecha, n));
+            if (!datos.slots || datos.cerrado) {
+                aviso(datos.cerrado ? __("Ese día estamos cerrados. Prueba con otra fecha.") : escapeHTML(datos.error || __("No hemos podido consultar las mesas libres.")));
+                return;
+            }
+            const lista = datos.slots.filter((s) => s.turno === turno);
+            const nombreTurno = turno === "cena" ? __("cena") : __("comida");
+            if (!lista.length) { aviso(__("Ese día no abrimos para {turno}. Prueba el otro turno.", { turno: nombreTurno })); return; }
+            if (!lista.some((s) => s.libre)) { aviso(__("No quedan mesas para {n} en ese turno. Prueba otro día o llámanos.", { n: personas(n) })); return; }
+            const f = qDia.selectedOptions[0]?.textContent.replace(/^.*· /, "") || fecha;
+            resultado.innerHTML = `
+                <p class="finder-msg">${__("Horas libres para {n} · {fecha}", { n: personas(n), fecha: escapeHTML(f) })}</p>
+                <div class="finder-slots">${lista.map((s) => `<button type="button" class="finder-slot" data-hora="${s.hora}"${s.libre ? "" : ` disabled aria-label="${s.hora}, ${__("completo")}"`}>${s.hora}</button>`).join("")}</div>
+                <p class="finder-hint">${__("Pulsa una hora y termina la reserva con tus datos.")}</p>`;
+        });
+        resultado.addEventListener("click", (e) => {
+            const b = e.target.closest(".finder-slot:not([disabled])");
+            if (!b) return;
+            preseleccionar({ n: Number(qPersonas.value), fecha: qDia.value, hora: b.dataset.hora, zona: qZona.value });
+        });
+    }
+
     cargarHoras();
 }
 
@@ -1451,7 +1500,7 @@ function iniciarMovimiento() {
         obs.observe(caja);
     });
     // Bloques que aparecen suavemente, escalonados dentro de su grupo
-    const grupos = [".about-statement", ".about-arch", ".facts > div", ".service", ".celebra-arch", ".quote-form", ".visit-map", ".contact-form", ".review"];
+    const grupos = [".about-arch", ".about-tall", ".facts > div", ".board-item", ".producer", ".service", ".celebra", ".visit-map", ".contact-form", ".review"];
     grupos.forEach((sel) => $$(sel).forEach((el, i) => { el.classList.add("reveal"); el.style.setProperty("--i", i % 4); obs.observe(el); }));
 
     // Contadores: "30 km", "14", "60" cuentan desde 0 cuando se ven
@@ -1511,17 +1560,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     traducirDocumento();                       // textos del HTML (i18n.js)
     pintarSelectorIdioma($("#lang-switch"));
     iniciarCabecera();
-    iniciarHero();
 
     const cartaDemo = { categorias: DATOS_DEMO.categorias, platos: DATOS_DEMO.platos, alergenos: DATOS_DEMO.alergenos };
     const infoDemo = { horarios: DATOS_DEMO.horarios, servicios: DATOS_DEMO.servicios, opiniones: DATOS_DEMO.opiniones };
-    let [{ datos: carta }, { datos: info }] = await Promise.all([pedir(API.carta, cartaDemo), pedir(API.info, infoDemo)]);
+    let [{ datos: carta }, { datos: info }, { datos: pizarra, demo: pizDemo }] = await Promise.all([
+        pedir(API.carta, cartaDemo), pedir(API.info, infoDemo), pedir(API.pizarra, { pizarra: DATOS_DEMO.pizarra }),
+    ]);
 
     // Si la base de datos falla, la web sigue mostrando la carta de ejemplo
     if (!carta.platos || !carta.categorias?.length) carta = cartaDemo;
     if (!info.horarios) info = infoDemo;
 
     pintarHorario(info.horarios);
+    // Sin servidor se ve la pizarra de ejemplo; con servidor, la de verdad (aunque esté vacía)
+    pintarPizarra(pizDemo || !Array.isArray(pizarra.pizarra) ? { pizarra: DATOS_DEMO.pizarra } : pizarra);
     iniciarCarta(carta);
     pintarServicios(info.servicios);
     pintarOpiniones(info.opiniones);
