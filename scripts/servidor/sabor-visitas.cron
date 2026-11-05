@@ -1,0 +1,2 @@
+# Informe de visitas (GoAccess) cada 15 minutos: panel → Visitas
+*/15 * * * * root /usr/local/sbin/sabor-visitas >/dev/null 2>&1

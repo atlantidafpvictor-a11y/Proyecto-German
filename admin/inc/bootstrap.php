@@ -59,7 +59,7 @@ set_exception_handler(function (Throwable $e) {
 /* ---------- Cabeceras de seguridad ----------
    El .htaccess de la raíz pone las de toda la web; estas son las del panel,
    más estrictas, y funcionan aunque Apache no tenga mod_headers. */
-const ADMIN_VERSION = '20261110';
+const ADMIN_VERSION = '20261111';
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
@@ -247,6 +247,7 @@ function cabecera(string $titulo, string $activa): void
                 <?= $enlace('mensajes.php', 'mensajes', 'Mensajes', $sinLeer) ?>
                 <p class="nav-group">Sistema</p>
                 <?= $enlace('usuarios.php', 'usuarios', 'Equipo') ?>
+                <?= $enlace('visitas.php', 'visitas', 'Visitas a la web') ?>
                 <?= $enlace('estado.php', 'estado', 'Estado del servidor', 0, $servidor) ?>
             <?php endif; ?>
         </nav>
@@ -290,6 +291,7 @@ function icono(string $nombre): string
         'presupuestos' => '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
         'mensajes'     => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
         'usuarios'     => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+        'visitas'      => '<path d="M3 21h18M6 17v-5M11 17V7M16 17v-8M21 17V4"/>',
         'estado'       => '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
         'web'          => '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
         'salir'        => '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3"/>',

@@ -394,6 +394,9 @@ code { background: var(--cal-2); padding: 1px 6px; border-radius: 5px; font-size
 .health-big.health-aviso { background: var(--ocre-claro); color: var(--ocre-texto); }
 .health-big.health-error { background: var(--error-claro); color: #8A2821; }
 
+/* ---------- Visitas (informe de GoAccess en un marco aislado) ---------- */
+.report-frame { display: block; width: 100%; height: calc(100vh - 230px); min-height: 560px; border: 1px solid var(--linea); border-radius: var(--radius); background: var(--blanco); box-shadow: var(--shadow-sm); }
+
 /* ---------- 17. Movimiento ---------- */
 @media (prefers-reduced-motion: no-preference) {
     .main > .page-head, .main > .stats, .main > .panel, .main > .dash, .main > section, .main > form {

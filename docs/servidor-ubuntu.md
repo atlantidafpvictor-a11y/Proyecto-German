@@ -627,7 +627,29 @@ sudo bash scripts/servidor/php-fpm.sh
 ab -n 2000 -c 50 -k https://127.0.0.1/api/carta.php | grep -E "Requests per|Time per request|Failed|Non-2xx"
 ```
 
-El script comprueba la configuración y que la web responde; si algo falla, vuelve solo a como estaba. Con PHP-FPM el límite de subida del panel se lee de `admin/.user.ini` (con `mod_php` se usa `admin/.htaccess`).
+El script comprueba la configuración y que la web responde; si algo falla, vuelve solo a como estaba.
+
+Resultado medido en nuestro servidor (50 clientes a la vez, `carta.php` desde la caché de Redis):
+
+| Prueba | mod_php + prefork | PHP-FPM + event |
+|---|---|---|
+| `ab` (HTTP/1.x) | 3008 pet/s | 2283 pet/s |
+| `h2load` (HTTP/2, como un navegador) | no disponible | 2082 pet/s |
+
+En una API que ya sale de caché, PHP-FPM es algo más lento por el paso extra de Apache a PHP-FPM. Se deja porque permite HTTP/2 (la portada carga ~30 archivos por una sola conexión), gasta menos memoria y separa PHP de Apache. Dos lecciones de la medición: Ubuntu trae PHP-FPM con solo 5 procesos (se suben a 40 en `php-fpm-sabor.conf`) y, desde el arreglo del CVE-2024-24795, Apache ignora el `Content-Length` de PHP-FPM salvo con `SetEnv ap_trust_cgilike_cl 1`. Con PHP-FPM el límite de subida del panel se lee de `admin/.user.ini` (con `mod_php` se usa `admin/.htaccess`).
+
+### 11l. Estadísticas de visitas con GoAccess
+
+GoAccess lee el registro de Apache y genera un informe de visitas (páginas más vistas, navegadores, sistemas, horas, errores) sin Google Analytics ni cookies. Las IPs se anonimizan y no se cuentan robots ni las pruebas hechas desde el propio servidor.
+
+```bash
+sudo apt install -y goaccess
+sudo install -m 700 /var/www/sabor-mediterraneo/scripts/visitas.sh /usr/local/sbin/sabor-visitas
+sudo install -m 644 /var/www/sabor-mediterraneo/scripts/servidor/sabor-visitas.cron /etc/cron.d/sabor-visitas
+sudo sabor-visitas
+```
+
+Se ve en el panel → **Visitas a la web** (solo Administración). El informe se carga en un marco con `sandbox`: ejecuta su JavaScript pero no puede leer las cookies del panel ni enviar datos fuera.
 
 ## Si algo falla
 
