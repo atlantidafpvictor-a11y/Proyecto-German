@@ -188,6 +188,11 @@ cat > /etc/apache2/mods-available/evasive.conf <<'EOF'
 </IfModule>
 EOF
 a2enmod -q evasive >/dev/null
+# mod_evasive trae Postfix (correo) como dependencia: que solo escuche dentro del servidor
+if command -v postconf >/dev/null; then
+    postconf -e "inet_interfaces = loopback-only"
+    systemctl restart postfix || true
+fi
 if apache2ctl configtest 2>/dev/null; then
     systemctl reload apache2
     ok "mod_evasive activo"
