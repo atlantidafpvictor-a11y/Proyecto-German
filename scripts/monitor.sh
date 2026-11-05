@@ -104,8 +104,8 @@ fi
 
 # ---------- 6. fail2ban ----------
 if command -v fail2ban-client >/dev/null && systemctl is-active --quiet fail2ban; then
-    ahora=$(fail2ban-client status sshd 2>/dev/null | awk -F: '/Currently banned/ {gsub(/ /,"",$2); print $2}')
-    total=$(fail2ban-client status sshd 2>/dev/null | awk -F: '/Total banned/ {gsub(/ /,"",$2); print $2}')
+    ahora=$(fail2ban-client status sshd 2>/dev/null | awk -F: '/Currently banned/ {gsub(/[ \t]/,"",$2); print $2}')
+    total=$(fail2ban-client status sshd 2>/dev/null | awk -F: '/Total banned/ {gsub(/[ \t]/,"",$2); print $2}')
     anotar bloqueos "IPs bloqueadas (SSH)" ok "${ahora:-0} ahora, ${total:-0} desde el arranque"
 fi
 

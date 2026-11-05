@@ -529,6 +529,34 @@ cat /var/lib/sabor-mediterraneo/estado.json
 
 Prueba para la presentación: `sudo systemctl stop mariadb`, `sudo sabor-monitor`, recargar el panel (sale el aviso en rojo) y `sudo systemctl start mariadb`.
 
+### 11h. Ver la base de datos del servidor con phpMyAdmin (túnel SSH)
+
+En el servidor **no se instala phpMyAdmin**: sería una puerta de entrada más. Para verla con el phpMyAdmin de XAMPP del PC se usa un túnel SSH, que lleva la conexión cifrada dentro de SSH sin abrir el puerto 3306.
+
+1. En el servidor, un usuario con contraseña solo para esta base de datos:
+
+```bash
+sudo mysql -e "CREATE USER 'gestor'@'127.0.0.1' IDENTIFIED BY 'UNA_CLAVE_LARGA'; GRANT ALL PRIVILEGES ON sabor_mediterraneo.* TO 'gestor'@'127.0.0.1'; FLUSH PRIVILEGES;"
+```
+
+2. En el PC, abrir el túnel y dejar la ventana abierta (el puerto 3307 del PC lleva al 3306 de la torre):
+
+```powershell
+ssh -N -L 3307:127.0.0.1:3306 usuario@192.168.4.121
+```
+
+3. Al final de `C:\xampp\phpMyAdmin\config.inc.php`:
+
+```php
+$i++;
+$cfg['Servers'][$i]['verbose']   = 'Servidor del instituto (túnel SSH)';
+$cfg['Servers'][$i]['host']      = '127.0.0.1';
+$cfg['Servers'][$i]['port']      = '3307';
+$cfg['Servers'][$i]['auth_type'] = 'cookie';
+```
+
+4. En phpMyAdmin, columna izquierda → **Servidor actual** → «Servidor del instituto (túnel SSH)», usuario `gestor`.
+
 ## Si algo falla
 
 | Síntoma | Causa probable | Qué mirar |
