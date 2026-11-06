@@ -27,18 +27,22 @@ AddType application/manifest+json .webmanifest
 
 # ---------- Cabeceras de seguridad ----------
 <IfModule mod_headers.c>
-    # "setifempty": si una página ya pone su propia cabecera (el panel pone
-    # una todavía más estricta), se respeta la suya.
-    # Content-Security-Policy: el navegador solo ejecuta JavaScript de nuestro
-    # propio servidor (nada en línea ni de otras webs). Aunque alguien colara
-    # un <script> en una opinión o un mensaje, no se ejecutaría (protege de XSS).
-    Header setifempty Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; frame-src https://www.openstreetmap.org; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
-    # Nadie puede meter nuestra web dentro de un iframe (clickjacking)
-    Header setifempty X-Frame-Options "SAMEORIGIN"
+    # Estas tres cabeceras solo se ponen a lo que NO es PHP (index.html, carta.html,
+    # CSS, fotos...). Las páginas PHP ponen las suyas: el panel, unas más estrictas.
+    # Con PHP-FPM, Apache no ve las cabeceras que pone PHP y "setifempty" añadiría
+    # una segunda política encima de la del panel (y el navegador aplica las dos).
+    <If "%{REQUEST_FILENAME} !~ /\.php$/">
+        # Content-Security-Policy: el navegador solo ejecuta JavaScript de nuestro
+        # propio servidor (nada en línea ni de otras webs). Aunque alguien colara
+        # un <script> en una opinión o un mensaje, no se ejecutaría (protege de XSS).
+        Header setifempty Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; frame-src https://www.openstreetmap.org; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+        # Nadie puede meter nuestra web dentro de un iframe (clickjacking)
+        Header setifempty X-Frame-Options "SAMEORIGIN"
+        # A otras webs solo les decimos el dominio, no la página exacta
+        Header setifempty Referrer-Policy "strict-origin-when-cross-origin"
+    </If>
     # El navegador no "adivina" tipos de archivo (una foto nunca se ejecuta como script)
     Header set X-Content-Type-Options "nosniff"
-    # A otras webs solo les decimos el dominio, no la página exacta
-    Header setifempty Referrer-Policy "strict-origin-when-cross-origin"
     # La web no usa cámara, micrófono, ubicación ni pagos: se desactivan
     Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
     Header set Cross-Origin-Opener-Policy "same-origin"
