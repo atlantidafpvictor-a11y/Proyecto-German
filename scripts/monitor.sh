@@ -102,6 +102,20 @@ else
     else anotar copia "Copia de seguridad" ok "$detalle"; fi
 fi
 
+# Copia en Google Drive (solo si está configurada: scripts/copia-nube.sh)
+SELLO_NUBE=/var/lib/sabor-mediterraneo/ultima-copia-nube
+if [[ -f /usr/local/sbin/sabor-copia-nube ]]; then
+    if [[ ! -f $SELLO_NUBE ]]; then
+        anotar nube "Copia en la nube" aviso "Todavía no se ha subido ninguna copia a Google Drive"
+    else
+        horas=$(( ( $(date +%s) - $(cat "$SELLO_NUBE") ) / 3600 ))
+        detalle="Última subida cifrada a Google Drive hace ${horas} h"
+        if   (( horas > 96 )); then anotar nube "Copia en la nube" error "$detalle"
+        elif (( horas > 72 )); then anotar nube "Copia en la nube" aviso "$detalle"
+        else anotar nube "Copia en la nube" ok "$detalle"; fi
+    fi
+fi
+
 # ---------- 5. Certificado HTTPS ----------
 if [[ -r "$CERT" ]]; then
     fin=$(openssl x509 -enddate -noout -in "$CERT" | cut -d= -f2)

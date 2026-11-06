@@ -467,7 +467,27 @@ sudo sabor-restaurar /var/backups/sabor-mediterraneo/bd_AAAA-MM-DD_HHMM.sql.gz
 
 Antes de restaurar guarda automáticamente el estado actual, por si hay que deshacerlo.
 
-> Una copia de seguridad en el mismo disco no protege si el disco se rompe. En un negocio real se copiaría además a otro equipo (`rsync`/`scp`) o a la nube. Para el proyecto podéis demostrarlo copiándola a vuestro PC: `scp usuario@192.168.4.121:/ruta/copia.sql.gz .` (antes `sudo cp` a vuestra carpeta personal y `sudo chown`).
+#### Copia fuera de la torre: Google Drive, cifrada
+
+Una copia en el mismo disco no protege si el disco se rompe. Por eso, al terminar cada copia, `sabor-backup` lanza `sabor-copia-nube`, que **cifra** la copia con `age` y la sube a Google Drive con `rclone`:
+
+- Se cifra con la clave **pública**: en Drive solo hay archivos ilegibles. Para descifrar hace falta la clave **privada**, guardada en el servidor (solo root) y **fuera de la torre** (si el disco muere, sin ella no se puede restaurar).
+- `rclone` tiene el permiso `drive.file`: solo ve los archivos que sube él, no el resto de la cuenta.
+- En la nube se guardan 30 días. La monitorización avisa si la última subida tiene más de 3 días.
+
+```bash
+sudo apt install -y rclone age
+sudo install -m 700 scripts/copia-nube.sh /usr/local/sbin/sabor-copia-nube
+sudo install -m 700 scripts/probar-copia-nube.sh /usr/local/sbin/sabor-probar-copia
+sudo install -d -m 700 /root/.config/sabor
+sudo age-keygen -o /root/.config/sabor/copias.key
+sudo sh -c 'age-keygen -y /root/.config/sabor/copias.key > /root/.config/sabor/copias.pub'
+sudo rclone config        # remoto "gdrive", tipo drive, scope drive.file, autorizado desde el PC con rclone authorize
+sudo sabor-copia-nube
+sudo sabor-probar-copia   # descarga, descifra y restaura en una BD de prueba y compara
+```
+
+`sabor-probar-copia` es la **prueba de restauración real**: descarga de Drive la última copia, la descifra, la carga en `sabor_prueba_restauracion`, compara el número de filas con la base de datos real y borra la de prueba.
 
 ### 11c. Bloquear ataques de fuerza bruta (fail2ban)
 

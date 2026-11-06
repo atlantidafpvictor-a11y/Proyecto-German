@@ -39,3 +39,8 @@ tar -czf "$ARCH" -C "$WEB" uploads api/config.local.php 2>/dev/null \
 find "$DESTINO" -type f \( -name 'bd_*.sql.gz' -o -name 'archivos_*.tar.gz' \) -mtime +"$DIAS" -delete
 
 log "Copia correcta: $(basename "$SQL") ($(du -h "$SQL" | cut -f1)), $(basename "$ARCH") ($(du -h "$ARCH" | cut -f1)). Copias guardadas: $(ls "$DESTINO"/bd_*.sql.gz | wc -l)"
+
+# 4. Copia fuera de la torre (Google Drive, cifrada), si está configurada
+if [[ -x /usr/local/sbin/sabor-copia-nube ]]; then
+    /usr/local/sbin/sabor-copia-nube || log "AVISO: la copia local está bien, pero no se pudo subir a Google Drive"
+fi
