@@ -685,6 +685,19 @@ sudo install -m 644 scripts/servidor/sabor-recordatorios.cron /etc/cron.d/sabor-
 - La web responde al cliente antes de enviar el email (`fastcgi_finish_request()`): reservar no se hace más lento.
 - Los recordatorios los manda `scripts/recordatorios.php` (cron, como `www-data`) y nunca se repiten: queda anotado en `reservas.recordatorio_en`. Registro: `journalctl -t sabor-recordatorios`.
 
+### 11n. Cambiar la contraseña de la base de datos
+
+Si una contraseña ha salido en una captura o es débil, se cambia sin que nadie la vea ni la escriba (se genera aleatoria y va directa a MariaDB y a `config.local.php`):
+
+```bash
+CLAVEBD=$(openssl rand -hex 24)
+sudo mysql -e "ALTER USER 'sabor_web'@'localhost' IDENTIFIED BY '$CLAVEBD';" && sudo sed -i "s/'db_pass' => '[^']*'/'db_pass' => '$CLAVEBD'/" /var/www/sabor-mediterraneo/api/config.local.php && echo "Contraseña cambiada"
+curl -sk https://localhost/api/salud.php
+unset CLAVEBD
+```
+
+Las copias, la prueba de restauración y la monitorización entran como root por el socket de Unix (sin contraseña), así que no se ven afectadas.
+
 ## Si algo falla
 
 | Síntoma | Causa probable | Qué mirar |
