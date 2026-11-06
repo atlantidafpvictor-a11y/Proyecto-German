@@ -22,6 +22,7 @@ const API = {
     galeria: "api/galeria.php",
     presupuesto: "api/presupuesto.php",
     pizarra: "api/pizarra.php",
+    listaEspera: "api/lista-espera.php",
 };
 
 /** ¿Quiere la persona menos movimiento? (ajuste del sistema operativo) */
@@ -896,15 +897,18 @@ function iniciarReservas(horarios, diasCerrados = []) {
         }
 
         const grupos = { comida: __("Comida"), cena: __("Cena") };
+        // Botón de lista de espera para un turno completo (lo abre iniciarListaEspera)
+        const espera = (turno) => `<p class="waitlist-cta">${__("¿Ninguna hora te viene bien?")} <button type="button" class="link-btn" data-espera="${turno}" data-fecha="${estado.fecha}" data-personas="${estado.personas}">${turno === "cena" ? __("Avísame si se libera una mesa para cenar") : __("Avísame si se libera una mesa para comer")}</button></p>`;
         const html = Object.entries(grupos).map(([turno, titulo]) => {
             const lista = datos.slots.filter((s) => s.turno === turno);
             if (!lista.length) return "";
-            return `<div class="slots-group"><h4>${titulo}</h4><div class="slots-row" role="radiogroup" aria-label="${titulo}">
+            const completo = !lista.some((s) => s.libre);
+            return `<div class="slots-group"><h4>${titulo}${completo ? ` · <span class="slots-full">${__("completo")}</span>` : ""}</h4><div class="slots-row" role="radiogroup" aria-label="${titulo}">
                 ${lista.map((s) => `<button type="button" class="opt" role="radio" aria-checked="false" data-hora="${s.hora}" ${s.libre ? "" : "disabled aria-label=\"" + s.hora + ", " + __("completo") + "\""}>${s.hora}</button>`).join("")}
-            </div></div>`;
+            </div>${lista.filter((s) => s.libre).length <= 1 ? espera(turno) : ""}</div>`;
         }).join("");
         const hayLibres = datos.slots.some((s) => s.libre);
-        slots.innerHTML = hayLibres ? html : `<p class="slots-msg">${__("No quedan mesas para {n} ese día. Prueba otro día o llámanos.", { n: estado.personas })}</p>`;
+        slots.innerHTML = hayLibres ? html : `<p class="slots-msg">${__("No quedan mesas para {n} ese día. Prueba otro día o llámanos.", { n: estado.personas })}</p>${[...new Set(datos.slots.map((s) => s.turno))].map(espera).join("")}`;
     }
 
     slots.addEventListener("click", (e) => {
@@ -1037,12 +1041,14 @@ function iniciarReservas(horarios, diasCerrados = []) {
         const dia = $(`[data-fecha="${fecha}"]`, strip);
         marcar(strip, dia);
         otraFecha.value = dia ? "" : fecha;
-        const z = $(`input[name='zona'][value='${zona}']`);
+        const z = zona && $(`input[name='zona'][value='${zona}']`);
         if (z) z.checked = true;
         await cargarHoras();
-        $(`.opt[data-hora="${hora}"]:not([disabled])`, slots)?.click();
+        if (hora) $(`.opt[data-hora="${hora}"]:not([disabled])`, slots)?.click();
         $("#reservas").scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth" });
-        setTimeout(() => $("#nombre").focus({ preventScroll: true }), sinMovimiento() ? 0 : 700);
+        // Con hora elegida se sigue por el nombre; sin hora, por la primera hora libre
+        const siguiente = hora ? $("#nombre") : $(".opt:not([disabled])", slots) || $("#nombre");
+        setTimeout(() => siguiente.focus({ preventScroll: true }), sinMovimiento() ? 0 : 700);
     }
 
     /* --- Buscador de la portada: las mismas horas libres, sin bajar hasta el formulario --- */
@@ -1073,7 +1079,11 @@ function iniciarReservas(horarios, diasCerrados = []) {
             const lista = datos.slots.filter((s) => s.turno === turno);
             const nombreTurno = turno === "cena" ? __("cena") : __("comida");
             if (!lista.length) { aviso(__("Ese día no abrimos para {turno}. Prueba el otro turno.", { turno: nombreTurno })); return; }
-            if (!lista.some((s) => s.libre)) { aviso(__("No quedan mesas para {n} en ese turno. Prueba otro día o llámanos.", { n: personas(n) })); return; }
+            if (!lista.some((s) => s.libre)) {
+                aviso(__("No quedan mesas para {n} en ese turno. Prueba otro día o llámanos.", { n: personas(n) }));
+                resultado.insertAdjacentHTML("beforeend", `<p class="finder-hint"><button type="button" class="link-btn" data-espera="${turno}" data-fecha="${fecha}" data-personas="${n}">${__("Apúntate a la lista de espera")}</button> ${__("y te avisamos por email si alguien cancela.")}</p>`);
+                return;
+            }
             const f = qDia.selectedOptions[0]?.textContent.replace(/^.*· /, "") || fecha;
             resultado.innerHTML = `
                 <p class="finder-msg">${__("Horas libres para {n} · {fecha}", { n: personas(n), fecha: escapeHTML(f) })}</p>
@@ -1087,7 +1097,91 @@ function iniciarReservas(horarios, diasCerrados = []) {
         });
     }
 
+    // Enlace del email "se ha liberado una mesa": ?fecha=2026-11-07&personas=4#reservas
+    const q = new URLSearchParams(location.search);
+    const fechaUrl = q.get("fecha"), nUrl = Number(q.get("personas"));
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaUrl || "") && nUrl >= 1 && nUrl <= 8) {
+        preseleccionar({ n: nUrl, fecha: fechaUrl });
+        return;
+    }
     cargarHoras();
+}
+
+/* =========================================================
+   5b. LISTA DE ESPERA
+   ---------------------------------------------------------
+   Si un turno está completo, el cliente deja sus datos y le
+   avisamos por email cuando alguien cancela (api/lista-espera.php).
+   ========================================================= */
+function iniciarListaEspera() {
+    const dialogo = $("#waitlist-dialog");
+    if (!dialogo) return;
+    const form = $("#waitlist-form");
+    const errorGeneral = $("#waitlist-error");
+    let peticion = null;
+
+    const marcar = (id, msg) => {
+        const campo = document.getElementById(id)?.closest(".field");
+        if (!campo) return;
+        campo.classList.toggle("invalid", Boolean(msg));
+        $(".field-error", campo).textContent = msg || "";
+    };
+
+    // Cualquier botón con data-espera (en las horas de la reserva o en el buscador) la abre
+    document.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-espera]");
+        if (!b) return;
+        peticion = { fecha: b.dataset.fecha, turno: b.dataset.espera, personas: Number(b.dataset.personas) };
+        const dia = new Date(peticion.fecha + "T12:00:00").toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
+        $("#waitlist-meta").textContent = `${dia.charAt(0).toUpperCase() + dia.slice(1)} · ${peticion.turno === "cena" ? __("Cena") : __("Comida")} · ${personas(peticion.personas)}`;
+        // Si ya escribió sus datos en el formulario de reserva, se aprovechan
+        [["w-nombre", "nombre"], ["w-telefono", "telefono"], ["w-email", "email"]].forEach(([w, r]) => {
+            if (!$("#" + w).value && $("#" + r)) $("#" + w).value = $("#" + r).value;
+        });
+        $("#waitlist-form").hidden = false;
+        $("#waitlist-done").hidden = true;
+        errorGeneral.textContent = "";
+        dialogo.showModal();
+        $("#w-nombre").focus();
+    });
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const reglas = {
+            "w-nombre": () => $("#w-nombre").value.trim().length >= 3 || __("Escribe tu nombre y apellidos."),
+            "w-telefono": () => /^\+?[0-9]{9,14}$/.test($("#w-telefono").value.replace(/\s/g, "")) || __("Escribe un teléfono de 9 cifras."),
+            "w-email": () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#w-email").value.trim()) || __("Revisa el email: falta algo como nombre@correo.com."),
+            "w-privacidad": () => $("#w-privacidad").checked || __("Necesitamos tu permiso para avisarte."),
+        };
+        let ok = true;
+        Object.entries(reglas).forEach(([id, regla]) => { const r = regla(); marcar(id, r === true ? "" : r); if (r !== true) ok = false; });
+        if (!ok) { $(".field.invalid input", form)?.focus(); return; }
+
+        const boton = $("#waitlist-submit");
+        boton.disabled = true;
+        const { datos } = await pedir(API.listaEspera, { ok: true }, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...peticion, nombre: $("#w-nombre").value.trim(), telefono: $("#w-telefono").value.trim(), email: $("#w-email").value.trim(), web: $("#w-web").value }),
+        });
+        boton.disabled = false;
+        if (!datos.ok) {
+            Object.entries(datos.campos || {}).forEach(([id, msg]) => marcar(id, msg));
+            errorGeneral.textContent = datos.error || __("No se ha podido guardar. Prueba a llamarnos.");
+            return;
+        }
+        $("#waitlist-form").hidden = true;
+        $("#waitlist-done").hidden = false;
+        $("#waitlist-done-title").focus();
+    });
+
+    ["w-nombre", "w-telefono", "w-email", "w-privacidad"].forEach((id) => document.getElementById(id).addEventListener("input", () => marcar(id, "")));
+    $("#waitlist-close").addEventListener("click", () => dialogo.close());
+    $("#waitlist-ok").addEventListener("click", () => dialogo.close());
+    dialogo.addEventListener("click", (e) => {
+        if (e.target !== dialogo) return;
+        const r = dialogo.getBoundingClientRect();
+        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialogo.close();
+    });
 }
 
 /* =========================================================
@@ -1334,6 +1428,14 @@ function iniciarMiReserva() {
         if (fuera) dialogo.close();
     });
     dialogo.addEventListener("close", () => $("#manage-open").focus());
+
+    // Enlace del email de confirmación: ?reserva=K7Q2XB#reservas
+    const codigoUrl = (new URLSearchParams(location.search).get("reserva") || "").toUpperCase();
+    if (/^[A-Z0-9]{6}$/.test(codigoUrl)) {
+        abrir();
+        $("#m-codigo").value = codigoUrl;
+        $("#m-telefono").focus();
+    }
 }
 
 /* =========================================================
@@ -1577,6 +1679,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     iniciarCarta(carta);
     pintarServicios(info.servicios);
     pintarOpiniones(info.opiniones);
+    iniciarListaEspera();
     iniciarReservas(info.horarios, info.dias_cerrados || []);
     iniciarContacto();
     iniciarPresupuesto();

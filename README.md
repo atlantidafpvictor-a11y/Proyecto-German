@@ -102,6 +102,7 @@ Si MySQL tiene contraseña o la base de datos tiene otro nombre, cámbialo en `a
 - [x] Carta para el móvil con QR por mesa (`carta.html`, panel → Códigos QR)
 - [x] Monitorización: estado del servidor en el panel, avisos y `api/salud.php`
 - [x] Portada nueva (dirección «Cal y cobalto»): buscador de mesa, pizarra del día editable desde el panel, carta impresa con plato destacado, productores y agenda en formato entrada
+- [x] Emails de confirmación, recordatorio y cancelación (con `.ics`), lista de espera con aviso automático al cancelar y registro de correos en el panel
 - [x] Ficha de cada plato con maridaje recomendado, celebraciones con formulario de presupuesto, zonas visuales en la reserva, contadores y apariciones al hacer scroll, barra «Reservar» en el móvil
 - [x] Redis (opcional): caché de la carta y del horario, límite de peticiones atómico y sesiones del panel, con plan B si Redis no está
 - [x] Web en inglés: selector ES · EN (o idioma del navegador), textos en `i18n-en.js`, contenido traducido en la base de datos (`_en`) y editable desde el panel, mensajes de la API en el idioma del cliente

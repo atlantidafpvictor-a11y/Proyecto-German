@@ -360,4 +360,20 @@ const TRADUCCIONES_EN = {
     "No quedan mesas para {n} en ese turno. Prueba otro día o llámanos.": "No tables left for {n} at that sitting. Try another day or call us.",
     "Horas libres para {n} · {fecha}": "Free times for {n} · {fecha}",
     "Pulsa una hora y termina la reserva con tus datos.": "Tap a time and finish the booking with your details.",
+
+    /* ---------- Lista de espera ---------- */
+    "Lista de espera": "Waiting list",
+    "Si alguien cancela y queda sitio para tu grupo, te avisamos por email con un enlace para reservar. Se queda la mesa quien reserve primero.": "If someone cancels and there is room for your group, we will email you a link to book. The first person to book gets the table.",
+    "Acepto que usen mis datos solo para avisarme si se libera una mesa.": "I agree to my details being used only to let me know if a table frees up.",
+    "Apuntarme a la lista": "Join the waiting list",
+    "Estás en la lista": "You're on the list",
+    "Te hemos mandado un email de confirmación. Si se libera una mesa para tu grupo, te escribiremos enseguida.": "We have sent you a confirmation email. If a table frees up for your group, we will write to you straight away.",
+    "Entendido": "Got it",
+    "¿Ninguna hora te viene bien?": "None of these times work for you?",
+    "Avísame si se libera una mesa para cenar": "Let me know if a dinner table frees up",
+    "Avísame si se libera una mesa para comer": "Let me know if a lunch table frees up",
+    "Apúntate a la lista de espera": "Join the waiting list",
+    "y te avisamos por email si alguien cancela.": "and we will email you if someone cancels.",
+    "Necesitamos tu permiso para avisarte.": "We need your permission to contact you.",
+    "No se ha podido guardar. Prueba a llamarnos.": "It could not be saved. Please try calling us.",
 };

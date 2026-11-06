@@ -105,11 +105,11 @@
 
     <link rel="alternate" hreflang="es" href="?lang=es">
     <link rel="alternate" hreflang="en" href="?lang=en">
-    <link rel="stylesheet" href="style.css?v=20261109">
+    <link rel="stylesheet" href="style.css?v=20261110">
     <!-- Idiomas: el diccionario inglés, después las funciones, después la web -->
-    <script src="i18n-en.js?v=20261109" defer></script>
-    <script src="i18n.js?v=20261109" defer></script>
-    <script src="javascript.js?v=20261109" defer></script>
+    <script src="i18n-en.js?v=20261110" defer></script>
+    <script src="i18n.js?v=20261110" defer></script>
+    <script src="javascript.js?v=20261110" defer></script>
 </head>
 <body>
 
@@ -734,6 +734,49 @@
                     <button type="button" class="btn btn-primary" id="event-ics">Añadir a mi calendario</button>
                     <button type="button" class="btn btn-ghost" id="event-done-close">Cerrar</button>
                 </div>
+            </div>
+        </dialog>
+
+        <!-- ============ LISTA DE ESPERA ============ -->
+        <dialog class="manage" id="waitlist-dialog" aria-labelledby="waitlist-title">
+            <button type="button" class="manage-close" id="waitlist-close" aria-label="Cerrar">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <form id="waitlist-form" novalidate>
+                <h3 id="waitlist-title">Lista de espera</h3>
+                <p class="manage-lead"><strong id="waitlist-meta"></strong><br>Si alguien cancela y queda sitio para tu grupo, te avisamos por email con un enlace para reservar. Se queda la mesa quien reserve primero.</p>
+                <div class="field">
+                    <label for="w-nombre">Nombre y apellidos</label>
+                    <input type="text" id="w-nombre" autocomplete="name" required>
+                    <p class="field-error" data-for="w-nombre"></p>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="w-telefono">Teléfono</label>
+                        <input type="tel" id="w-telefono" autocomplete="tel" required>
+                        <p class="field-error" data-for="w-telefono"></p>
+                    </div>
+                    <div class="field">
+                        <label for="w-email">Email</label>
+                        <input type="email" id="w-email" autocomplete="email" required>
+                        <p class="field-error" data-for="w-email"></p>
+                    </div>
+                </div>
+                <div class="hp" aria-hidden="true"><label for="w-web">No rellenar</label><input type="text" id="w-web" tabindex="-1" autocomplete="off"></div>
+                <div class="field">
+                    <label class="consent">
+                        <input type="checkbox" id="w-privacidad" required>
+                        Acepto que usen mis datos solo para avisarme si se libera una mesa.
+                    </label>
+                    <p class="field-error" data-for="w-privacidad"></p>
+                </div>
+                <p class="manage-error" id="waitlist-error" role="alert"></p>
+                <button type="submit" class="btn btn-primary btn-block" id="waitlist-submit">Apuntarme a la lista</button>
+            </form>
+            <div id="waitlist-done" hidden>
+                <h3 tabindex="-1" id="waitlist-done-title">Estás en la lista</h3>
+                <p class="manage-lead">Te hemos mandado un email de confirmación. Si se libera una mesa para tu grupo, te escribiremos enseguida.</p>
+                <div class="manage-actions"><button type="button" class="btn btn-primary" id="waitlist-ok">Entendido</button></div>
             </div>
         </dialog>
 

@@ -671,6 +671,20 @@ sudo sabor-visitas
 
 Se ve en el panel → **Visitas a la web** (solo Administración). El informe se carga en un marco con `sandbox`: ejecuta su JavaScript pero no puede leer las cookies del panel ni enviar datos fuera.
 
+### 11m. Emails de reserva y lista de espera
+
+La web manda un email al reservar (con el archivo `.ics` para el calendario), el día antes (recordatorio), al cambiar o cancelar, y a quien está en la **lista de espera** cuando alguien cancela y queda sitio para su grupo.
+
+```bash
+sudo mysql sabor_mediterraneo < database/migraciones/008_correo_lista_espera.sql
+sudo install -m 644 scripts/servidor/sabor-recordatorios.cron /etc/cron.d/sabor-recordatorios
+```
+
+- **Modo pruebas** (por defecto): los emails no salen, pero se guardan y se ven en el panel → **Correos enviados** tal cual le llegarían al cliente.
+- **Envío real por Gmail**: con una *contraseña de aplicación* de la cuenta del proyecto (necesita la verificación en dos pasos activada): `sudo bash scripts/servidor/correo.sh`. Configura Postfix como relay hacia `smtp.gmail.com:587` con TLS, manda un email de prueba y activa `correo_activo` en `config.local.php`.
+- La web responde al cliente antes de enviar el email (`fastcgi_finish_request()`): reservar no se hace más lento.
+- Los recordatorios los manda `scripts/recordatorios.php` (cron, como `www-data`) y nunca se repiten: queda anotado en `reservas.recordatorio_en`. Registro: `journalctl -t sabor-recordatorios`.
+
 ## Si algo falla
 
 | Síntoma | Causa probable | Qué mirar |

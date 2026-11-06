@@ -71,7 +71,22 @@ function responder(array $datos, int $codigo = 200): void
     // sin Content-Length los clientes HTTP/1.0 no pueden reutilizar la conexión
     header('Content-Length: ' . strlen($json));
     echo $json;
+    // Con PHP-FPM la respuesta se entrega ya y lo de despues() (emails) sigue
+    // en segundo plano: el cliente no espera a que salga ningún correo
+    if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
     exit;
+}
+
+/** Deja una tarea (enviar un email...) para cuando ya se haya respondido. */
+function despues(callable $tarea): void
+{
+    register_shutdown_function(function () use ($tarea) {
+        try {
+            $tarea();
+        } catch (Throwable $e) {
+            error_log('Tarea en segundo plano: ' . $e->getMessage());
+        }
+    });
 }
 
 /* =========================================================
@@ -421,6 +436,60 @@ function horasDelDia(DateTimeImmutable $fecha): array
         }
     }
     return $horas;
+}
+
+/**
+ * Horas de un día y si queda alguna mesa libre a cada hora para un grupo.
+ * Una hora está libre si hay una mesa activa donde quepa el grupo sin otra
+ * reserva a menos de 'duracion_reserva' minutos.
+ * $excluir = código de una reserva que se está cambiando (su mesa cuenta como libre).
+ * @return list<array{hora: string, turno: string, libre: bool}>
+ */
+function horasLibres(PDO $pdo, DateTimeImmutable $fecha, int $personas, string $excluir = ''): array
+{
+    $horas = horasDelDia($fecha);
+    if (!$horas) return [];
+
+    $stmt = $pdo->prepare('SELECT id FROM mesas WHERE activa = 1 AND capacidad >= ?');
+    $stmt->execute([$personas]);
+    $mesas = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+    $stmt = $pdo->prepare(
+        "SELECT mesa_id, TIME_FORMAT(hora, '%H:%i') AS hora
+         FROM reservas
+         WHERE fecha = ? AND mesa_id IS NOT NULL AND estado IN ('pendiente', 'confirmada') AND codigo <> ?"
+    );
+    $stmt->execute([$fecha->format('Y-m-d'), strtoupper(substr($excluir, 0, 6))]);
+    $ocupadas = $stmt->fetchAll();
+
+    $esHoy    = $fecha->format('Y-m-d') === date('Y-m-d');
+    $ahora    = (int) date('G') * 60 + (int) date('i');
+    $duracion = (int) config('duracion_reserva');
+
+    $slots = [];
+    foreach ($horas as $h) {
+        $min = aMinutos($h['hora']);
+        // Hoy no se puede reservar para dentro de menos de una hora
+        if ($esHoy && $min <= $ahora + 60) {
+            $slots[] = $h + ['libre' => false];
+            continue;
+        }
+        $bloqueadas = [];
+        foreach ($ocupadas as $r) {
+            if (abs(aMinutos($r['hora']) - $min) < $duracion) $bloqueadas[(int) $r['mesa_id']] = true;
+        }
+        $slots[] = $h + ['libre' => (bool) array_filter($mesas, fn($id) => !isset($bloqueadas[$id]))];
+    }
+    return $slots;
+}
+
+/** Turno (comida / cena) al que pertenece una hora de un día. */
+function turnoDe(DateTimeImmutable $fecha, string $hora): string
+{
+    foreach (horasDelDia($fecha) as $h) {
+        if ($h['hora'] === substr($hora, 0, 5)) return $h['turno'];
+    }
+    return substr($hora, 0, 5) < '17:00' ? 'comida' : 'cena';
 }
 
 function aMinutos(string $hhmm): int

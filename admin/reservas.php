@@ -113,8 +113,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
         } elseif (in_array($accion, ['cancelada', 'completada', 'no_presentado'], true)) {
+            $antes = $pdo->prepare("SELECT fecha, TIME_FORMAT(hora, '%H:%i') AS hora, estado FROM reservas WHERE id = ?");
+            $antes->execute([$id]);
+            $antes = $antes->fetch();
             $pdo->prepare('UPDATE reservas SET estado = ? WHERE id = ?')->execute([$accion, $id]);
-            flash('ok', 'Reserva marcada como «' . $ESTADOS[$accion] . '».');
+            $texto = 'Reserva marcada como «' . $ESTADOS[$accion] . '».';
+            // Una cancelación deja mesa libre: email al cliente y aviso a la lista de espera de ese turno
+            if ($accion === 'cancelada' && $antes && in_array($antes['estado'], ['pendiente', 'confirmada'], true)) {
+                require_once __DIR__ . '/../api/avisos.php';
+                correoReserva($pdo, $id, 'cancelacion');
+                $n = avisarListaEspera($pdo, $antes['fecha'], turnoDe(new DateTimeImmutable($antes['fecha']), $antes['hora']));
+                if ($n) $texto .= " Hay $n " . ($n === 1 ? 'persona' : 'personas') . ' de la lista de espera con sitio ahora: ' . (config('correo_activo') ? 'se les ha avisado por email.' : 'llámales (Lista de espera).');
+            }
+            flash('ok', $texto);
         }
     }
     redirigir($volver);

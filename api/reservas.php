@@ -15,6 +15,7 @@
  */
 declare(strict_types=1);
 require __DIR__ . '/db.php';
+require __DIR__ . '/avisos.php';
 
 ejecutar(function () {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -99,7 +100,7 @@ ejecutar(function () {
             $call->closeCursor(); // libera la conexión tras un CALL
 
             $pdo->commit();
-            return ['ok' => true, 'codigo' => $codigo, 'http' => 201];
+            return ['ok' => true, 'codigo' => $codigo, 'id' => $reservaId, 'http' => 201];
         } catch (PDOException $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             // SQLSTATE 45000 = error lanzado a propósito por nuestro trigger o procedimiento
@@ -114,7 +115,18 @@ ejecutar(function () {
     });
 
     $http = $resultado['http'];
-    unset($resultado['http']);
+    $reservaId = (int) ($resultado['id'] ?? 0);
+    unset($resultado['http'], $resultado['id']);
+
+    if ($reservaId) {
+        // Idioma de los emails (columna de la migración 008: si aún no está, se sigue sin ella)
+        try {
+            db()->prepare('UPDATE reservas SET idioma = ? WHERE id = ?')->execute([idioma(), $reservaId]);
+        } catch (PDOException) {
+        }
+        // El email de confirmación sale cuando el cliente ya tiene su respuesta
+        despues(fn() => correoReserva(db(), $reservaId, 'confirmacion'));
+    }
     responder($resultado, $http);
 });
 

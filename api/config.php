@@ -38,6 +38,17 @@ $config = [
     // Informe que deja cada 5 minutos scripts/monitor.sh (solo en el servidor Ubuntu)
     'estado_servidor' => '/var/lib/sabor-mediterraneo/estado.json',
 
+    // Emails a los clientes (confirmación, recordatorio, cancelación, lista de espera).
+    // Desactivado por defecto: en el servidor se activa en config.local.php una vez
+    // configurado Postfix con Gmail (scripts/servidor/correo.sh).
+    'correo_activo'    => false,
+    'correo_remitente' => 'proyectointermodulargastrotech@gmail.com',
+    'correo_nombre'    => 'Sabor Mediterráneo',
+    // Dirección de la web que va en los enlaces de los emails
+    'url_web'          => 'https://192.168.4.121/',
+    // Para pruebas: si tiene un email, TODOS los correos van a esa dirección
+    'correo_desvio'    => '',
+
     // Redis (opcional): caché de la carta, límite de peticiones y sesiones del panel.
     // Desactivado por defecto: se activa en config.local.php del servidor, con su contraseña.
     // Si Redis no está o no responde, la web sigue funcionando igual (sin caché).

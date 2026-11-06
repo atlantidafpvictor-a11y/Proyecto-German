@@ -633,6 +633,12 @@ main { counter-reset: seccion; }
 .slots-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .slots-row .opt { padding: 9px 14px; font-variant-numeric: tabular-nums; }
 .slots-msg { color: var(--tinta-2); }
+/* Lista de espera: aparece cuando un turno está completo o casi */
+.slots-full { color: var(--ocre-texto); font-weight: 700; text-transform: lowercase; }
+.waitlist-cta { margin-top: 10px; font-size: var(--t-sm); color: var(--tinta-2); }
+.link-btn { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--anil); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.link-btn:hover { color: var(--anil-oscuro); }
+#waitlist-meta { color: var(--tinta); }
 
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .field { margin-bottom: 16px; }

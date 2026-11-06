@@ -1,0 +1,4 @@
+# Recordatorio por email el día antes de cada reserva (a las 12:30 y 15 min después de encender la torre).
+# Nunca se manda dos veces: el script anota cuándo envió cada uno. Registro: journalctl -t sabor-recordatorios
+30 12 * * * www-data php /var/www/sabor-mediterraneo/scripts/recordatorios.php 2>&1 | logger -t sabor-recordatorios
+@reboot     www-data sleep 900 && php /var/www/sabor-mediterraneo/scripts/recordatorios.php 2>&1 | logger -t sabor-recordatorios

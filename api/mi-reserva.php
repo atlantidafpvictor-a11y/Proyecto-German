@@ -17,6 +17,7 @@
  */
 declare(strict_types=1);
 require __DIR__ . '/db.php';
+require __DIR__ . '/avisos.php';
 
 ejecutar(function () {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -69,14 +70,28 @@ ejecutar(function () {
             ->execute([$r['id']]);
         $r['estado'] = 'cancelada';
         [$puede, $motivo] = puedeCancelar($r);
+        // Después de responder: email al cliente y aviso a la lista de espera de ese turno
+        $libre = $r;
+        despues(function () use ($libre) {
+            $pdo = db();
+            correoReserva($pdo, (int) $libre['id'], 'cancelacion');
+            avisarListaEspera($pdo, $libre['fecha'], turnoDe(new DateTimeImmutable($libre['fecha']), $libre['hora']));
+        });
     }
 
     if ($accion === 'cambiar') {
         if (!$puede) {
             responder(['ok' => false, 'error' => (idioma() === 'es' ? str_replace('cancelar', 'cambiar', $motivo) : $motivo), 'reserva' => publica($r, false, $motivo)], 409);
         }
+        $antes = $r;
         $r = cambiar($pdo, $r, $d);
         [$puede, $motivo] = puedeCancelar($r);
+        // El hueco que deja la reserva antigua puede servir a alguien de la lista de espera
+        despues(function () use ($antes) {
+            $pdo = db();
+            correoReserva($pdo, (int) $antes['id'], 'cambio');
+            avisarListaEspera($pdo, $antes['fecha'], turnoDe(new DateTimeImmutable($antes['fecha']), $antes['hora']));
+        });
         responder(['ok' => true, 'cambiada' => true, 'reserva' => publica($r, $puede, $motivo)]);
     }
 
